@@ -2,19 +2,10 @@ import uuid
 import os
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, send_from_directory
-import sqlite3
+from app.database import get_db_connection, DATA_DIR
 from bs4 import BeautifulSoup
 
-# --- CONFIG & HELPERS (Copied from temp_Main.pyw) ---
-APP_ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
-DATA_DIR = os.path.join(APP_ROOT, "data")
-DATABASE_PATH = os.path.join(DATA_DIR, "Data.db")
 SOUNDS_FOLDER = os.path.join(DATA_DIR, "sounds")
-
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 # --- BLUEPRINT DEFINITION ---
 notes_bp = Blueprint("notes_feature", __name__, url_prefix="/notes")

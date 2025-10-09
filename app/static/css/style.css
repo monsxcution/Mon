@@ -267,4 +267,13 @@ body {
     background: linear-gradient(135deg, #66BB6A, #26A69A);
 }
 
-/* Other styles from index.html should be pasted here */
+/* Center the notes search bar */
+.notes-layout-container .notes-search-container {
+    margin: 0 auto;
+    transform: translateX(0);
+}
+
+/* Hide all context menus by default */
+.custom-context-menu {
+    display: none;
+}

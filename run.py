@@ -1,8 +1,9 @@
 from app import create_app
+from app.database import init_database
 
+# --- APPLICATION ---
 app = create_app()
 
 if __name__ == "__main__":
-    # Chạy ứng dụng với chế độ debug, dễ dàng cho việc phát triển
-    # Port 5000 là port mặc định của Flask
+    init_database()  # Initialize the database before running the app
     app.run(host="0.0.0.0", port=5001, debug=True)
