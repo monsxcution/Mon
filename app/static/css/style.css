@@ -277,3 +277,201 @@ body {
 .custom-context-menu {
     display: none;
 }
+
+/* Notes Card View Styles */
+
+/* New Layout System with Animation */
+.notes-layout-container {
+      display: flex;
+      gap: 1rem;
+}
+
+#notes-list-wrapper {
+      flex-grow: 1;
+      width: 100%;
+      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper {
+      flex-shrink: 0;
+      width: 0;
+      transform: translateX(30px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+#notes-detail-wrapper.visible {
+      width: 66.666667%;
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+}
+#notes-list-wrapper.shrunk {
+      width: 33.333333%;
+}
+#notes-container.notes-grid-view .note-card-wrapper {
+      flex: 0 0 33.333333%;
+      max-width: 33.333333%;
+      padding: 0 !important;
+}
+#notes-container.notes-grid-view .card {
+      height: 120px;
+}
+#notes-container.notes-list-view .note-card-wrapper {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding: 0 !important;
+}
+#notes-container.notes-list-view .card {
+      height: 70px;
+}
+#notes-container.notes-list-view .card .card-title {
+      font-size: 1.14rem;
+      margin-bottom: 0.2rem;
+}
+#notes-container.notes-list-view .card .card-note-body {
+      font-size: 0.75rem;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+}
+#notes-container.notes-list-view .card .card-body {
+      padding: 0.5rem;
+}
+#notes-container {
+      max-width: 100%;
+      margin: 0;
+}
+
+/* REFACTORED NOTES CARD STYLES (GRID & LIST VIEW) */
+#notes-container .card {
+      border-left: 4px solid var(--bs-card-border-color);
+      border-radius: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+}
+#notes-container .card-body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0.75rem;
+      overflow: hidden;
+}
+#notes-container .card-note-body {
+      flex-grow: 1;
+      margin-right: 8px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+}
+#notes-container .card-body .mt-auto {
+      margin-top: auto !important;
+}
+
+/* Notes Search Bar Styles */
+.notes-search-container {
+      background-color: transparent;
+      border: none;
+}
+#notes-search-input {
+      background-color: var(--card-bg) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-color) !important;
+}
+
+/* Notes Detail Panel Styles */
+#notes-detail-panel {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      height: 100%;
+      min-height: 600px;
+}
+#notes-detail-panel .card-header {
+      background-color: var(--hover-color);
+      border-bottom: 1px solid var(--border-color);
+}
+.note-card-active {
+      transform: scale(1.02);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3) !important;
+      border: 2px solid var(--primary-color) !important;
+      transition: all 0.3s ease;
+}
+.card {
+      transition: all 0.3s ease;
+}
+
+/* Inline Editor Styles */
+#detail-editable-full {
+      outline: none;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+      min-height: 150px;
+}
+#detail-editable-full:hover,
+#detail-editable-full:focus {
+      background-color: var(--hover-color);
+}
+#detail-editable-full:empty:before {
+      content: attr(data-placeholder);
+      color: #6c757d;
+}
+#detail-editable-full * {
+      background-color: transparent !important;
+      border: none !important;
+}
+#detail-editable-full a {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      background-color: transparent !important;
+      color: #69b3ff;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+#detail-editable-full a:hover {
+      color: #00e0ff;
+      text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+/* Animation cho thẻ Ghi chú mới */
+@keyframes noteCardEnterAnimation {
+    0% {
+        opacity: 0;
+        transform: translateY(25px) scale(0.95);
+        box-shadow: 0 0 15px rgba(0, 224, 255, 0.4);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(0) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 224, 255, 0.25);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: none;
+    }
+}
+.note-card-enter .card {
+    animation: noteCardEnterAnimation 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+#notes-container .card {
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                box-shadow 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                border-color 0.2s ease-in-out;
+}
+#notes-container .card:hover {
+    transform: translateY(-10px);
+    border-color: #00e0ff;
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.2), 
+                0 12px 30px rgba(0, 0, 0, 0.4);
+}
+#notes-title-input:empty:before {
+    content: attr(placeholder);
+    color: #6c757d;
+    pointer-events: none;
+    display: block;
+}
