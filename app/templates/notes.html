@@ -219,7 +219,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!response.ok) throw new Error('Lỗi khi lưu');
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
                 showToast('Đã tự động lưu!', 'success');
                 await fetchAndRenderNotes();
             } catch (error) {
@@ -262,19 +262,25 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('notes-editId').value;
-            const url = id ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}` : "{{ url_for('notes_feature.api_add_note') }}";
+            const url = id
+                ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}`
+                : "{{ url_for('notes_feature.api_add_note') }}";
+
             const payload = {
                 title_html: document.getElementById('notes-title-input').innerHTML,
                 content_html: document.getElementById('notes-content-editor').innerHTML,
             };
+
             if (!payload.title_html && !payload.content_html) {
+                alert('Ghi chú không được để trống.');
                 return;
             }
+
             try {
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error('Lỗi khi lưu');
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
                 notesModal.hide();
-                await fetchAndRenderNotes(id || null);
+                await fetchAndRenderNotes();
                 showToast(id ? 'Đã cập nhật ghi chú!' : 'Đã tạo ghi chú mới!', 'success');
             } catch (error) {
                 showToast('Lỗi: Không thể lưu ghi chú.', 'error');
@@ -296,8 +302,10 @@
             }
         });
 
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-context-menu')) {
+                document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
+            }
         });
 
         fetchAndRenderNotes();
