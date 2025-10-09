@@ -387,7 +387,7 @@ body {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       height: 100%;
-      min-height: 600px;
+      min-height: 75vh;
 }
 #notes-detail-panel .card-header {
       background-color: var(--hover-color);

@@ -1,457 +1,226 @@
-{% extends "layouts/base.html" %}{% extends "layouts/base.html" %}
-
-
+{% extends "layouts/base.html" %}
 
 {% block content %}
-
-<div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel"><div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
-
-    <div class="notes-layout-container">    <div class="notes-layout-container">
-
-                
-
-        <div id="notes-list-wrapper">        <div id="notes-list-wrapper">
-
-            <div class="d-flex justify-content-start align-items-center mb-2">            <div class="d-flex justify-content-start align-items-center mb-2">
-
-                <div class="position-relative notes-search-container" style="width: 50%;">                <div class="position-relative notes-search-container" style="width: 50%;">
-
-                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="z-index: 10;"></i>                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="z-index: 10;"></i>
-
-                    <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false" placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">                    <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false" placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
-
-                </div>                </div>
-
-            </div>            </div>
-
-            <div id="notes-container" class="row notes-grid-view" spellcheck="false">            <div id="notes-container" class="row notes-grid-view" spellcheck="false">
-
-                </div>                </div>
-
-        </div>        </div>
-
-
-
-        <div id="notes-detail-wrapper">        <div id="notes-detail-wrapper">
-
-            <div id="notes-detail-panel" class="card h-100">            <div id="notes-detail-panel" class="card h-100">
-
-                <div class="card-header">                <div class="card-header">
-
-                    </div>                    </div>
-
-                <div class="card-body" id="notes-detail-content-wrapper">                <div class="card-body" id="notes-detail-content-wrapper">
-
-                    <div class="text-center text-muted p-3 h-100 d-flex flex-column justify-content-center align-items-center" id="notes-detail-placeholder">                    <div class="text-center text-muted p-3 h-100 d-flex flex-column justify-content-center align-items-center" id="notes-detail-placeholder">
-
-                        <i class="bi bi-arrow-left-circle" style="font-size: 2rem;"></i>                        <i class="bi bi-arrow-left-circle" style="font-size: 2rem;"></i>
-
-                        <h6 class="mt-2">Chọn một ghi chú để xem</h6>                        <h6 class="mt-2">Chọn ghi chú</h6>
-
-                        <small>Click vào một thẻ ghi chú bên trái</small>                        <small>Click để xem</small>
-
-                    </div>                    </div>
-
-                    <div id="notes-detail-content" class="d-none">                    <div id="notes-detail-content" class="d-none">
-
-                        </div>                        </div>
-
-                </div>                </div>
-
-            </div>            </div>
-
-        </div>        </div>
-
-
-
-    </div>    </div>
-
-</div></div>
-
-
-
-<div class="modal fade" id="notes-addEditModal" tabindex="-1"><div class="modal fade" id="notes-addEditModal" tabindex="-1">
-
-    <div class="modal-dialog modal-dialog-centered">  <div class="modal-dialog modal-dialog-centered">
-
-        <div class="modal-content">      <div class="modal-content">
-
-            <form id="notes-addEditForm">          <form id="notes-addEditForm">
-
-                <div class="modal-header">              <div class="modal-header">
-
-                    <h5 class="modal-title" id="notes-modalTitle">Thêm Ghi Chú Mới</h5>                  <h5 class="modal-title" id="notes-modalTitle">Thêm Ghi Chú Mới</h5>
-
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-
-                </div>              </div>
-
-                <input type="hidden" id="notes-editId">              <input type="hidden" id="notes-editId">
-
-                <div class="modal-body">              <div class="modal-body">
-
-                    <div class="mb-3">                  <div class="mb-3">
-
-                        <label for="notes-title-input" class="form-label">Tiêu đề (tùy chọn)</label>                      <label for="notes-title-input" class="form-label">Tiêu đề (tùy chọn)</label>
-
-                        <div id="notes-title-input" contenteditable="true" class="form-control" spellcheck="false" placeholder="Nhập tiêu đề ghi chú..." style="min-height: 40px;"></div>                      <div id="notes-title-input" contenteditable="true" class="form-control" spellcheck="false" placeholder="Nhập tiêu đề ghi chú..." style="min-height: 40px;"></div>
-
-                    </div>                  </div>
-
-                    <div class="mb-3">                <div class="mb-3">
-
-                        <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false" style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung ghi chú..."></div>                      <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false" style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung ghi chú..."></div>
-
-                    </div>                </div>
-
-                    <div class="form-check form-switch mb-3">                  <div class="form-check form-switch mb-3">
-
-                        <input class="form-check-input" type="checkbox" role="switch" id="notes-enableAlarmCheck">                      <input class="form-check-input" type="checkbox" role="switch" id="notes-enableAlarmCheck">
-
-                        <label class="form-check-label" for="notes-enableAlarmCheck">Đặt báo thức</label>                      <label class="form-check-label" for="notes-enableAlarmCheck">Đặt báo thức</label>
-
-                    </div>                  </div>
-
-                    <div id="notes-alarm-container" class="d-none">                  <div id="notes-alarm-container" class="d-none">
-
-                        </div>                      </div>
-
-                </div>              </div>
-
-                <div class="modal-footer">              <div class="modal-footer">
-
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-
-                    <button type="submit" class="btn btn-primary">Lưu</button>                  <button type="submit" class="btn btn-primary">Lưu</button>
-
-                </div>              </div>
-
-            </form>          </form>
-
-        </div>      </div>
-
-    </div>  </div>
-
-</div></div>
-
-
-
-<div class="modal fade" id="notes-notificationModal" tabindex="-1"><div class="modal fade" id="notes-notificationModal" tabindex="-1">...</div>
-
-    <div class="modal-dialog modal-dialog-centered"><div id="notes-context-menu" class="custom-context-menu">...</div>
-
-        <div class="modal-content border border-warning border-3 shadow-lg"><div id="note-card-context-menu" class="custom-context-menu">...</div>
-
-            <div class="modal-header bg-warning text-dark"><div id="profile-span-context-menu" class="custom-context-menu">...</div>
-
-                <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2"></i>ĐẾN GIỜ RỒI!</h5><div class="modal fade" id="notes-addLinkModal" tabindex="-1">...</div>
-
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button><div class="modal fade" id="notes-addProfileModal" tabindex="-1">...</div>
-
+<div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
+    <div class="notes-layout-container">
+
+        <div id="notes-list-wrapper">
+            <div class="d-flex justify-content-center align-items-center mb-2">
+                <div class="position-relative notes-search-container" style="width: 50%;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3"
+                        style="z-index: 10;"></i>
+                    <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false"
+                        placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
+                </div>
             </div>
-
-            <div class="modal-body">{% endblock %}
-
-                <h3 id="notes-notificationTitle" class="text-center mb-3"></h3>
-
-                <p id="notes-notificationContent" style="white-space: pre-wrap;"></p>{% block scripts %}
-
-                <input type="hidden" id="notes-notificationId"><script>
-
-            </div>    document.addEventListener('DOMContentLoaded', function () {
-
-            <div class="modal-footer">        // --- NOTES MANAGER SCRIPT ---
-
-                <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="notes-acknowledgeBtn">OK, Đã hiểu</button>        const notesTab = document.getElementById('notes-tool-tab');
-
-            </div>        if (!notesTab) return;
-
+            <div id="notes-container" class="row g-0 notes-grid-view" spellcheck="false">
+            </div>
         </div>
 
-    </div>        const container = document.getElementById('notes-container');
-
-</div>        const searchInput = document.getElementById('notes-search-input');
-
-        const modalEl = document.getElementById('notes-addEditModal');
-
-<div id="notes-context-menu" class="custom-context-menu">...</div>        const form = document.getElementById('notes-addEditForm');
-
-<div id="note-card-context-menu" class="custom-context-menu">        
-
-    <div class="menu-item" id="context-mark-note"><i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu</div>        let activeNoteId = null;
-
+        <div id="notes-detail-wrapper">
+            <div id="notes-detail-panel" class="card h-100">
+                <div class="card-header">
+                </div>
+                <div class="card-body" id="notes-detail-content-wrapper">
+                    <div class="text-center text-muted p-3 h-100 d-flex flex-column justify-content-center align-items-center"
+                        id="notes-detail-placeholder">
+                        <i class="bi bi-arrow-left-circle" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">Chọn một ghi chú để xem</h6>
+                        <small>Click vào một thẻ ghi chú bên trái</small>
+                    </div>
+                    <div id="notes-detail-content" class="d-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div id="profile-span-context-menu" class="custom-context-menu">...</div>        // --- Core Functions ---
-
-{% endblock %}        async function fetchAndRenderNotes() {
-
-            try {
-
-{% block scripts %}                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");
-
-<script>                const notes = await response.json();
-
-    document.addEventListener('DOMContentLoaded', function () {                window.notesData = notes;
-
-        const notesTab = document.querySelector('#notes-tool-tab');                renderNotes(notes);
-
-        if (!notesTab.classList.contains('active')) return;            } catch (error) {
-
-                console.error('Error fetching notes:', error);
-
-        const container = document.getElementById('notes-container');            }
-
-        const searchInput = document.getElementById('notes-search-input');        }
-
-        const modalEl = document.getElementById('notes-addEditModal');
-
-        const notesModal = new bootstrap.Modal(modalEl);        function renderNotes(notesToRender) {
-
-        const form = document.getElementById('notes-addEditForm');            container.innerHTML = '';
-
-        let activeNoteId = null;            if (notesToRender.length === 0) {
-
-                container.innerHTML = `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6></div>`;
-
-        async function fetchAndRenderNotes() {            } else {
-
-            try {                notesToRender.forEach(note => container.appendChild(createNoteCard(note)));
-
-                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");            }
-
-                if (!response.ok) throw new Error('Failed to fetch notes');        }
-
-                const notes = await response.json();
-
-                window.notesData = notes;        function createNoteCard(note) {
-
-                renderNotes(notes);            const col = document.createElement('div');
-
-            } catch (error) {            col.className = 'note-card-wrapper col-lg-4 col-md-6 mb-3'; // Default grid classes
-
-                console.error('Error fetching notes:', error);            col.dataset.noteId = note.id;
-
-            }
-
-        }            col.innerHTML = `
-
-                <div class="card h-100" data-note-id="${note.id}">
-
-        function renderNotes(notesToRender) {                    <div class="card-body">
-
-            container.innerHTML = '';                        <h5 class="card-title">${note.title_html || 'Ghi chú không tiêu đề'}</h5>
-
-            if (notesToRender.length === 0) {                        <div class="card-text card-note-body">${note.content_html || '...'}</div>
-
-                container.innerHTML = `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6><button class="btn btn-primary mt-3" onclick="prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo ghi chú đầu tiên</button></div>`;                        <div class="mt-auto d-flex justify-content-end">
-
-                return;                            <button class="btn btn-sm btn-outline-danger" onclick="deleteNote('${note.id}', event)"><i class="bi bi-trash-fill"></i></button>
-
-            }                        </div>
-
-            notesToRender.forEach(note => container.appendChild(createNoteCard(note)));                    </div>
-
-        }                </div>`;
-
-
-
-        function createNoteCard(note) {            const cardElement = col.querySelector('.card');
-
-            const col = document.createElement('div');            cardElement.addEventListener('click', (e) => {
-
-            col.className = 'note-card-wrapper col-lg-4 col-md-6 mb-2';                if (e.target.closest('button')) return;
-
-            col.dataset.noteId = note.id;                openDetailPanel();
-
-            col.innerHTML = `                showNoteDetail(note);
-
-                <div class="card h-100" data-note-id="${note.id}">            });
-
-                    <div class="card-body d-flex flex-column">            
-
-                        <h5 class="card-title text-truncate">${note.title_html || 'Ghi chú không tiêu đề'}</h5>            // Add right-click listener
-
-                        <div class="card-text card-note-body flex-grow-1">${note.content_html || '...'}</div>            cardElement.addEventListener('contextmenu', (e) => {
-
-                        <div class="mt-auto d-flex justify-content-between align-items-center">                e.preventDefault();
-
-                            <small class="text-muted">${new Date(note.modified_at).toLocaleString()}</small>                e.stopPropagation();
-
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteNoteWrapper('${note.id}', event)"><i class="bi bi-trash-fill"></i></button>                // Logic to show note-card-context-menu
-
-                        </div>            });
-
+<div class="modal fade" id="notes-addEditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="notes-addEditForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notes-modalTitle">Thêm Ghi Chú Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <input type="hidden" id="notes-editId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div id="notes-title-input" contenteditable="true" class="form-control" spellcheck="false"
+                            placeholder="Nhập tiêu đề..." style="min-height: 40px;"></div>
                     </div>
+                    <div class="mb-3">
+                        <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false"
+                            style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung..."></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-                </div>`;            return col;
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const notesPane = document.getElementById('notes-tool-pane');
+        if (!notesPane) return;
 
-                    }
+        const container = document.getElementById('notes-container');
+        const listWrapper = document.getElementById('notes-list-wrapper');
+        const detailWrapper = document.getElementById('notes-detail-wrapper');
+        const modalEl = document.getElementById('notes-addEditModal');
+        const notesModal = new bootstrap.Modal(modalEl);
+        const form = document.getElementById('notes-addEditForm');
+
+        let activeNoteId = null;
+        window.notesData = [];
+
+        async function fetchAndRenderNotes() {
+            try {
+                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");
+                if (!response.ok) throw new Error(`Lỗi Server: ${response.status}`);
+                const notes = await response.json();
+                window.notesData = notes.sort((a, b) => new Date(b.modified_at) - new Date(a.modified_at));
+                renderNotes(window.notesData);
+            } catch (error) {
+                console.error('Lỗi khi tải ghi chú:', error);
+            }
+        }
+
+        function renderNotes(notesToRender) {
+            container.innerHTML = '';
+            if (notesToRender.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6><button class="btn btn-primary mt-3" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo ghi chú đầu tiên</button></div>`;
+                return;
+            }
+            notesToRender.forEach(note => container.appendChild(createNoteCard(note)));
+        }
+
+        function createNoteCard(note) {
+            const col = document.createElement('div');
+            col.className = 'note-card-wrapper';
+            col.dataset.noteId = note.id;
+
+            const title = note.title_html || 'Ghi chú không tiêu đề';
+            const content = note.content_html || '...';
+
+            col.innerHTML = `
+                <div class="card h-100" data-note-id="${note.id}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">${title}</h5>
+                        <div class="card-text card-note-body flex-grow-1">${content}</div>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <small class="text-muted">${new Date(note.modified_at).toLocaleDateString()}</small>
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
 
             const cardElement = col.querySelector('.card');
+            cardElement.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                openDetailPanel();
+                showNoteDetail(note);
+            });
+            return col;
+        }
 
-            cardElement.addEventListener('click', (e) => {        function openDetailPanel() {
-
-                if (e.target.closest('button')) return;            document.getElementById('notes-list-wrapper').classList.add('shrunk');
-
-                openDetailPanel();            document.getElementById('notes-detail-wrapper').classList.add('visible');
-
-                showNoteDetail(note);            container.classList.remove('notes-grid-view');
-
-            });            container.classList.add('notes-list-view');
-
-            return col;            // Adjust column classes for list view
-
-        }            container.querySelectorAll('.note-card-wrapper').forEach(col => {
-
-                col.className = 'note-card-wrapper col-12 mb-2';
-
-        function openDetailPanel() {            });
-
-            document.getElementById('notes-list-wrapper').classList.add('shrunk');        }
-
-            document.getElementById('notes-detail-wrapper').classList.add('visible');
-
-            container.classList.remove('notes-grid-view');        function showNoteDetail(note) {
-
-            container.classList.add('notes-list-view');            activeNoteId = note.id;
-
-            container.querySelectorAll('.note-card-wrapper').forEach(col => col.className = 'note-card-wrapper col-12 mb-1');            const detailHeader = document.querySelector('#notes-detail-panel .card-header');
-
-        }            const detailContent = document.getElementById('notes-detail-content');
-
-            const detailPlaceholder = document.getElementById('notes-detail-placeholder');
+        function openDetailPanel() {
+            listWrapper.classList.add('shrunk');
+            detailWrapper.classList.add('visible');
+            container.classList.remove('notes-grid-view');
+            container.classList.add('notes-list-view');
+        }
 
         function showNoteDetail(note) {
-
-            activeNoteId = note.id;            // Highlight active card
-
-            const detailHeader = document.querySelector('#notes-detail-panel .card-header');            document.querySelectorAll('#notes-container .card').forEach(c => c.classList.remove('note-card-active'));
-
-            const detailContent = document.getElementById('notes-detail-content');            document.querySelector(`.card[data-note-id="${note.id}"]`)?.classList.add('note-card-active');
-
+            activeNoteId = note.id;
+            const detailHeader = document.querySelector('#notes-detail-panel .card-header');
+            const detailContent = document.getElementById('notes-detail-content');
             const detailPlaceholder = document.getElementById('notes-detail-placeholder');
 
+            document.querySelectorAll('#notes-container .card').forEach(c => c.classList.remove('note-card-active'));
+            document.querySelector(`.card[data-note-id="${note.id}"]`)?.classList.add('note-card-active');
+
             detailHeader.innerHTML = `
-
-            document.querySelectorAll('#notes-container .card').forEach(c => c.classList.remove('note-card-active'));                <div class="d-flex justify-content-between align-items-center w-100">
-
-            document.querySelector(`.card[data-note-id="${note.id}"]`)?.classList.add('note-card-active');                    <small class="text-muted"><i class="bi bi-clock-history me-1"></i>${new Date(note.modified_at).toLocaleString()}</small>
-
-                    <div class="d-flex align-items-center" style="gap: 0.5rem;">
-
-            detailHeader.innerHTML = `                        <button class="btn btn-sm btn-primary" onclick="prepareAddNoteModal()"><i class="bi bi-plus-lg"></i></button>
-
-                <div class="d-flex justify-content-between align-items-center w-100">                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNote('${note.id}', event)"><i class="bi bi-trash-fill"></i></button>
-
-                    <div>                        <button class="btn-close btn-close-white" onclick="closeDetailPanel()" style="font-size: 0.8rem;"></button>
-
-                         <button class="btn btn-sm btn-primary" onclick="prepareAddNoteModal()"><i class="bi bi-plus-lg"></i></button>                    </div>
-
-                    </div>                </div>`;
-
-                    <small class="text-muted">Last modified: ${new Date(note.modified_at).toLocaleTimeString()}</small>            
-
-                    <div>            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false">${note.title_html}<br>${note.content_html}</div>`;
-
-                        <button class="btn-close btn-close-white" onclick="closeDetailPanel()" style="font-size: 0.8rem;"></button>            
-
-                    </div>            detailPlaceholder.classList.add('d-none');
-
-                </div>`;            detailContent.classList.remove('d-none');
-
-                    }
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div><button class="btn btn-sm btn-primary" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i></button></div>
+                    <small class="text-muted">Chỉnh sửa lần cuối: ${new Date(note.modified_at).toLocaleTimeString()}</small>
+                    <div><button class="btn-close btn-close-white" onclick="window.closeDetailPanel()" style="font-size: 0.8rem;"></button></div>
+                </div>`;
 
             detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
 
-                    window.closeDetailPanel = function () {
+            detailPlaceholder.classList.add('d-none');
+            detailContent.classList.remove('d-none');
+        }
 
-            detailPlaceholder.classList.add('d-none');            document.getElementById('notes-list-wrapper').classList.remove('shrunk');
-
-            detailContent.classList.remove('d-none');            document.getElementById('notes-detail-wrapper').classList.remove('visible');
-
-        }            container.classList.remove('notes-list-view');
-
-                    container.classList.add('notes-grid-view');
-
-        window.prepareAddNoteModal = () => {            document.querySelector('.note-card-active')?.classList.remove('note-card-active');
-
-            form.reset();            activeNoteId = null;
-
-            document.getElementById('notes-modalTitle').textContent = 'Thêm Ghi Chú Mới';            // Adjust column classes back to grid view
-
-            document.getElementById('notes-editId').value = '';            container.querySelectorAll('.note-card-wrapper').forEach(col => {
-
-            document.getElementById('notes-title-input').innerHTML = '';                col.className = 'note-card-wrapper col-lg-4 col-md-6 mb-3';
-
-            document.getElementById('notes-content-editor').innerHTML = '';            });
-
-            notesModal.show();        };
-
+        window.prepareAddNoteModal = () => {
+            form.reset();
+            document.getElementById('notes-modalTitle').textContent = 'Thêm Ghi Chú Mới';
+            document.getElementById('notes-editId').value = '';
+            document.getElementById('notes-title-input').innerHTML = '';
+            document.getElementById('notes-content-editor').innerHTML = '';
+            notesModal.show();
         };
 
-        window.deleteNote = async function(id, event) {
+        window.deleteNoteWrapper = async (id, event) => {
+            event.stopPropagation();
+            if (!confirm('Bạn có chắc muốn xóa ghi chú này?')) return;
+            try {
+                const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${id}`, { method: 'POST' });
+                if (!response.ok) throw new Error('Lỗi khi xóa trên server');
+                if (id === activeNoteId) window.closeDetailPanel();
+                await fetchAndRenderNotes();
+            } catch (error) {
+                console.error("Lỗi khi xóa ghi chú:", error);
+            }
+        };
 
-        window.deleteNoteWrapper = async (id, event) => {            event.stopPropagation();
-
-            event.stopPropagation();            if (!confirm('Bạn có chắc muốn xóa ghi chú này?')) return;
-
-            if (!confirm('Bạn có chắc muốn xóa ghi chú này?')) return;            try {
-
-            try {                await fetch(`/notes/api/delete/${id}`, { method: 'POST' });
-
-                const response = await fetch(`/notes/api/delete/${id}`, { method: 'POST' });                if (id === activeNoteId) {
-
-                if (!response.ok) throw new Error('Deletion failed');                    closeDetailPanel();
-
-                if (id === activeNoteId) closeDetailPanel();                }
-
-                fetchAndRenderNotes();                fetchAndRenderNotes();
-
-            } catch (error) {            } catch (error) {
-
-                console.error("Error deleting note:", error);                console.error("Error deleting note:", error);
-
-            }            }
-
-        };        };
-
-
-
-        window.closeDetailPanel = () => {        // --- Initial Load ---
-
-            document.getElementById('notes-list-wrapper').classList.remove('shrunk');        fetchAndRenderNotes();
-
-            document.getElementById('notes-detail-wrapper').classList.remove('visible');    });
-
-            container.classList.remove('notes-list-view');</script>
-
-            container.classList.add('notes-grid-view');{% endblock %}
-
+        window.closeDetailPanel = () => {
+            listWrapper.classList.remove('shrunk');
+            detailWrapper.classList.remove('visible');
+            container.classList.remove('notes-list-view');
+            container.classList.add('notes-grid-view');
             document.querySelector('.note-card-active')?.classList.remove('note-card-active');
             activeNoteId = null;
-            container.querySelectorAll('.note-card-wrapper').forEach(col => col.className = 'note-card-wrapper col-lg-4 col-md-6 mb-2');
         };
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('notes-editId').value;
-            const url = id ? `/notes/api/update/${id}` : "{{ url_for('notes_feature.api_add_note') }}";
+            const url = id
+                ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}`
+                : "{{ url_for('notes_feature.api_add_note') }}";
+
             const payload = {
                 title_html: document.getElementById('notes-title-input').innerHTML,
                 content_html: document.getElementById('notes-content-editor').innerHTML,
             };
+
+            if (!payload.title_html && !payload.content_html) {
+                alert('Ghi chú không được để trống.');
+                return;
+            }
+
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!response.ok) throw new Error('Save failed');
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
                 notesModal.hide();
-                fetchAndRenderNotes();
+                await fetchAndRenderNotes();
             } catch (error) {
-                console.error('Failed to save note:', error);
+                console.error('Lỗi khi lưu ghi chú:', error);
             }
         });
 
