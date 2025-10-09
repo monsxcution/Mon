@@ -15,41 +15,6 @@ MonS là một ứng dụng web được xây dựng bằng Python (Flask) và B
 ## 📁 Cấu Trúc Thư Mục
 Dự án được cấu trúc theo mô hình package của Flask để đảm bảo tính tổ chức:
 ```
-/Mon/
-|-- app/                  # Package chính của ứng dụng
-|   |-- static/           # Chứa file CSS, JS, hình ảnh
-|   |-- templates/        # Chứa các file HTML
-|   |-- __init__.py       # Khởi tạo package và ứng dụng Flask
-|   `-- routes.py         # Định nghĩa các URL của ứng dụng
-|
-|-- run.py                # File để khởi chạy server
-|-- requirements.txt      # Danh sách các thư viện cần thiết
-`-- README.md             # File hướng dẫn này
-```
-## 🚀 Hướng Dẫn Cài Đặt và Chạy
-### 1. Yêu Cầu
-- Python 3.8 trở lên
-- `pip` (trình quản lý gói của Python)
-### 2. Cài Đặt Các Thư Viện
-Mở terminal (hoặc Command Prompt) trong thư mục gốc `stool_project` và chạy lệnh sau:
-```bash
-pip install -r requirements.txt
-```
-### 3. Chạy Ứng Dụng
-Sau khi cài đặt thành công, chạy lệnh:
-```bash
-python run.py
-```
-### 4. Truy Cập Ứng Dụng
-Mở trình duyệt web và truy cập vào địa chỉ:
-[http://127.0.0.1:5001](http://127.0.0.1:5001)
----
-Chúc bạn phát triển dự án thành công!
-
-# Mục Tiêu Phát Triển App:
-Đa chức năng bao gồm: Telegram Bot, Ghi chú , Quản Lý Tài Khoản MXH , Chỉnh Sửa Hình Ảnh......
-
-Cấu trúc thư mục:
 /Mon
 |
 |-- app/
@@ -76,3 +41,28 @@ Cấu trúc thư mục:
 |-- run.py                      # File để chạy toàn bộ ứng dụng
 |-- requirements.txt            # Các thư viện Python cần thiết
 `-- README.md                   # File hướng dẫn mới
+```
+## 🚀 Hướng Dẫn Cài Đặt và Chạy
+### 1. Yêu Cầu
+- Python 3.8 trở lên
+- `pip` (trình quản lý gói của Python)
+### 2. Cài Đặt Các Thư Viện
+Mở terminal (hoặc Command Prompt) trong thư mục gốc `stool_project` và chạy lệnh sau:
+```bash
+pip install -r requirements.txt
+```
+### 3. Chạy Ứng Dụng
+Sau khi cài đặt thành công, chạy lệnh:
+```bash
+python run.py
+```
+### 4. Truy Cập Ứng Dụng
+Mở trình duyệt web và truy cập vào địa chỉ:
+[http://127.0.0.1:5001](http://127.0.0.1:5001)
+---
+Chúc bạn phát triển dự án thành công!
+
+# Mục Tiêu Phát Triển App:
+Đa chức năng bao gồm: Telegram Bot, Ghi chú , Quản Lý Tài Khoản MXH , Chỉnh Sửa Hình Ảnh......
+
+Cấu trúc thư mục:

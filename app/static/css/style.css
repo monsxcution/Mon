@@ -1,0 +1,217 @@
+/* Custom styles for Kcal Calculator Header */
+#healthy-v-pills-kcal .card-header {
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+}
+#kcal-totals-header {
+    font-size: 1.25rem; /* Match h5 font-size */
+}
+
+/* Decrease height of food category headers */
+#kcal-container .card-header {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+:root {
+      --dark-bg: #1a1d21;
+      --card-bg: #2c303a;
+      --border-color: #444a59;
+      --text-color: #e6e6e6;
+      --primary-color: #0d6efd;
+      --hover-color: #3d4453;
+}
+
+body {
+      background-color: var(--dark-bg);
+      color: var(--text-color);
+      padding: 1rem;
+      font-family: 'Roboto', sans-serif;
+}
+
+.main-nav .nav-link {
+      font-weight: 500;
+      color: var(--text-color);
+}
+
+.main-nav .nav-link.active {
+      background-color: var(--primary-color) !important;
+      color: #fff !important;
+}
+
+.tab-content {
+      border: 1px solid var(--border-color);
+      border-top: none;
+      padding: 1rem;
+      border-radius: 0 0 0.375rem 0.375rem;
+      background-color: var(--card-bg);
+}
+
+.tool-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 1.5rem;
+      transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+      cursor: pointer;
+      height: 100%;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: visible;
+}
+
+.tool-card:hover {
+      transform: translateY(-12px) scale(1.03);
+      box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+      border-color: #00e0ff;
+}
+
+.tool-card::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 0;
+}
+
+.tool-card:hover::before {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.1);
+}
+
+.tool-card .card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 1rem auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00e0ff 0%, #3a7bd5 100%);
+      box-shadow: 0 4px 16px rgba(0, 224, 255, 0.18);
+      font-size: 2.5rem;
+      color: #fff;
+      position: relative;
+      z-index: 1;
+}
+
+/* Blinking Animation for Filtered Cards */
+@keyframes blink-border {
+    0%, 100% { border-color: #ffc107; box-shadow: 0 0 10px #ffc107; }
+    50% { border-color: #00e0ff; box-shadow: 0 0 20px #00e0ff; }
+}
+.card-blinking {
+    animation: blink-border 1.5s infinite !important;
+}
+
+.table {
+      --bs-table-bg: #2d2d2d;
+      --bs-table-border-color: #404040;
+      vertical-align: middle;
+}
+
+.table .badge {
+      background-color: #6c757d;
+      color: white;
+}
+
+.table thead th {
+      color: #ffffff !important;
+      background-color: #374151;
+      font-weight: bold;
+}
+
+.table tbody td {
+      color: #f8f9fa !important;
+}
+
+#password-tool-pane .table th:nth-child(3),
+#password-tool-pane .table td:nth-child(3) {
+      width: 260px;
+      max-width: 260px;
+}
+
+.password-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+}
+
+.password-text {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-text-security: disc;
+      transition: -webkit-text-security 0.2s;
+}
+
+.form-control,
+.form-select {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: var(--text-color);
+}
+
+.modal-content {
+      background-color: var(--card-bg);
+      border-color: var(--border-color);
+}
+
+#telegram-tool-pane .sticky-top {
+      top: 0;
+      z-index: 1020;
+      background-color: var(--card-bg) !important;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+}
+
+#telegram-tool-pane .main-tool-container .tab-content,
+#telegram-tool-pane .main-tool-container .nav-pills {
+      background: none;
+      border: none;
+      padding: 0;
+}
+
+#image-editor-tool-pane .nav-pills .nav-link,
+#telegram-tool-pane .nav-pills .nav-link {
+      color: var(--text-color);
+}
+
+#image-editor-tool-pane .nav-pills .nav-link.active,
+#telegram-tool-pane .nav-pills .nav-link.active {
+      background-color: var(--primary-color);
+      color: #fff;
+}
+
+#image-editor-tool-pane #ie-options-panel {
+      background-color: var(--card-bg);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      height: 100%;
+}
+
+
+#tg-session-tables-container .table-responsive {
+      max-height: 75vh;
+      overflow-y: auto;
+}
+
+.stat-card {
+      border: 1px solid #4b5563;
+      padding: 0.75rem 1.25rem;
+      min-width: 320px;
+}
+
+/* Other styles from index.html should be pasted here */
