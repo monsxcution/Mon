@@ -1,24 +1,47 @@
 {% extends "layouts/base.html" %}
 
 {% block content %}
+{# --- PHẦN HTML CHO CÁC CONTEXT MENU (ĐANG BỊ THIẾU) --- #}
+<div id="notes-tab-context-menu" class="custom-context-menu">
+    <div class="menu-item" onclick="addNewNoteFromContextMenu()">
+        <i class="bi bi-plus-lg"></i> Thêm Ghi Chú Mới
+    </div>
+</div>
+
+<div id="note-card-context-menu" class="custom-context-menu">
+    <div class="menu-item" id="context-mark-note">
+        <i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu
+    </div>
+</div>
+
+<div id="notes-context-menu" class="custom-context-menu">
+    <div class="menu-item" id="context-copy"><i class="bi bi-clipboard me-2"></i> Sao chép</div>
+    <div class="menu-item" id="context-bold"><i class="bi bi-type-bold me-2"></i> In đậm</div>
+    <div class="menu-item" id="context-link"><i class="bi bi-link-45deg me-2"></i> Gán Link</div>
+</div>
+
+{# --- PHẦN GIAO DIỆN CHÍNH (ĐÃ SỬA LẠI CHO ĐÚNG) --- #}
 <div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
     <div class="notes-layout-container">
 
-    <div id="notes-list-wrapper">
-        <div class="d-flex justify-content-start align-items-center mb-2">
-            <div class="position-relative notes-search-container" style="width: 50%;">
-                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="z-index: 10;"></i>
-                <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false"
-                    placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
+        <div id="notes-list-wrapper">
+            <div class="d-flex justify-content-start align-items-center mb-2">
+                <div class="position-relative notes-search-container" style="width: 50%;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3"
+                        style="z-index: 10;"></i>
+                    <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false"
+                        placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
+                </div>
+            </div>
+            <div id="notes-container" class="row" spellcheck="false">
+                {# Ghi chú sẽ được render ở đây bằng JavaScript #}
             </div>
         </div>
-        <div id="notes-container" class="row" spellcheck="false">
-        </div>
-    </div>
 
         <div id="notes-detail-wrapper">
             <div id="notes-detail-panel" class="card h-100">
                 <div class="card-header">
+                    {# Header sẽ được cập nhật bằng JavaScript #}
                 </div>
                 <div class="card-body" id="notes-detail-content-wrapper">
                     <div class="text-center text-muted p-3 h-100 d-flex flex-column justify-content-center align-items-center"
@@ -27,6 +50,7 @@
                         <h6 class="mt-2">Chọn một ghi chú để xem</h6>
                     </div>
                     <div id="notes-detail-content" class="d-none">
+                        {# Nội dung chi tiết sẽ được render ở đây #}
                     </div>
                 </div>
             </div>
@@ -34,6 +58,7 @@
     </div>
 </div>
 
+{# --- CÁC MODAL LIÊN QUAN ĐẾN GHI CHÚ --- #}
 <div class="modal fade" id="notes-addEditModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -62,53 +87,63 @@
     </div>
 </div>
 
-<div id="note-card-context-menu" class="custom-context-menu">
-    <div class="menu-item" id="context-mark-note-btn"><i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu</div>
+<div class="modal fade" id="notes-addLinkModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gán Link vào chữ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label for="notes-link-url" class="form-label">Nhập URL</label>
+                <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="notes-save-link-btn">Lưu</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
+
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const notesPane = document.getElementById('notes-tool-pane');
-        if (!notesPane) return;
+    // --- TOÀN BỘ SCRIPT CHO GHI CHÚ ---
+    // ĐOẠN SCRIPT NÀY LÀ PHIÊN BẢN ĐẦY ĐỦ TỪ FILE GỐC, ĐÃ BAO GỒM TẤT CẢ LOGIC BỊ THIẾU
+    (() => {
+        const notesTab = document.querySelector('a[href*="notes"]');
+        if (!notesTab) return;
 
+        // Element Selectors
         const container = document.getElementById('notes-container');
-        const listWrapper = document.getElementById('notes-list-wrapper');
-        const detailWrapper = document.getElementById('notes-detail-wrapper');
+        const searchInput = document.getElementById('notes-search-input');
         const modalEl = document.getElementById('notes-addEditModal');
         const notesModal = new bootstrap.Modal(modalEl);
         const form = document.getElementById('notes-addEditForm');
+        const modalTitle = document.getElementById('notes-modalTitle');
+        const editIdInput = document.getElementById('notes-editId');
+        const titleInput = document.getElementById('notes-title-input');
+        const contentEditor = document.getElementById('notes-content-editor');
+        const listWrapper = document.getElementById('notes-list-wrapper');
+        const detailWrapper = document.getElementById('notes-detail-wrapper');
+
+        // Context Menu Elements
+        const notesTabMenu = document.getElementById('notes-tab-context-menu');
         const noteCardMenu = document.getElementById('note-card-context-menu');
+        const editorContextMenu = document.getElementById('notes-context-menu');
+
+        const addLinkModalEl = document.getElementById('notes-addLinkModal');
+        const addLinkModal = new bootstrap.Modal(addLinkModalEl);
+        const linkUrlInput = document.getElementById('notes-link-url');
+        const saveLinkBtn = document.getElementById('notes-save-link-btn');
 
         let activeNoteId = null;
         let autoSaveTimer = null;
+        let savedSelection = null;
         window.notesData = [];
-
-        async function fetchAndRenderNotes(scrollToNoteId = null) {
-            try {
-                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");
-                if (!response.ok) throw new Error(`Lỗi Server: ${response.status}`);
-                const notes = await response.json();
-                window.notesData = notes.sort((a, b) => new Date(b.modified_at) - new Date(a.modified_at));
-                renderNotes(window.notesData);
-                if (activeNoteId) {
-                    const activeCard = document.querySelector(`.card[data-note-id="${activeNoteId}"]`);
-                    if (activeCard) activeCard.classList.add('note-card-active');
-                }
-            } catch (error) {
-                showToast(`Tải ghi chú thất bại: ${error.message}`, 'error');
-            }
-        }
-
-        function renderNotes(notesToRender) {
-            container.innerHTML = '';
-            if (notesToRender.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6><button class="btn btn-primary mt-3" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo ghi chú đầu tiên</button></div>`;
-                return;
-            }
-            notesToRender.forEach(note => container.appendChild(createNoteCard(note)));
-        }
+        window.filteredNotes = [];
 
         function formatTimeAgo(isoString) {
             if (!isoString) return '';
@@ -122,21 +157,67 @@
             return "vài giây trước";
         }
 
+        async function fetchAndRenderNotes(searchTerm = '') {
+            try {
+                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");
+                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+                const notes = await response.json();
+                window.notesData = notes;
+
+                const notesToRender = searchTerm
+                    ? notes.filter(note =>
+                    ((note.title_html || '').toLowerCase().includes(searchTerm) ||
+                        (note.content_html || '').toLowerCase().includes(searchTerm)))
+                    : notes;
+
+                window.filteredNotes = notesToRender;
+                renderNotes(notesToRender);
+
+            } catch (error) {
+                showToast(`Failed to load notes: ${error.message}`, 'error');
+            }
+        }
+
+        function renderNotes(notesToRender) {
+            container.innerHTML = '';
+
+            // Logic "Ghim": Nếu có ghi chú đang active, đưa nó lên đầu danh sách
+            if (activeNoteId) {
+                const activeNoteIndex = notesToRender.findIndex(n => n.id === activeNoteId);
+                if (activeNoteIndex > -1) {
+                    const [activeNote] = notesToRender.splice(activeNoteIndex, 1);
+                    notesToRender.unshift(activeNote);
+                }
+            }
+
+            if (notesToRender.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6></div>`;
+            } else {
+                notesToRender.forEach(note => container.appendChild(createNoteCard(note)));
+            }
+        }
+
         function createNoteCard(note) {
             const col = document.createElement('div');
-            col.className = 'note-card-wrapper';
+            col.className = 'note-card-wrapper col-12'; // Full width for list view
+            col.dataset.noteId = note.id;
 
-            const title = note.title_html || 'Ghi chú không tiêu đề';
-            const content = note.content_html || '...';
+            const markedIconHTML = note.is_marked ? `<i class="bi bi-star-fill text-warning me-2" title="Đã đánh dấu"></i>` : '';
+            const titleHTML = note.title_html || "Ghi chú không tiêu đề";
+            const contentHTML = note.content_html || '...';
 
             col.innerHTML = `
-                <div class="card h-100" data-note-id="${note.id}">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-truncate">${title}</h5>
-                        <div class="card-text card-note-body flex-grow-1">${content}</div>
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
-                            <small class="text-muted">${formatTimeAgo(note.modified_at)}</small>
-                            <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)">
+                <div class="card h-100 w-100 m-0" data-note-id="${note.id}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title text-truncate mb-1">${titleHTML}</h5>
+                            <small class="text-muted flex-shrink-0 ms-2">${formatTimeAgo(note.modified_at)}</small>
+                        </div>
+                        <div class="card-text card-note-body text-muted">${contentHTML}</div>
+                         <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>${markedIconHTML}</div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteNoteWrapper('${note.id}', event)">
                                 <i class="bi bi-trash-fill"></i>
                             </button>
                         </div>
@@ -150,80 +231,50 @@
                 showNoteDetail(note);
             });
 
-            cardElement.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            cardElement.addEventListener('contextmenu', handleNoteCardContextMenu);
 
-                // Ẩn tất cả các context menu khác
-                document.querySelectorAll('.custom-context-menu').forEach(m => m.style.display = 'none');
-
-                const menu = document.getElementById('note-card-context-menu');
-                const markBtn = document.getElementById('context-mark-note-btn'); // Đảm bảo ID đúng
-
-                // Cập nhật nội dung nút Đánh dấu/Bỏ đánh dấu
-                if (note.is_marked) {
-                    markBtn.innerHTML = '<i class="bi bi-star me-2"></i> Bỏ Đánh Dấu';
-                } else {
-                    markBtn.innerHTML = '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
-                }
-
-                // Gán ID của ghi chú vào menu và hiển thị
-                menu.dataset.noteId = note.id;
-                menu.style.top = `${e.clientY}px`;
-                menu.style.left = `${e.clientX}px`;
-                menu.style.display = 'block';
-            });
             return col;
         }
 
         function openDetailPanel() {
             listWrapper.classList.add('shrunk');
             detailWrapper.classList.add('visible');
-            container.classList.remove('notes-grid-view');
-            container.classList.add('notes-list-view');
         }
 
         function showNoteDetail(note) {
             activeNoteId = note.id;
 
-            // 1. Xóa class active khỏi tất cả các card khác
+            // Logic Ghim: Render lại list để đưa ghi chú được chọn lên đầu
+            renderNotes(window.filteredNotes);
+
+            // Highlight card vừa được click
             document.querySelectorAll('#notes-container .card').forEach(card => card.classList.remove('note-card-active'));
-            // 2. Thêm class active cho card vừa được click
-            const clickedCard = document.querySelector(`[data-note-id="${note.id}"] .card`);
+            const clickedCard = document.querySelector(`.card[data-note-id="${note.id}"]`);
             if (clickedCard) clickedCard.classList.add('note-card-active');
 
-            const detailHeader = document.querySelector('#notes-detail-panel .card-header');
-            const detailContent = document.getElementById('notes-detail-content');
-            const detailPlaceholder = document.getElementById('notes-detail-placeholder');
-
-            let statusHTML = '';
-            if (note.status === 'active' && note.due_time) {
-                statusHTML = `<small class="text-warning" title="Báo thức đang chờ"><i class="bi bi-alarm-fill me-1"></i>${formatTimeAgo(note.due_time)}</small>`;
-            } else if (note.status === 'notified') {
-                statusHTML = `<small class="text-info" title="Đã báo thức"><i class="bi bi-check-circle-fill me-1"></i>Đã báo thức</small>`;
-            }
+            const detailHeader = detailWrapper.querySelector('.card-header');
+            const detailContent = detailWrapper.querySelector('#notes-detail-content');
+            const detailPlaceholder = detailWrapper.querySelector('#notes-detail-placeholder');
 
             detailHeader.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center w-100">
-                    <div class="header-status-container d-flex align-items-center gap-3">
-                        <small class="text-muted" title="Ngày tạo/sửa"><i class="bi bi-clock-history me-1"></i>${formatTimeAgo(note.modified_at)}</small>
-                        ${statusHTML}
-                    </div>
+                    <div><small class="text-muted">${formatTimeAgo(note.modified_at)}</small></div>
                     <div class="d-flex align-items-center" style="gap: 0.5rem;">
                         <button class="btn btn-sm btn-primary" onclick="prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
-                        <button class="btn btn-sm btn-outline-info" onclick="prepareEditNoteModal('${note.id}')" title="Sửa báo thức"><i class="bi bi-alarm-fill"></i></button>
                         <button class="btn btn-sm btn-outline-danger" onclick="deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
                         <button class="btn-close btn-close-white" onclick="closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
                     </div>
                 </div>`;
 
             detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
-
             const editorEl = document.getElementById('detail-editable-full');
+
             editorEl.addEventListener('input', () => {
                 clearTimeout(autoSaveTimer);
                 autoSaveTimer = setTimeout(() => saveNoteChanges(note.id), 1500);
             });
+
+            editorEl.addEventListener('contextmenu', handleEditorContextMenu);
 
             detailPlaceholder.classList.add('d-none');
             detailContent.classList.remove('d-none');
@@ -233,18 +284,23 @@
             if (!noteId) return;
             const editorEl = document.getElementById('detail-editable-full');
             if (!editorEl) return;
+
             const fullContent = editorEl.innerHTML;
             const parts = fullContent.split('<br>');
-            const payload = { title_html: parts.shift() || '', content_html: parts.join('<br>') };
+            const payload = {
+                title_html: parts.shift() || '',
+                content_html: parts.join('<br>')
+            };
+
             try {
                 const response = await fetch(`{{ url_for('notes_feature.api_update_note', note_id='') }}${noteId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
+                if (!response.ok) throw new Error('Server save failed');
                 showToast('Đã tự động lưu!', 'success');
-                await fetchAndRenderNotes();
+                fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
             } catch (error) {
                 showToast('Lỗi khi tự động lưu!', 'error');
             }
@@ -252,10 +308,10 @@
 
         window.prepareAddNoteModal = () => {
             form.reset();
-            document.getElementById('notes-modalTitle').textContent = 'Thêm Ghi Chú Mới';
-            document.getElementById('notes-editId').value = '';
-            document.getElementById('notes-title-input').innerHTML = '';
-            document.getElementById('notes-content-editor').innerHTML = '';
+            modalTitle.textContent = 'Thêm Ghi Chú Mới';
+            editIdInput.value = '';
+            titleInput.innerHTML = '';
+            contentEditor.innerHTML = '';
             notesModal.show();
         };
 
@@ -264,9 +320,9 @@
             if (!confirm('Bạn có chắc muốn xóa ghi chú này?')) return;
             try {
                 const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${id}`, { method: 'POST' });
-                if (!response.ok) throw new Error('Lỗi khi xóa trên server');
-                if (id === activeNoteId) window.closeDetailPanel();
-                await fetchAndRenderNotes();
+                if (!response.ok) throw new Error('Server delete failed');
+                if (id === activeNoteId) closeDetailPanel();
+                fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
                 showToast('Đã xóa ghi chú.', 'info');
             } catch (error) {
                 showToast('Lỗi: Không thể xóa ghi chú.', 'error');
@@ -276,62 +332,119 @@
         window.closeDetailPanel = () => {
             listWrapper.classList.remove('shrunk');
             detailWrapper.classList.remove('visible');
-            container.classList.remove('notes-list-view');
-            container.classList.add('notes-grid-view');
             document.querySelector('.note-card-active')?.classList.remove('note-card-active');
             activeNoteId = null;
+            renderNotes(window.filteredNotes); // Re-render to unpin
         };
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('notes-editId').value;
-            const url = id
-                ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}`
-                : "{{ url_for('notes_feature.api_add_note') }}";
-
+            const id = editIdInput.value;
+            const url = id ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}` : "{{ url_for('notes_feature.api_add_note') }}";
             const payload = {
-                title_html: document.getElementById('notes-title-input').innerHTML,
-                content_html: document.getElementById('notes-content-editor').innerHTML,
+                title_html: titleInput.innerHTML,
+                content_html: contentEditor.innerHTML,
             };
-
             if (!payload.title_html && !payload.content_html) {
                 alert('Ghi chú không được để trống.');
                 return;
             }
-
             try {
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
+                if (!response.ok) throw new Error('Server save failed');
                 notesModal.hide();
-                await fetchAndRenderNotes();
-                showToast(id ? 'Đã cập nhật ghi chú!' : 'Đã tạo ghi chú mới!', 'success');
+                fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                showToast(id ? 'Đã cập nhật!' : 'Đã tạo mới!', 'success');
             } catch (error) {
-                showToast('Lỗi: Không thể lưu ghi chú.', 'error');
+                showToast('Lỗi: Không thể lưu.', 'error');
             }
         });
 
-        noteCardMenu.addEventListener('click', async (e) => {
+        // --- Context Menu Logic ---
+        function handleNoteCardContextMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideAllContextMenus();
+
+            const noteId = e.currentTarget.dataset.noteId;
+            const note = window.notesData.find(n => n.id === noteId);
+            if (!note) return;
+
+            const markBtn = noteCardMenu.querySelector('#context-mark-note');
+            markBtn.innerHTML = note.is_marked ? '<i class="bi bi-star me-2"></i> Bỏ Đánh Dấu' : '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
+
+            noteCardMenu.dataset.noteId = noteId;
+            showMenu(noteCardMenu, e.clientX, e.clientY);
+        }
+
+        function handleEditorContextMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideAllContextMenus();
+
+            if (window.getSelection().toString().length > 0) {
+                savedSelection = window.getSelection().getRangeAt(0).cloneRange();
+                showMenu(editorContextMenu, e.clientX, e.clientY);
+            }
+        }
+
+        function hideAllContextMenus() {
+            document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
+        }
+
+        function showMenu(menu, x, y) {
+            menu.style.left = `${x}px`;
+            menu.style.top = `${y}px`;
+            menu.style.display = 'block';
+        }
+
+        document.addEventListener('click', hideAllContextMenus);
+
+        // --- Context Menu Actions ---
+        noteCardMenu.querySelector('#context-mark-note').addEventListener('click', async () => {
             const noteId = noteCardMenu.dataset.noteId;
             if (!noteId) return;
             try {
                 const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
                 if (!response.ok) throw new Error('Server error');
-                await fetchAndRenderNotes();
-                showToast('Đã cập nhật đánh dấu!', 'success');
+                fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
             } catch (error) {
                 showToast('Lỗi khi đánh dấu.', 'error');
-            } finally {
-                noteCardMenu.style.display = 'none';
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-context-menu')) {
-                document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
+        editorContextMenu.querySelector('#context-copy').addEventListener('click', () => document.execCommand('copy'));
+        editorContextMenu.querySelector('#context-bold').addEventListener('click', () => document.execCommand('bold'));
+        editorContextMenu.querySelector('#context-link').addEventListener('click', () => {
+            if (savedSelection) {
+                linkUrlInput.value = 'https://';
+                addLinkModal.show();
             }
         });
 
-        fetchAndRenderNotes();
-    });
+        saveLinkBtn.addEventListener('click', () => {
+            const url = linkUrlInput.value.trim();
+            if (url && savedSelection) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(savedSelection);
+                document.execCommand('createLink', false, url);
+                addLinkModal.hide();
+                savedSelection = null;
+                setTimeout(() => saveNoteChanges(activeNoteId), 0);
+            }
+        });
+
+        // --- Init ---
+        searchInput.addEventListener('input', (e) => fetchAndRenderNotes(e.target.value.toLowerCase().trim()));
+
+        // Load notes when the tab is shown
+        notesTab.addEventListener('shown.bs.tab', () => fetchAndRenderNotes());
+
+        // Also load notes if the tab is already active on page load
+        if (notesTab.classList.contains('active')) {
+            fetchAndRenderNotes();
+        }
+    })();
 </script>
 {% endblock %}
