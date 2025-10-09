@@ -276,6 +276,60 @@ body {
 /* Hide all context menus by default */
 .custom-context-menu {
     display: none;
+    position: fixed;
+    z-index: 10000;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 220px;
+    font-size: 0.9rem;
+}
+
+.custom-context-menu .menu-item {
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.custom-context-menu .menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+.custom-context-menu .color-palette {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    background: #2c3340;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 150px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.custom-context-menu .menu-item:hover>.color-palette {
+    display: grid;
+}
+
+.custom-context-menu .color-palette span {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #555;
+    transition: transform 0.2s;
+}
+
+.custom-context-menu .color-palette span:hover {
+    transform: scale(1.15);
 }
 
 /* Notes Card View Styles */
