@@ -4,14 +4,17 @@
 <div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
     <div class="notes-layout-container">
 
-        <div id="notes-list-wrapper">
-            <div class="d-flex justify-content-center align-items-center mb-2">
-                <button class="btn btn-primary" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo
-                    Ghi Chú Mới</button>
-            </div>
-            <div id="notes-container" class="row g-0 notes-grid-view" spellcheck="false">
+    <div id="notes-list-wrapper">
+        <div class="d-flex justify-content-start align-items-center mb-2">
+            <div class="position-relative notes-search-container" style="width: 50%;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="z-index: 10;"></i>
+                <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false"
+                    placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
             </div>
         </div>
+        <div id="notes-container" class="row" spellcheck="false">
+        </div>
+    </div>
 
         <div id="notes-detail-wrapper">
             <div id="notes-detail-panel" class="card h-100">
@@ -150,15 +153,25 @@
             cardElement.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
-                const markBtn = noteCardMenu.querySelector('#context-mark-note-btn');
-                markBtn.innerHTML = note.is_marked
-                    ? '<i class="bi bi-star me-2"></i> Bỏ Đánh Dấu'
-                    : '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
-                noteCardMenu.dataset.noteId = note.id;
-                noteCardMenu.style.top = `${e.clientY}px`;
-                noteCardMenu.style.left = `${e.clientX}px`;
-                noteCardMenu.style.display = 'block';
+
+                // Ẩn tất cả các context menu khác
+                document.querySelectorAll('.custom-context-menu').forEach(m => m.style.display = 'none');
+
+                const menu = document.getElementById('note-card-context-menu');
+                const markBtn = document.getElementById('context-mark-note-btn'); // Đảm bảo ID đúng
+
+                // Cập nhật nội dung nút Đánh dấu/Bỏ đánh dấu
+                if (note.is_marked) {
+                    markBtn.innerHTML = '<i class="bi bi-star me-2"></i> Bỏ Đánh Dấu';
+                } else {
+                    markBtn.innerHTML = '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
+                }
+
+                // Gán ID của ghi chú vào menu và hiển thị
+                menu.dataset.noteId = note.id;
+                menu.style.top = `${e.clientY}px`;
+                menu.style.left = `${e.clientX}px`;
+                menu.style.display = 'block';
             });
             return col;
         }
@@ -172,25 +185,35 @@
 
         function showNoteDetail(note) {
             activeNoteId = note.id;
+
+            // 1. Xóa class active khỏi tất cả các card khác
+            document.querySelectorAll('#notes-container .card').forEach(card => card.classList.remove('note-card-active'));
+            // 2. Thêm class active cho card vừa được click
+            const clickedCard = document.querySelector(`[data-note-id="${note.id}"] .card`);
+            if (clickedCard) clickedCard.classList.add('note-card-active');
+
             const detailHeader = document.querySelector('#notes-detail-panel .card-header');
             const detailContent = document.getElementById('notes-detail-content');
             const detailPlaceholder = document.getElementById('notes-detail-placeholder');
 
-            document.querySelectorAll('.card.note-card-active').forEach(c => c.classList.remove('note-card-active'));
-            document.querySelector(`.card[data-note-id="${note.id}"]`)?.classList.add('note-card-active');
+            let statusHTML = '';
+            if (note.status === 'active' && note.due_time) {
+                statusHTML = `<small class="text-warning" title="Báo thức đang chờ"><i class="bi bi-alarm-fill me-1"></i>${formatTimeAgo(note.due_time)}</small>`;
+            } else if (note.status === 'notified') {
+                statusHTML = `<small class="text-info" title="Đã báo thức"><i class="bi bi-check-circle-fill me-1"></i>Đã báo thức</small>`;
+            }
 
             detailHeader.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center w-100">
-                    <div class="d-flex align-items-center" style="gap: 0.5rem;">
-                         <button class="btn btn-sm btn-primary" onclick="window.prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
-                         <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
+                    <div class="header-status-container d-flex align-items-center gap-3">
+                        <small class="text-muted" title="Ngày tạo/sửa"><i class="bi bi-clock-history me-1"></i>${formatTimeAgo(note.modified_at)}</small>
+                        ${statusHTML}
                     </div>
-                    <small class="text-muted d-flex align-items-center gap-1" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">
-                        <i class="bi bi-clock-history"></i>
-                        <span>${formatTimeAgo(note.modified_at)}</span>
-                    </small>
-                    <div>
-                        <button class="btn-close btn-close-white" onclick="window.closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
+                    <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                        <button class="btn btn-sm btn-primary" onclick="prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
+                        <button class="btn btn-sm btn-outline-info" onclick="prepareEditNoteModal('${note.id}')" title="Sửa báo thức"><i class="bi bi-alarm-fill"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
+                        <button class="btn-close btn-close-white" onclick="closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
                     </div>
                 </div>`;
 
