@@ -61,7 +61,7 @@ def check_and_queue_reminders():
     conn.close()
 
 # --- API ROUTES (Copied from temp_Main.pyw, starting from line 1509) ---
-@notes_bp.route("/api/get")
+@notes_bp.route("/api/get_notes")
 def api_get_notes():
     check_and_queue_reminders()
     conn = get_db_connection()
