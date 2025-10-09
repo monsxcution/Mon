@@ -1,0 +1,22 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="display-5 fw-bold mb-4">Dashboard Công Cụ</h1>
+    <p class="lead">Chọn một công cụ từ thanh điều hướng để bắt đầu.</p>
+    
+    <div class="row g-4 mt-4">
+        <div class="col-lg-3 col-md-6">
+            <a href="{{ url_for('passwords') }}" class="text-decoration-none">
+                <div class="card bg-dark text-white h-100 border-secondary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-lock-fill display-4 text-info"></i>
+                        <h5 class="card-title mt-3">Quản Lý Mật Khẩu</h5>
+                        <p class="card-text text-white-50">Lưu trữ và quản lý tài khoản an toàn.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        </div>
+</div>
+{% endblock %}
