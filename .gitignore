@@ -37,4 +37,6 @@ __pycache__/
 env/
 venv/
 ENV/
-/data
+
+# Ignore repository-local data directory
+data/
