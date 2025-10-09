@@ -1,0 +1,26 @@
+# STool Dashboard Requirements
+# Core Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Telegram Integration
+telethon==1.40.0
+
+# Image Processing
+Pillow==11.3.0
+
+# System Tray
+pystray==0.19.5
+
+# Windows Shell Integration
+winshell==0.6
+
+# HTML Parsing
+beautifulsoup4==4.13.4
+
+# Database (SQLite is built-in with Python)
+# No additional database libraries needed
+
+# Optional: For development
+pytest==7.4.3
+black==23.11.0
