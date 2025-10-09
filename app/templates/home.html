@@ -1,48 +1,18 @@
 {% extends "layouts/base.html" %}
 
 {% block content %}
-<div class="tab-pane fade show active p-4" id="home-tab-pane" role="tabpanel">
+<div class="p-4">
     <div class="row g-4">
-        <div class="col-lg-3 col-md-6 d-flex">
-            <div class="card tool-card w-100" onclick="document.getElementById('notes-tool-tab').click()">
-                  <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <div class="card-icon mb-3" style="background: linear-gradient(135deg, #66BB6A 0%, #26A69A 100%); box-shadow: 0 4px 16px rgba(102, 187, 106, 0.25);">
-                              <i class="bi bi-journal-richtext"></i>
-                        </div>
-                        <h5 class="card-title">Ghi Chú & Nhắc Việc</h5>
-                        <p class="card-text text-muted">Tạo ghi chú, đặt lịch và quản lý công việc.</p>
-                  </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 d-flex">
-            <div class="card tool-card w-100" onclick="document.getElementById('password-tool-tab').click()">
-                  <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <div class="card-icon mb-3"><i class="bi bi-shield-lock-fill"></i></div>
-                        <h5 class="card-title">Quản Lý Mật Khẩu</h5>
-                        <p class="card-text text-muted">Lưu trữ và quản lý tài khoản an toàn.</p>
-                  </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 d-flex">
-            <div class="card tool-card w-100" onclick="document.getElementById('telegram-tool-tab').click()">
-                  <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <div class="card-icon mb-3"><i class="bi bi-telegram"></i></div>
-                        <h5 class="card-title">Quản Lý Telegram</h5>
-                        <p class="card-text text-muted">Tự động hóa các tác vụ cho Telegram.</p>
-                  </div>
-            </div>
-        </div>
         <div class="col-lg-3 col-md-6 d-flex">
             <div class="card tool-card w-100">
                   <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <div class="card-icon mb-3" style="background: linear-gradient(135deg, #f953c6 0%, #b91d73 100%); box-shadow: 0 4px 16px rgba(249, 83, 198, 0.25);">
-                              <i class="bi bi-image-alt"></i>
+                        <div class="card-icon mb-3" style="background: linear-gradient(135deg, #66BB6A 0%, #26A69A 100%);">
+                              <i class="bi bi-journal-richtext"></i>
                         </div>
-                        <h5 class="card-title">Chỉnh Sửa Ảnh</h5>
-                        <p class="card-text text-muted">Ghép ảnh, thêm text, và các công cụ khác.</p>
+                        <h5 class="card-title">Ghi Chú & Nhắc Việc</h5>
                   </div>
             </div>
         </div>
-    </div>
+        </div>
 </div>
 {% endblock %}

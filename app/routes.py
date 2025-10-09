@@ -19,4 +19,9 @@ def telegram():
     """Render trang quản lý Telegram."""
     # (Trong tương lai, bạn sẽ thêm logic cho Telegram ở đây)
     return render_template('telegram.html', title='Quản Lý Telegram')
+
+@app.route('/notes')
+def notes():
+    """Render trang ghi chú."""
+    return render_template('notes.html', title='Ghi Chú')
 # Bạn có thể thêm các route khác cho Ghi chú, MXH... ở đây

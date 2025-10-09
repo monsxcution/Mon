@@ -2,24 +2,27 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-0">
         <ul class="nav nav-tabs main-nav mb-0" id="main-tab" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" id="home-tab" href="{{ url_for('home') }}">
-                      <span class="nav-card-icon"><i class="bi bi-house-door-fill"></i></span> Trang Chủ
+                <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" href="{{ url_for('home') }}">
+                    <span class="nav-card-icon"><i class="bi bi-house-door-fill"></i></span> Trang Chủ
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="notes-tool-tab" href="#">
-                      <span class="nav-card-icon"><i class="bi bi-journal-richtext"></i></span> Ghi chú
+                <a class="nav-link {% if request.path == url_for('notes') %}active{% endif %}" href="{{ url_for('notes') }}">
+                    <span class="nav-card-icon"><i class="bi bi-journal-richtext"></i></span> Ghi Chú
                 </a>
             </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('passwords') %}active{% endif %}" id="password-tool-tab" href="{{ url_for('passwords') }}">
-                            <span class="nav-card-icon"><i class="bi bi-shield-lock-fill"></i></span> Quản Lý Mật Khẩu
+        </ul>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('telegram') %}active{% endif %}" id="telegram-tool-tab" href="{{ url_for('telegram') }}">
-                      <span class="nav-card-icon"><i class="bi bi-telegram"></i></span> Quản Lý Telegram
-                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Chức năng 1 (TBD)</a></li>
+                    <li><a class="dropdown-item" href="#">Chức năng 2 (TBD)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Cài đặt (TBD)</a></li>
+                </ul>
             </li>
         </ul>
     </div>
