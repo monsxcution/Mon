@@ -12,5 +12,8 @@ def create_app():
     # Đăng ký các routes từ file routes.py
     with app.app_context():
         from . import routes
+        from . import notes_routes
+        app.register_blueprint(notes_routes.notes_bp)
+        
         
     return app

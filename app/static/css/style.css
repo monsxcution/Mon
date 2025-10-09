@@ -214,4 +214,57 @@ body {
       min-width: 320px;
 }
 
+/* --- Floating Nav Card Styles --- */
+.main-nav.nav-tabs {
+    border-bottom: none;
+    padding: 5px 0;
+}
+.main-nav .nav-link {
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    margin: 0 5px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.nav-tabs .nav-link {
+    margin-bottom: 0;
+    border-bottom-color: var(--border-color);
+}
+.main-nav .nav-link:not(.active):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    border-color: #00e0ff;
+}
+.main-nav .nav-link.active {
+    transform: translateY(-2px);
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(13, 110, 253, 0.5), 0 4px 10px rgba(13, 110, 253, 0.3);
+    border-color: var(--primary-color);
+}
+.main-nav .nav-link {
+    display: flex;
+    align-items: center;
+}
+.nav-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+}
+#home-tab .nav-card-icon {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+}
+#notes-tool-tab .nav-card-icon, .nav-link[href*="notes"] .nav-card-icon {
+    background: linear-gradient(135deg, #66BB6A, #26A69A);
+}
+
 /* Other styles from index.html should be pasted here */
