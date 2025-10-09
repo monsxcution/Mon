@@ -15,7 +15,7 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
         <div id="liveToast" class="toast" role="alert">
               <div class="toast-header" id="toastHeader"><strong class="me-auto" id="toastTitle">Thông báo</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div>
               <div class="toast-body" id="toastBody"></div>
@@ -35,5 +35,6 @@
             new bootstrap.Toast(e).show();
         }
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
