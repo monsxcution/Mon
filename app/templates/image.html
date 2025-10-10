@@ -202,6 +202,16 @@
                     <div id="collageCanvasContainer" style="max-width: 50%; max-height: 50%; display: none; margin: 0 auto;">
                         <canvas id="collageCanvas" style="width: 100%; height: auto; display: block; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);"></canvas>
                     </div>
+                    <!-- COLLAGE START -->
+                    <div id="collage-tiles" style="display: none; height: 720px;">
+                        <div id="image-container1" class="tile">
+                            <img id="imgL" src="" alt="">
+                        </div>
+                        <div id="image-container2" class="tile">
+                            <img id="imgR" src="" alt="">
+                        </div>
+                    </div>
+                    <!-- COLLAGE END -->
                     <div id="collagePrompt">
                         <i class="bi bi-images" style="font-size: 4rem; color: #6c757d;"></i>
                         <p class="mt-3 text-muted">Upload photos to create a collage</p>
@@ -328,6 +338,145 @@ function downloadImage() {
 }
 
 // ===== PHOTO COLLAGE TAB =====
+// ===== LOCKED DRAG WITH OBJECT-POSITION =====
+function bindLockedDrag(img) {
+    if (!img) return;
+    img.setAttribute('draggable', 'false');  // chặn drag mặc định của trình duyệt
+    img.style.cursor = 'grab';
+
+    let dragging = false;
+
+    img.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        if (img.setPointerCapture) {
+            img.setPointerCapture(e.pointerId);
+        }
+        img.style.cursor = 'grabbing';
+        e.preventDefault();
+    }, { passive: false });
+
+    img.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const r = img.getBoundingClientRect();
+        let px = ((e.clientX - r.left) / r.width) * 100;
+        let py = ((e.clientY - r.top) / r.height) * 100;
+        // Clamp 0–100% để không bao giờ hở nền
+        px = Math.max(0, Math.min(100, px));
+        py = Math.max(0, Math.min(100, py));
+        img.style.objectPosition = `${px}% ${py}%`;
+        e.preventDefault();
+    }, { passive: false });
+
+    const end = () => { 
+        dragging = false; 
+        img.style.cursor = 'grab'; 
+    };
+    img.addEventListener('pointerup', end);
+    img.addEventListener('pointercancel', end);
+}
+
+// ===== HELPER FUNCTIONS FOR CANVAS COLLAGE =====
+// Preload ảnh: trả về HTMLImageElement đã sẵn sàng
+async function loadImage(src) {
+    return new Promise((res, rej) => {
+        const im = new Image();
+        im.crossOrigin = "anonymous";
+        im.onload = () => res(im);
+        im.onerror = rej;
+        im.src = src;
+    });
+}
+
+// Tính danh sách cell theo layout cho 3 ảnh
+// Trả về mảng các rect: [{x,y,w,h}, ...] (tọa độ pixel trong canvas)
+function getCellsForLayout(layoutKey, W, H, gutter) {
+    const g = gutter;
+    // Mặc định: 1 ảnh bên phải full height, 2 ảnh bên trái chia đôi
+    // Đặt tên ví dụ: 'L2_R1' (2 trái 1 phải), 'R2_L1', 'T2_B1' (2 trên 1 dưới), ...
+    switch (layoutKey) {
+        case 'L2_R1':
+        case 'layout-3-left': {
+            const colW = Math.floor((W - g) / 2);
+            const rightW = W - g - colW;
+            const halfH = Math.floor((H - g) / 2);
+            return [
+                { x: 0,        y: 0,      w: colW, h: halfH },        // left-top
+                { x: 0,        y: halfH+g,w: colW, h: H - halfH - g },// left-bottom
+                { x: colW+g,   y: 0,      w: rightW, h: H }           // right full
+            ];
+        }
+        case 'R2_L1':
+        case 'layout-3-right': {
+            const colW = Math.floor((W - g) / 2);
+            const leftW = W - g - colW;
+            const halfH = Math.floor((H - g) / 2);
+            return [
+                { x: 0,        y: 0,      w: leftW, h: H },           // left full
+                { x: leftW+g,  y: 0,      w: colW, h: halfH },        // right-top
+                { x: leftW+g,  y: halfH+g,w: colW, h: H - halfH - g } // right-bottom
+            ];
+        }
+        case 'T2_B1':
+        case 'layout-3-top': {
+            const rowH = Math.floor((H - g) / 2);
+            const topH = rowH, botH = H - g - rowH;
+            const halfW = Math.floor((W - g) / 2);
+            return [
+                { x: 0,      y: 0,     w: halfW,   h: topH },         // top-left
+                { x: halfW+g,y: 0,     w: W - halfW - g, h: topH },   // top-right
+                { x: 0,      y: topH+g,w: W,       h: botH }          // bottom full
+            ];
+        }
+        case 'B2_T1':
+        case 'layout-3-bottom': {
+            const rowH = Math.floor((H - g) / 2);
+            const topH = H - g - rowH, botH = rowH;
+            const halfW = Math.floor((W - g) / 2);
+            return [
+                { x: 0,      y: 0,     w: W,       h: topH },         // top full
+                { x: 0,      y: topH+g,w: halfW,   h: botH },         // bottom-left
+                { x: halfW+g,y: topH+g,w: W - halfW - g, h: botH }    // bottom-right
+            ];
+        }
+        case 'layout-3h':
+        case 'layout-3-horizontal':
+        default: { // 3 cột (fallback)
+            const colW = Math.floor((W - 2*g)/3);
+            return [
+                { x: 0,         y: 0, w: colW,     h: H },
+                { x: colW+g,    y: 0, w: colW,     h: H },
+                { x: 2*(colW+g),y: 0, w: W - 2*(colW+g) - colW, h: H }
+            ];
+        }
+    }
+}
+
+// Clamp offset để không bao giờ hở nền (cover logic)
+function clampOffsetForCover(imgW, imgH, cellW, cellH, off) {
+    const imgAspect = imgW / imgH;
+    const cellAspect = cellW / cellH;
+
+    // Kích thước vẽ theo cover
+    let drawW, drawH;
+    if (imgAspect > cellAspect) {
+        drawH = cellH;
+        drawW = Math.ceil(cellH * imgAspect);
+    } else {
+        drawW = cellW;
+        drawH = Math.ceil(cellW / imgAspect);
+    }
+    // Phần "dư" để có thể pan mà vẫn cover
+    const overflowX = Math.max(0, drawW - cellW);
+    const overflowY = Math.max(0, drawH - cellH);
+
+    return {
+        x: Math.min( overflowX/2, Math.max(-overflowX/2, off.x || 0) ),
+        y: Math.min( overflowY/2, Math.max(-overflowY/2, off.y || 0) ),
+        drawW, drawH
+    };
+}
+
+// ===== PHOTO COLLAGE TAB VARIABLES =====
 let collageCanvas = document.getElementById('collageCanvas');
 let collageCtx = collageCanvas.getContext('2d');
 let collageImages = [];
@@ -335,6 +484,10 @@ let selectedLayout = null;
 
 // Image position offsets for manual adjustment
 let imageOffsets = []; // Array of {x: 0, y: 0} for each image
+
+// Current images and layout for canvas redraw
+let currentImages = [];
+let currentLayoutKey = null;
 
 // Drag state
 let isDragging = false;
@@ -399,122 +552,6 @@ document.getElementById('collageBackground').addEventListener('change', function
         createCollageWithLayout();
     }
 });
-
-// ===== DRAG TO ADJUST IMAGE POSITION =====
-// Setup canvas mouse events for dragging
-collageCanvas.addEventListener('mousedown', handleCanvasMouseDown);
-collageCanvas.addEventListener('mousemove', handleCanvasMouseMove);
-collageCanvas.addEventListener('mouseup', handleCanvasMouseUp);
-collageCanvas.addEventListener('mouseleave', handleCanvasMouseUp);
-
-// Touch events for mobile
-collageCanvas.addEventListener('touchstart', handleCanvasTouchStart);
-collageCanvas.addEventListener('touchmove', handleCanvasTouchMove);
-collageCanvas.addEventListener('touchend', handleCanvasMouseUp);
-
-function getCanvasCoordinates(e) {
-    const rect = collageCanvas.getBoundingClientRect();
-    const scaleX = collageCanvas.width / rect.width;
-    const scaleY = collageCanvas.height / rect.height;
-    
-    let clientX, clientY;
-    if (e.touches && e.touches[0]) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-    }
-    
-    return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-    };
-}
-
-function handleCanvasMouseDown(e) {
-    if (!selectedLayout || collageImages.length === 0) return;
-    
-    const coords = getCanvasCoordinates(e);
-    const imageIndex = getImageAtPosition(coords.x, coords.y);
-    
-    if (imageIndex >= 0) {
-        isDragging = true;
-        dragImageIndex = imageIndex;
-        dragStartX = coords.x;
-        dragStartY = coords.y;
-        dragInitialOffsetX = imageOffsets[imageIndex]?.x || 0;
-        dragInitialOffsetY = imageOffsets[imageIndex]?.y || 0;
-        collageCanvas.style.cursor = 'grabbing';
-        e.preventDefault();
-    }
-}
-
-function handleCanvasMouseMove(e) {
-    if (isDragging && dragImageIndex >= 0) {
-        const coords = getCanvasCoordinates(e);
-        const deltaX = coords.x - dragStartX;
-        const deltaY = coords.y - dragStartY;
-        
-        imageOffsets[dragImageIndex] = {
-            x: dragInitialOffsetX + deltaX,
-            y: dragInitialOffsetY + deltaY
-        };
-        
-        createCollageWithLayout();
-        e.preventDefault();
-    } else if (!isDragging && selectedLayout && collageImages.length > 0) {
-        const coords = getCanvasCoordinates(e);
-        const imageIndex = getImageAtPosition(coords.x, coords.y);
-        collageCanvas.style.cursor = imageIndex >= 0 ? 'grab' : 'default';
-    }
-}
-
-function handleCanvasMouseUp(e) {
-    if (isDragging) {
-        isDragging = false;
-        dragImageIndex = -1;
-        collageCanvas.style.cursor = 'default';
-    }
-}
-
-function handleCanvasTouchStart(e) {
-    handleCanvasMouseDown(e);
-}
-
-function handleCanvasTouchMove(e) {
-    handleCanvasMouseMove(e);
-}
-
-function getImageAtPosition(x, y) {
-    if (!selectedLayout) return -1;
-    
-    const layout = layoutTemplates.find(l => l.id === selectedLayout);
-    if (!layout) return -1;
-    
-    const gutter = parseInt(document.getElementById('collageGutter').value);
-    
-    const canvasWidth = collageCanvas.width;
-    const canvasHeight = collageCanvas.height;
-    const totalGutterWidth = gutter * (layout.cols + 1);
-    const totalGutterHeight = gutter * (layout.rows + 1);
-    const cellWidth = (canvasWidth - totalGutterWidth) / layout.cols;
-    const cellHeight = (canvasHeight - totalGutterHeight) / layout.rows;
-    
-    for (let index = 0; index < layout.cells.length && index < collageImages.length; index++) {
-        const [cellX, cellY, w, h] = layout.cells[index];
-        const imgX = gutter + (cellX * cellWidth) + (cellX * gutter);
-        const imgY = gutter + (cellY * cellHeight) + (cellY * gutter);
-        const imgW = (w * cellWidth) + ((w - 1) * gutter);
-        const imgH = (h * cellHeight) + ((h - 1) * gutter);
-        
-        if (x >= imgX && x <= imgX + imgW && y >= imgY && y <= imgY + imgH) {
-            return index;
-        }
-    }
-    
-    return -1;
-}
 
 // Render layout templates
 function renderLayoutTemplates() {
@@ -646,6 +683,73 @@ document.getElementById('collageUpload').addEventListener('change', function(e) 
     });
 });
 
+// Create HTML-based collage for 2 horizontal images
+function createHTMLCollage() {
+    const gutter = parseInt(document.getElementById('collageGutter').value);
+    const radius = parseInt(document.getElementById('collageRadius').value);
+    const borderWidth = parseInt(document.getElementById('collageBorder').value);
+    const borderColor = document.getElementById('collageBorderColor').value;
+    const backgroundColor = document.getElementById('collageBackground').value;
+    
+    const collageTiles = document.getElementById('collage-tiles');
+    const imgL = document.getElementById('imgL');
+    const imgR = document.getElementById('imgR');
+    const container1 = document.getElementById('image-container1');
+    const container2 = document.getElementById('image-container2');
+    
+    // Set images
+    if (collageImages.length >= 2) {
+        imgL.src = collageImages[0].src;
+        imgR.src = collageImages[1].src;
+    }
+    
+    // --- lấy aspect từ selector ---
+    const aspect = document.getElementById('collageAspect').value; // '1:1','3:4','4:5','16:9'
+    const [arW, arH] = aspect.split(':').map(Number);
+
+    // --- tính chiều cao theo chiều rộng thực tế của #collage-tiles ---
+    const tiles = document.getElementById('collage-tiles');
+    const maxW = tiles.parentElement.clientWidth;  // vùng preview card
+    // trừ padding 2 bên theo gutter để không tràn
+    const innerW = Math.max(320, maxW - gutter*2);
+    const innerH = Math.round(innerW * arH / arW);
+
+    // set biến CSS để CSS lấy đúng
+    tiles.style.setProperty('--canvas-h', `${innerH}px`);
+    tiles.style.aspectRatio = `${arW} / ${arH}`; // giúp browser tự co giãn theo tỷ lệ
+    
+    // Set CSS variables for responsive styling
+    collageTiles.style.setProperty('--gutter', `${gutter}px`);
+    collageTiles.style.setProperty('--radius', `${radius}px`);
+    collageTiles.style.setProperty('--stroke', `${borderWidth}px`);
+    collageTiles.style.setProperty('--stroke-color', borderColor);
+    
+    // Apply background
+    collageTiles.style.backgroundColor = backgroundColor;
+    collageTiles.style.padding = `${gutter}px`;
+    
+    // Hide canvas, show tiles
+    document.getElementById('collageCanvasContainer').style.display = 'none';
+    document.getElementById('uploadedPhotosPreview').style.display = 'none';
+    document.getElementById('collagePrompt').style.display = 'none';
+    collageTiles.style.display = 'flex';
+    
+    // Bind drag handlers to all images (if not already bound)
+    document.querySelectorAll('#collage-tiles .tile > img').forEach(img => {
+        // Remove old listeners if any (by cloning)
+        const newImg = img.cloneNode(true);
+        img.parentNode.replaceChild(newImg, img);
+        bindLockedDrag(newImg);
+    });
+}
+
+// Apply UI settings
+function applyUI() {
+    if (selectedLayout === 'layout-2h' && collageImages.length === 2) {
+        createHTMLCollage();
+    }
+}
+
 function createCollageWithLayout() {
     if (collageImages.length === 0 || !selectedLayout) {
         showToast('Please upload photos and select a layout', 'warning');
@@ -655,130 +759,172 @@ function createCollageWithLayout() {
     const layout = layoutTemplates.find(l => l.id === selectedLayout);
     if (!layout) return;
     
-    const gutter = parseInt(document.getElementById('collageGutter').value);
-    const radius = parseInt(document.getElementById('collageRadius').value);
-    const borderWidth = parseInt(document.getElementById('collageBorder').value);
-    const borderColor = document.getElementById('collageBorderColor').value;
-    const backgroundColor = document.getElementById('collageBackground').value;
-    const aspect = document.getElementById('collageAspect').value;
+    // Special handling for 2 images layout - use HTML/CSS tiles
+    if (collageImages.length === 2) {
+        const tiles = document.getElementById('collage-tiles');
+        
+        if (selectedLayout === 'layout-2h') { 
+            // Horizontal layout (default)
+            tiles.style.flexDirection = 'row';
+            createHTMLCollage(); 
+            return; 
+        }
+        
+        if (selectedLayout === 'layout-2v') { 
+            // Vertical layout - chuyển tiles sang dạng cột
+            tiles.style.flexDirection = 'column';
+            createHTMLCollage(); 
+            return; 
+        }
+    }
     
-    // Fixed size: 720x720
-    const canvasWidth = 720;
-    const canvasHeight = 720;
+    // Reset flex direction khi không phải 2 ảnh
+    const tiles = document.getElementById('collage-tiles');
+    tiles.style.flexDirection = 'row';
     
-    collageCanvas.width = canvasWidth;
-    collageCanvas.height = canvasHeight;
+    // ===== CANVAS COLLAGE FOR 3+ IMAGES =====
+    createCanvasCollage(collageImages.map(img => img.src), selectedLayout);
+}
+
+// New async canvas collage function
+async function createCanvasCollage(images, layoutKey) {
+    // Save for drag redraw
+    currentImages = images;
+    currentLayoutKey = layoutKey;
     
-    // Enable high-quality image rendering
-    collageCtx.imageSmoothingEnabled = true;
-    collageCtx.imageSmoothingQuality = 'high';
+    // 1) Kích thước canvas theo tỷ lệ chọn
+    const aspect = document.getElementById('collageAspect').value; // '1:1','3:4','4:5','16:9'
+    const [arW, arH] = aspect.split(':').map(Number);
+    const base = 1080; // cạnh dài để xuất nét
+    const CW = arW >= arH ? base : Math.round(base * (arW/arH));
+    const CH = arH >= arW ? base : Math.round(base * (arH/arW));
+
+    collageCanvas.width  = CW;
+    collageCanvas.height = CH;
+
+    const gutter = parseInt(document.getElementById('collageGutter').value || 0, 10);
+    const radius = parseInt(document.getElementById('collageRadius').value || 0, 10);
+    const border = parseInt(document.getElementById('collageBorder').value || 0, 10);
+    const borderColor = document.getElementById('collageBorderColor').value || '#ff3b30';
+    const backgroundColor = document.getElementById('collageBackground').value || '#111111';
+
+    // 2) Preload ảnh (fix lỗi "chỉ 1 ảnh")
+    const imgs = await Promise.all(images.map(src => loadImage(src)));
+
+    // 3) Tính cell theo layout
+    const cells = getCellsForLayout(layoutKey, CW, CH, gutter);
+    // nếu số cell ít hơn số ảnh, chỉ lấy ảnh đầu; nếu nhiều hơn thì lặp lại ảnh cuối
+    const n = Math.min(cells.length, imgs.length);
+
+    collageCtx.clearRect(0,0,CW,CH);
     
     // Fill background
     collageCtx.fillStyle = backgroundColor;
-    collageCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-    
-    // Calculate cell dimensions
-    // For 2 images horizontal: subtract gutter from total, then divide by cols
-    const totalGutterWidth = gutter * (layout.cols + 1);
-    const totalGutterHeight = gutter * (layout.rows + 1);
-    const cellWidth = (canvasWidth - totalGutterWidth) / layout.cols;
-    const cellHeight = (canvasHeight - totalGutterHeight) / layout.rows;
-    
-    console.log(`Canvas: ${canvasWidth}x${canvasHeight}, Layout: ${layout.cols}x${layout.rows}, Cell: ${cellWidth}x${cellHeight}, Gutter: ${gutter}`);
-    
-    // Draw each image
-    layout.cells.forEach((cell, index) => {
-        if (index >= collageImages.length) return;
-        
-        const [x, y, w, h] = cell;
-        
-        // Calculate position and size for this cell
-        const imgX = gutter + (x * cellWidth) + (x * gutter);
-        const imgY = gutter + (y * cellHeight) + (y * gutter);
-        const imgW = (w * cellWidth) + ((w - 1) * gutter);
-        const imgH = (h * cellHeight) + ((h - 1) * gutter);
-        
-        console.log(`  Image ${index}: x=${imgX}, y=${imgY}, w=${imgW}, h=${imgH}`);
-        
-        // Save context
+    collageCtx.fillRect(0, 0, CW, CH);
+
+    for (let i = 0; i < n; i++) {
+        const {x,y,w,h} = cells[i];
+        const im = imgs[i];
+
+        // 3a) chuẩn bị cover + clamp offset
+        const offRaw = imageOffsets[i] || {x:0,y:0};
+        const {x:offX, y:offY, drawW, drawH} = clampOffsetForCover(im.width, im.height, w, h, offRaw);
+
+        // 3b) toạ độ vẽ sao cho ảnh vẫn cover cell
+        const drawX = x + Math.round((w - drawW)/2 + offX);
+        const drawY = y + Math.round((h - drawH)/2 + offY);
+
+        // 3c) clip tròn góc + vẽ
         collageCtx.save();
-        
-        // Clip with rounded corners if radius > 0
         if (radius > 0) {
-            const rad = radius * 2; // Scale radius for canvas resolution
+            const r = Math.min(radius, Math.min(w,h)/2 - 1);
+            const p = new Path2D();
+            p.moveTo(x+r,y);
+            p.arcTo(x+w,y,x+w,y+h,r);
+            p.arcTo(x+w,y+h,x,y+h,r);
+            p.arcTo(x,y+h,x,y,r);
+            p.arcTo(x,y,x+w,y,r);
+            p.closePath();
+            collageCtx.clip(p);
+        } else {
             collageCtx.beginPath();
-            collageCtx.moveTo(imgX + rad, imgY);
-            collageCtx.lineTo(imgX + imgW - rad, imgY);
-            collageCtx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + rad);
-            collageCtx.lineTo(imgX + imgW, imgY + imgH - rad);
-            collageCtx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - rad, imgY + imgH);
-            collageCtx.lineTo(imgX + rad, imgY + imgH);
-            collageCtx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - rad);
-            collageCtx.lineTo(imgX, imgY + rad);
-            collageCtx.quadraticCurveTo(imgX, imgY, imgX + rad, imgY);
-            collageCtx.closePath();
+            collageCtx.rect(x,y,w,h);
             collageCtx.clip();
         }
-        
-        // Draw image (cover fit) with high quality
-        const img = collageImages[index];
-        const imgAspect = img.width / img.height;
-        const cellAspect = imgW / imgH;
-        
-        let drawWidth, drawHeight, drawX, drawY;
-        if (imgAspect > cellAspect) {
-            drawHeight = imgH;
-            drawWidth = img.width * (imgH / img.height);
-            drawX = imgX - (drawWidth - imgW) / 2;
-            drawY = imgY;
-        } else {
-            drawWidth = imgW;
-            drawHeight = img.height * (imgW / img.width);
-            drawX = imgX;
-            drawY = imgY - (drawHeight - imgH) / 2;
-        }
-        
-        // Apply image offset for drag-to-reposition
-        const offset = imageOffsets[index] || { x: 0, y: 0 };
-        drawX += offset.x;
-        drawY += offset.y;
-        
-        // Draw with high quality settings
-        collageCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-        
-        // Restore context
+
+        collageCtx.drawImage(im, drawX, drawY, drawW, drawH);
         collageCtx.restore();
-        
-        // Draw border around this image if enabled
-        if (borderWidth > 0) {
+
+        // 3d) Border cell (vẽ đúng nét, không *2)
+        if (border > 0) {
+            collageCtx.save();
+            collageCtx.lineWidth = border;
             collageCtx.strokeStyle = borderColor;
-            collageCtx.lineWidth = borderWidth * 2; // Scale border width for canvas resolution
-            
+            const inset = border/2;
+            collageCtx.beginPath();
             if (radius > 0) {
-                // Border with rounded corners
-                const rad = radius * 2;
-                collageCtx.beginPath();
-                collageCtx.moveTo(imgX + rad, imgY);
-                collageCtx.lineTo(imgX + imgW - rad, imgY);
-                collageCtx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + rad);
-                collageCtx.lineTo(imgX + imgW, imgY + imgH - rad);
-                collageCtx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - rad, imgY + imgH);
-                collageCtx.lineTo(imgX + rad, imgY + imgH);
-                collageCtx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - rad);
-                collageCtx.lineTo(imgX, imgY + rad);
-                collageCtx.quadraticCurveTo(imgX, imgY, imgX + rad, imgY);
-                collageCtx.closePath();
-                collageCtx.stroke();
+                const r = Math.max(0, Math.min(radius - inset, Math.min(w,h)/2 - inset));
+                const p2 = new Path2D();
+                p2.moveTo(x+inset+r, y+inset);
+                p2.arcTo(x+w-inset, y+inset,   x+w-inset, y+h-inset, r);
+                p2.arcTo(x+w-inset, y+h-inset, x+inset,   y+h-inset, r);
+                p2.arcTo(x+inset,   y+h-inset, x+inset,   y+inset,   r);
+                p2.arcTo(x+inset,   y+inset,   x+w-inset, y+inset,   r);
+                p2.closePath();
+                collageCtx.stroke(p2);
             } else {
-                // Rectangle border
-                collageCtx.strokeRect(imgX, imgY, imgW, imgH);
+                collageCtx.strokeRect(x+inset, y+inset, w-border, h-border);
             }
+            collageCtx.restore();
         }
-    });
+    }
+
+    // 4) Gắn vùng drag cho từng cell (pan trong giới hạn)
+    enableCanvasDrag(cells);
     
     // Show canvas container
     document.getElementById('uploadedPhotosPreview').style.display = 'none';
     document.getElementById('collageCanvasContainer').style.display = 'block';
+    document.getElementById('collage-tiles').style.display = 'none';
+}
+
+// Kéo trong Canvas – không bao giờ lòi nền
+function enableCanvasDrag(cells) {
+    let active = -1;
+    let start = {x:0, y:0};
+    
+    collageCanvas.onpointerdown = (e) => {
+        const rect = collageCanvas.getBoundingClientRect();
+        const cx = (e.clientX - rect.left) * (collageCanvas.width / rect.width);
+        const cy = (e.clientY - rect.top)  * (collageCanvas.height / rect.height);
+        // chọn cell đang click
+        active = cells.findIndex(({x,y,w,h}) => cx>=x && cx<=x+w && cy>=y && cy<=y+h);
+        start = {x:cx, y:cy};
+        if (collageCanvas.setPointerCapture) {
+            collageCanvas.setPointerCapture(e.pointerId);
+        }
+    };
+    
+    collageCanvas.onpointermove = (e) => {
+        if (active < 0) return;
+        const rect = collageCanvas.getBoundingClientRect();
+        const cx = (e.clientX - rect.left) * (collageCanvas.width / rect.width);
+        const cy = (e.clientY - rect.top)  * (collageCanvas.height / rect.height);
+        const dx = cx - start.x, dy = cy - start.y;
+        start = {x:cx, y:cy};
+        imageOffsets[active] = imageOffsets[active] || {x:0, y:0};
+        imageOffsets[active].x += dx;
+        imageOffsets[active].y += dy;
+
+        // vẽ lại (clamp sẽ áp trong createCanvasCollage)
+        if (currentImages && currentLayoutKey) {
+            createCanvasCollage(currentImages, currentLayoutKey);
+        }
+    };
+    
+    const end = () => { active = -1; };
+    collageCanvas.onpointerup = end;
+    collageCanvas.onpointercancel = end;
 }
 
 function swapImages() {
@@ -803,6 +949,7 @@ function clearCollage() {
     imageOffsets = [];
     selectedLayout = null;
     document.getElementById('collageCanvasContainer').style.display = 'none';
+    document.getElementById('collage-tiles').style.display = 'none';
     document.getElementById('collagePrompt').style.display = 'block';
     document.getElementById('uploadedPhotosPreview').style.display = 'none';
     document.getElementById('uploadedPhotosPreview').innerHTML = '';
@@ -812,8 +959,125 @@ function clearCollage() {
 }
 
 function saveCollage() {
-    const container = document.getElementById('collageCanvasContainer');
-    if (container.style.display === 'none') {
+    const canvasContainer = document.getElementById('collageCanvasContainer');
+    const tilesContainer = document.getElementById('collage-tiles');
+    
+    // Check if HTML collage is displayed
+    if (tilesContainer.style.display !== 'none') {
+        // Convert HTML collage to canvas for export
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCanvas.width = 720;
+        tempCanvas.height = 720;
+        
+        const gutter = parseInt(document.getElementById('collageGutter').value);
+        const radius = parseInt(document.getElementById('collageRadius').value);
+        const borderWidth = parseInt(document.getElementById('collageBorder').value);
+        const borderColor = document.getElementById('collageBorderColor').value;
+        const backgroundColor = document.getElementById('collageBackground').value;
+        
+        // Enable high-quality rendering
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+        
+        // Fill background
+        tempCtx.fillStyle = backgroundColor;
+        tempCtx.fillRect(0, 0, 720, 720);
+        
+        const halfWidth = (720 - gutter * 3) / 2;
+        const imgHeight = 720 - gutter * 2;
+        
+        // Helper function to draw image with object-position
+        function drawImageWithPosition(img, x, y, w, h) {
+            if (!img.complete || img.naturalHeight === 0) return;
+            
+            // Get object-position from style (default 50% 50%)
+            const objPos = img.style.objectPosition || '50% 50%';
+            const [posX, posY] = objPos.split(' ').map(p => parseFloat(p));
+            
+            // Calculate source and destination
+            const imgAspect = img.naturalWidth / img.naturalHeight;
+            const targetAspect = w / h;
+            
+            tempCtx.save();
+            
+            // Clip with rounded corners if radius > 0
+            if (radius > 0) {
+                tempCtx.beginPath();
+                tempCtx.moveTo(x + radius, y);
+                tempCtx.lineTo(x + w - radius, y);
+                tempCtx.quadraticCurveTo(x + w, y, x + w, y + radius);
+                tempCtx.lineTo(x + w, y + h - radius);
+                tempCtx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+                tempCtx.lineTo(x + radius, y + h);
+                tempCtx.quadraticCurveTo(x, y + h, x, y + h - radius);
+                tempCtx.lineTo(x, y + radius);
+                tempCtx.quadraticCurveTo(x, y, x + radius, y);
+                tempCtx.closePath();
+                tempCtx.clip();
+            }
+            
+            // Draw image with cover fit
+            let drawWidth, drawHeight, drawX, drawY;
+            if (imgAspect > targetAspect) {
+                drawHeight = h;
+                drawWidth = img.naturalWidth * (h / img.naturalHeight);
+                drawX = x - (drawWidth - w) * (posX / 100);
+                drawY = y;
+            } else {
+                drawWidth = w;
+                drawHeight = img.naturalHeight * (w / img.naturalWidth);
+                drawX = x;
+                drawY = y - (drawHeight - h) * (posY / 100);
+            }
+            
+            tempCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+            tempCtx.restore();
+            
+            // Draw border if enabled
+            if (borderWidth > 0) {
+                tempCtx.strokeStyle = borderColor;
+                tempCtx.lineWidth = borderWidth;
+                
+                if (radius > 0) {
+                    tempCtx.beginPath();
+                    tempCtx.moveTo(x + radius, y);
+                    tempCtx.lineTo(x + w - radius, y);
+                    tempCtx.quadraticCurveTo(x + w, y, x + w, y + radius);
+                    tempCtx.lineTo(x + w, y + h - radius);
+                    tempCtx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+                    tempCtx.lineTo(x + radius, y + h);
+                    tempCtx.quadraticCurveTo(x, y + h, x, y + h - radius);
+                    tempCtx.lineTo(x, y + radius);
+                    tempCtx.quadraticCurveTo(x, y, x + radius, y);
+                    tempCtx.closePath();
+                    tempCtx.stroke();
+                } else {
+                    tempCtx.strokeRect(x, y, w, h);
+                }
+            }
+        }
+        
+        // Draw left image
+        const imgL = document.getElementById('imgL');
+        drawImageWithPosition(imgL, gutter, gutter, halfWidth, imgHeight);
+        
+        // Draw right image
+        const imgR = document.getElementById('imgR');
+        drawImageWithPosition(imgR, gutter * 2 + halfWidth, gutter, halfWidth, imgHeight);
+        
+        // Save
+        const link = document.createElement('a');
+        link.download = 'photo-collage-hq.png';
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
+        link.click();
+        showToast('High quality collage saved successfully', 'success');
+        return;
+    }
+    
+    // Original canvas-based save
+    if (canvasContainer.style.display === 'none') {
         showToast('Please create a collage first', 'warning');
         return;
     }
@@ -829,6 +1093,57 @@ function saveCollage() {
 // Initialize layout templates on page load
 document.addEventListener('DOMContentLoaded', function() {
     renderLayoutTemplates();
+    
+    // Apply UI if collage is already loaded
+    if (typeof applyUI === 'function') {
+        applyUI();
+    }
+    
+    // Bind locked drag to all images in collage-tiles
+    document.querySelectorAll('#collage-tiles .tile > img').forEach(bindLockedDrag);
+    
+    // Keyboard shortcuts for collage
+    document.addEventListener('keydown', function(e) {
+        // Only work in collage tab
+        const collageTab = document.getElementById('collage-panel');
+        if (!collageTab || !collageTab.classList.contains('active')) return;
+        
+        // [ key - decrease gutter
+        if (e.key === '[') {
+            const gutterSlider = document.getElementById('collageGutter');
+            const currentValue = parseInt(gutterSlider.value);
+            if (currentValue > parseInt(gutterSlider.min)) {
+                gutterSlider.value = currentValue - 1;
+                document.getElementById('gutterValue').textContent = gutterSlider.value;
+                if (selectedLayout && collageImages.length > 0) {
+                    createCollageWithLayout();
+                }
+            }
+            e.preventDefault();
+        }
+        
+        // ] key - increase gutter
+        if (e.key === ']') {
+            const gutterSlider = document.getElementById('collageGutter');
+            const currentValue = parseInt(gutterSlider.value);
+            if (currentValue < parseInt(gutterSlider.max)) {
+                gutterSlider.value = currentValue + 1;
+                document.getElementById('gutterValue').textContent = gutterSlider.value;
+                if (selectedLayout && collageImages.length > 0) {
+                    createCollageWithLayout();
+                }
+            }
+            e.preventDefault();
+        }
+        
+        // S key - swap images
+        if (e.key === 's' || e.key === 'S') {
+            if (collageImages.length >= 2) {
+                swapImages();
+                e.preventDefault();
+            }
+        }
+    });
 });
 </script>
 
