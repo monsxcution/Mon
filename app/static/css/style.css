@@ -42,7 +42,7 @@ body {
 .tab-content {
       border: 1px solid var(--border-color);
       border-top: none;
-      padding: 1rem;
+      padding: 0;
       border-radius: 0 0 0.375rem 0.375rem;
       background-color: var(--card-bg);
 }

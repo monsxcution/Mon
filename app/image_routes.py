@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file
 import os
+import json
+from datetime import datetime
+import uuid
 
 image_bp = Blueprint('image', __name__, url_prefix='/image')
 
@@ -61,3 +64,133 @@ def create_collage():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# === COLLAGE HISTORY APIs ===
+COLLAGE_HISTORY_DIR = os.path.join('data', 'collage_history')
+COLLAGE_HISTORY_JSON = os.path.join('data', 'collage_history.json')
+
+# Ensure directories exist
+os.makedirs(COLLAGE_HISTORY_DIR, exist_ok=True)
+
+@image_bp.route('/api/save-collage', methods=['POST'])
+def save_collage():
+    """Save collage and add to history"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'No image file'}), 400
+        
+        image_file = request.files['image']
+        image_count = request.form.get('imageCount', 0)
+        layout = request.form.get('layout', 'unknown')
+        
+        # Generate unique ID
+        collage_id = str(uuid.uuid4())
+        
+        # Save image
+        image_path = os.path.join(COLLAGE_HISTORY_DIR, f'{collage_id}.png')
+        image_file.save(image_path)
+        
+        # Load existing history
+        history = []
+        if os.path.exists(COLLAGE_HISTORY_JSON):
+            with open(COLLAGE_HISTORY_JSON, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        
+        # Add new entry (at beginning for newest first)
+        history.insert(0, {
+            'id': collage_id,
+            'date': datetime.now().strftime('%Y-%m-%d %H:%M'),
+            'imageCount': int(image_count),
+            'layout': layout,
+            'timestamp': datetime.now().timestamp()
+        })
+        
+        # Keep only last 50
+        history = history[:50]
+        
+        # Save history
+        with open(COLLAGE_HISTORY_JSON, 'w', encoding='utf-8') as f:
+            json.dump(history, f, indent=2)
+        
+        return jsonify({
+            'success': True,
+            'id': collage_id
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@image_bp.route('/api/collage-history', methods=['GET'])
+def get_collage_history():
+    """Get list of saved collages"""
+    try:
+        if not os.path.exists(COLLAGE_HISTORY_JSON):
+            return jsonify({'success': True, 'history': []})
+        
+        with open(COLLAGE_HISTORY_JSON, 'r', encoding='utf-8') as f:
+            history = json.load(f)
+        
+        return jsonify({
+            'success': True,
+            'history': history
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@image_bp.route('/api/collage-thumbnail/<collage_id>', methods=['GET'])
+def get_collage_thumbnail(collage_id):
+    """Get thumbnail image for collage"""
+    try:
+        image_path = os.path.join(COLLAGE_HISTORY_DIR, f'{collage_id}.png')
+        abs_path = os.path.abspath(image_path)
+        
+        print(f"[DEBUG] Thumbnail request for ID: {collage_id}")
+        print(f"[DEBUG] Relative path: {image_path}")
+        print(f"[DEBUG] Absolute path: {abs_path}")
+        print(f"[DEBUG] File exists: {os.path.exists(abs_path)}")
+        
+        if not os.path.exists(abs_path):
+            return jsonify({'error': 'Not found', 'path': abs_path}), 404
+        
+        return send_file(abs_path, mimetype='image/png')
+        
+    except Exception as e:
+        print(f"[ERROR] Thumbnail error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@image_bp.route('/api/collage-data/<collage_id>', methods=['GET'])
+def get_collage_data(collage_id):
+    """Get collage data for re-editing (currently not supported)"""
+    # For now, just return error since we don't store original images
+    return jsonify({
+        'success': False,
+        'error': 'Re-editing is not supported yet'
+    }), 501
+
+@image_bp.route('/api/collage-delete/<collage_id>', methods=['DELETE'])
+def delete_collage(collage_id):
+    """Delete collage from history"""
+    try:
+        # Delete image file
+        image_path = os.path.join(COLLAGE_HISTORY_DIR, f'{collage_id}.png')
+        if os.path.exists(image_path):
+            os.remove(image_path)
+        
+        # Update history JSON
+        if os.path.exists(COLLAGE_HISTORY_JSON):
+            with open(COLLAGE_HISTORY_JSON, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+            
+            history = [item for item in history if item['id'] != collage_id]
+            
+            with open(COLLAGE_HISTORY_JSON, 'w', encoding='utf-8') as f:
+                json.dump(history, f, indent=2)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
