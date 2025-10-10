@@ -3,7 +3,7 @@
         <ul class="nav nav-tabs main-nav mb-0" id="main-tab" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" href="{{ url_for('home') }}">
-                    <span class="nav-card-icon"><i class="bi bi-house-door-fill"></i></span> Trang Chủ
+                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #0da5aa 100%);"><i class="bi bi-house-door-fill"></i></span> 
                 </a>
             </li>
             <li class="nav-item" role="presentation">
@@ -11,18 +11,158 @@
                     <span class="nav-card-icon"><i class="bi bi-journal-richtext"></i></span> Ghi Chú
                 </a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if request.path == url_for('mxh_feature.mxh_page') %}active{% endif %}" href="{{ url_for('mxh_feature.mxh_page') }}">
+                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="bi bi-share-fill"></i></span> MXH
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if request.path.startswith('/image') %}active{% endif %}" href="{{ url_for('image.index') }}">
+                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="bi bi-image-fill"></i></span> Image
+                </a>
+            </li>
         </ul>
         <ul class="navbar-nav ms-auto">
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown" id="hamburger-menu">
                 <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">Chức năng 1 (TBD)</a></li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('settings.settings_page') }}">
+                            <i class="bi bi-gear-wide-connected me-2"></i>Cài Đặt
+                        </a>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">Cài đặt (TBD)</a></li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); location.reload();">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Tải Lại
+                        </a>
+                    </li>
                 </ul>
             </li>
         </ul>
     </div>
 </div>
+
+<style>
+/* Hamburger menu position fix - Keep in place, just show dropdown */
+#hamburger-menu {
+    position: relative;
+}
+
+#hamburger-menu .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.125rem;
+    display: none;
+    /* Prevent menu from affecting layout */
+    min-width: 200px;
+}
+
+/* REMOVED CSS hover - Let JavaScript handle show/hide */
+/* JavaScript will control .show class instead */
+
+/* Smooth dropdown animation */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Show dropdown with animation when .show class is added */
+#hamburger-menu .dropdown-menu.show {
+    display: block;
+    animation: fadeInDown 0.3s ease-in-out;
+}
+
+/* Dropdown item hover effect */
+#hamburger-menu .dropdown-item {
+    transition: all 0.2s ease;
+}
+
+#hamburger-menu .dropdown-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Prevent icon from moving */
+#hamburger-menu .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+// Enhanced hover menu behavior with smart timing
+(function() {
+    const hamburgerMenu = document.getElementById('hamburger-menu');
+    if (!hamburgerMenu) return;
+    
+    const menuLink = hamburgerMenu.querySelector('.nav-link');
+    const dropdownMenu = hamburgerMenu.querySelector('.dropdown-menu');
+    
+    let autoHideTimeout;
+    let mouseLeaveTimeout;
+    let isMouseOverMenu = false;
+    let isMouseOverDropdown = false;
+    
+    // Show dropdown when hovering icon
+    hamburgerMenu.addEventListener('mouseenter', () => {
+        clearTimeout(autoHideTimeout);
+        clearTimeout(mouseLeaveTimeout);
+        isMouseOverMenu = true;
+        dropdownMenu.classList.add('show');
+        
+        // Auto-hide after 2 seconds if user doesn't move to dropdown
+        autoHideTimeout = setTimeout(() => {
+            if (!isMouseOverDropdown) {
+                dropdownMenu.classList.remove('show');
+            }
+        }, 2000);
+    });
+    
+    // When mouse leaves hamburger icon
+    hamburgerMenu.addEventListener('mouseleave', () => {
+        isMouseOverMenu = false;
+        
+        // Give user time to move mouse to dropdown (500ms grace period)
+        mouseLeaveTimeout = setTimeout(() => {
+            // If not hovering dropdown after grace period, hide
+            if (!isMouseOverDropdown) {
+                clearTimeout(autoHideTimeout);
+                dropdownMenu.classList.remove('show');
+            }
+        }, 500); // 500ms to move from icon to dropdown
+    });
+    
+    // When mouse enters dropdown menu
+    dropdownMenu.addEventListener('mouseenter', () => {
+        clearTimeout(autoHideTimeout);
+        clearTimeout(mouseLeaveTimeout); // Cancel hide action
+        isMouseOverDropdown = true;
+        dropdownMenu.classList.add('show');
+    });
+    
+    // When mouse leaves dropdown menu
+    dropdownMenu.addEventListener('mouseleave', () => {
+        isMouseOverDropdown = false;
+        
+        // Small delay before hiding
+        setTimeout(() => {
+            // Only hide if not back on menu icon
+            if (!isMouseOverMenu && !isMouseOverDropdown) {
+                dropdownMenu.classList.remove('show');
+            }
+        }, 100);
+    });
+})();
+</script>

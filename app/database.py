@@ -31,7 +31,71 @@ def init_database():
             is_marked INTEGER DEFAULT 0
         )"""
     )
-    # Add other table creation statements here in the future
+    
+    # MXH Tables
+    # Groups table to organize social media accounts
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS mxh_groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            color TEXT NOT NULL,
+            icon TEXT DEFAULT 'bi-share-fill',
+            created_at TEXT NOT NULL
+        )"""
+    )
+    
+    # Accounts table with full WeChat support
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS mxh_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            card_name TEXT NOT NULL,
+            group_id INTEGER NOT NULL,
+            platform TEXT NOT NULL,
+            username TEXT NOT NULL,
+            phone TEXT,
+            url TEXT,
+            login_username TEXT,
+            login_password TEXT,
+            created_at TEXT NOT NULL,
+            
+            -- WeChat Primary Account Fields
+            wechat_created_day INTEGER DEFAULT 1,
+            wechat_created_month INTEGER DEFAULT 1,
+            wechat_created_year INTEGER DEFAULT 2024,
+            wechat_scan_create INTEGER DEFAULT 0,
+            wechat_scan_rescue INTEGER DEFAULT 0,
+            wechat_status TEXT DEFAULT 'available',
+            muted_until TEXT,
+            status TEXT DEFAULT 'active',
+            die_date TEXT,
+            wechat_scan_count INTEGER DEFAULT 0,
+            wechat_last_scan_date TEXT,
+            rescue_count INTEGER DEFAULT 0,
+            rescue_success_count INTEGER DEFAULT 0,
+            
+            -- WeChat Secondary Account Fields
+            secondary_card_name TEXT,
+            secondary_username TEXT,
+            secondary_phone TEXT,
+            secondary_url TEXT,
+            secondary_login_username TEXT,
+            secondary_login_password TEXT,
+            secondary_wechat_created_day INTEGER,
+            secondary_wechat_created_month INTEGER,
+            secondary_wechat_created_year INTEGER,
+            secondary_wechat_status TEXT,
+            secondary_muted_until TEXT,
+            secondary_status TEXT DEFAULT 'active',
+            secondary_die_date TEXT,
+            secondary_wechat_scan_count INTEGER DEFAULT 0,
+            secondary_wechat_last_scan_date TEXT,
+            secondary_rescue_count INTEGER DEFAULT 0,
+            secondary_rescue_success_count INTEGER DEFAULT 0,
+            
+            FOREIGN KEY (group_id) REFERENCES mxh_groups (id)
+        )"""
+    )
+    
     conn.commit()
     conn.close()
     print("Database initialized successfully.")

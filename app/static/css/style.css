@@ -220,29 +220,31 @@ body {
     padding: 5px 0;
 }
 .main-nav .nav-link {
-    border: 1px solid var(--border-color);
-    background-color: var(--card-bg);
+    border: none;
+    background-color: transparent;
     border-radius: 10px;
     margin: 0 5px;
     padding: 10px 20px;
     font-weight: 500;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    box-shadow: none;
 }
 .nav-tabs .nav-link {
     margin-bottom: 0;
-    border-bottom-color: var(--border-color);
+    border-bottom-color: transparent;
 }
 .main-nav .nav-link:not(.active):hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-    border-color: #00e0ff;
+    border-color: transparent;
+    background-color: rgba(0, 224, 255, 0.1);
 }
 .main-nav .nav-link.active {
     transform: translateY(-2px);
     font-weight: bold;
     box-shadow: 0 0 15px rgba(13, 110, 253, 0.5), 0 4px 10px rgba(13, 110, 253, 0.3);
-    border-color: var(--primary-color);
+    border-color: transparent;
+    background-color: var(--primary-color) !important;
 }
 .main-nav .nav-link {
     display: flex;
@@ -270,12 +272,18 @@ body {
 /* Center the notes search bar */
 .notes-layout-container .notes-search-container {
     margin: 0 auto;
-    transform: translateX(0);
+    width: 50%;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-list-wrapper.shrunk .notes-search-container {
+    width: 100%;
 }
 
 /* Hide all context menus by default */
 .custom-context-menu {
     display: none;
+    position: fixed;
     position: fixed;
     z-index: 10000;
     background-color: var(--card-bg);
@@ -331,6 +339,218 @@ body {
 .custom-context-menu .color-palette span:hover {
     transform: scale(1.15);
 }
+
+/* Submenu styles for context menu */
+.custom-context-menu .menu-item.has-submenu {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid #444a59;
+    animation: fadeInMenu 0.1s;
+}
+
+.custom-context-menu .menu-item.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.custom-context-menu .submenu .menu-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.custom-context-menu .submenu .menu-item i.bi-check-circle-fill {
+    color: #00e0ff;
+}
+
+.custom-context-menu .submenu-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+/* Profile span context menu specific styles */
+.context-menu-header {
+    padding: 8px 22px;
+    font-weight: 600;
+    color: #00e0ff;
+    border-bottom: 1px solid #333a4a;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 8px 22px;
+    margin-bottom: 8px;
+}
+
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    border-color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-divider {
+    height: 1px;
+    background: #333a4a;
+    margin: 8px 0;
+}
+
+#profile-span-context-menu .submenu {
+    padding: 8px;
+    width: 170px;
+}
+
+#profile-span-context-menu .color-grid {
+    padding: 0;
+    margin: 0;
+}
+
+/* Utilities Modal Styles */
+#utilitiesModal .modal-dialog {
+    max-width: 550px;
+}
+
+#utilitiesModal .form-check-label {
+    user-select: none;
+}
+
+/* MXH Card Container - 3D Flip Support */
+.mxh-card-container {
+    perspective: 1000px;
+    width: 100%;
+    height: 160px;
+    cursor: pointer;
+}
+
+.mxh-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.mxh-card-container.flipped .mxh-card-inner {
+    transform: rotateY(180deg);
+}
+
+.mxh-card-front,
+.mxh-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.mxh-card-back {
+    transform: rotateY(180deg);
+}
+
+/* MXH Card Styles - Matching temp_index.html exactly */
+.mxh-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+    cursor: pointer;
+    height: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: visible;
+    margin: 0;
+}
+
+.mxh-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: #00e0ff;
+}
+
+.mxh-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 0;
+}
+
+.mxh-card:hover::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Blink animation for anniversary cards */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.mxh-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.mxh-card .card-body {
+    padding: 0.6rem;
+    min-height: 128px;
+    position: relative;
+    z-index: 1;
+}
+
+.mxh-card .card-title {
+    font-size: 1.26rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Remove Bootstrap grid spacing */
+#mxh-accounts-container .row > .col {
+    padding: 2px !important;
+}
+
 
 /* Notes Card View Styles */
 
@@ -424,6 +644,40 @@ body {
 }
 #notes-container .card-body .mt-auto {
       margin-top: auto !important;
+}
+
+/* Card Height Modifiers */
+#notes-container.h-minus-2 .card {
+      --note-card-height: 80px;
+}
+
+#notes-container.h-minus-4 .card {
+      --note-card-height: 65px;
+}
+
+#notes-container.h-minus-4 .card .card-note-body {
+      display: none;
+}
+
+#notes-container.h-minus-4 .card .card-title {
+      font-size: 0.9rem;
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+}
+
+#notes-container.h-minus-2 .card .card-title {
+      font-size: 0.9rem;
+}
+
+#notes-container.h-minus-2 .card .card-note-body {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      font-size: 0.8rem;
 }
 
 /* Notes Search Bar Styles */
@@ -529,4 +783,47 @@ body {
     color: #6c757d;
     pointer-events: none;
     display: block;
+}
+
+/* Adjust search input width when panel is shrunk */
+.notes-search-container {
+    transition: width 0.3s ease;
+}
+
+/* List view: Search bar matches card width when panel is shrunk */
+#notes-list-wrapper.shrunk .notes-search-container {
+    width: 100% !important;
+}
+
+/* Profile highlight styles */
+.has-profile {
+    color: #00e0ff !important;
+    border-bottom: 1px dashed #00e0ff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.has-profile:hover {
+    background-color: rgba(0, 224, 255, 0.15);
+    text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+@keyframes profile-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-10px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-5px);
+    }
+}
+
+.profile-highlight {
+    display: inline-block;
+    animation: profile-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

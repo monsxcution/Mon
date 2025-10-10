@@ -1,0 +1,907 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Image Editor{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0.5rem 1rem 1rem 1rem;">
+    <!-- Tab Navigation - Sát với dashboard tabs -->
+    <ul class="nav nav-tabs" id="imageTab" role="tablist" style="margin-bottom: 0.5rem;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if not active_tab or active_tab == 'edit' %}active{% endif %}" 
+                    id="edit-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#edit-panel" 
+                    type="button" 
+                    role="tab">
+                <i class="bi bi-image me-2"></i>Edit Image
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'collage' %}active{% endif %}" 
+                    id="collage-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#collage-panel" 
+                    type="button" 
+                    role="tab">
+                <i class="bi bi-grid-3x3 me-2"></i>Photo Collage
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="imageTabContent">
+        <!-- Edit Image Tab -->
+        <div class="tab-pane fade {% if not active_tab or active_tab == 'edit' %}show active{% endif %}" 
+             id="edit-panel" 
+             role="tabpanel">
+            <div class="row">
+                <!-- Left Panel - Tools -->
+                <div class="col-md-3">
+                    <div class="card bg-dark text-white">
+                        <div class="card-header">
+                            <h5 class="mb-0">Tools</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Image</label>
+                                <input type="file" class="form-control" id="imageUpload" accept="image/*">
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Brightness</label>
+                                <input type="range" class="form-range" id="brightness" min="0" max="200" value="100">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Contrast</label>
+                                <input type="range" class="form-range" id="contrast" min="0" max="200" value="100">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Saturation</label>
+                                <input type="range" class="form-range" id="saturation" min="0" max="200" value="100">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Blur</label>
+                                <input type="range" class="form-range" id="blur" min="0" max="10" value="0">
+                            </div>
+                            
+                            <hr>
+                            
+                            <button class="btn btn-primary w-100 mb-2" onclick="applyFilters()">
+                                <i class="bi bi-check-circle me-2"></i>Apply
+                            </button>
+                            <button class="btn btn-secondary w-100 mb-2" onclick="resetFilters()">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                            </button>
+                            <button class="btn btn-success w-100" onclick="downloadImage()">
+                                <i class="bi bi-download me-2"></i>Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel - Canvas -->
+                <div class="col-md-9">
+                    <div class="card bg-dark text-white">
+                        <div class="card-body text-center" style="min-height: 600px;">
+                            <canvas id="imageCanvas" style="max-width: 100%; height: auto;"></canvas>
+                            <div id="uploadPrompt" class="text-muted">
+                                <i class="bi bi-cloud-upload" style="font-size: 4rem;"></i>
+                                <p class="mt-3">Upload an image to start editing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Collage Tab -->
+        <div class="tab-pane fade {% if active_tab == 'collage' %}show active{% endif %}" 
+             id="collage-panel" 
+             role="tabpanel">
+            <!-- Top Controls Bar -->
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-body p-2">
+                    <div class="row g-2 align-items-center">
+                        <!-- Upload Section -->
+                        <div class="col-auto">
+                            <label for="collageUpload" style="cursor: pointer; margin: 0;">
+                                <button type="button" class="btn btn-info btn-sm" onclick="document.getElementById('collageUpload').click()">
+                                    <i class="bi bi-card-image me-1"></i>Select photo(s)
+                                </button>
+                            </label>
+                            <input type="file" class="d-none" id="collageUpload" accept="image/*" multiple>
+                        </div>
+                        
+                        <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
+                        
+                        <!-- Ratio -->
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-label mb-0" style="white-space: nowrap;">Ratio</label>
+                                <select class="form-select form-select-sm" id="collageAspect" style="width: 100px;">
+                                    <option value="1:1" selected>1:1</option>
+                                    <option value="3:4">3:4</option>
+                                    <option value="4:5">4:5</option>
+                                    <option value="16:9">16:9</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
+                        
+                        <!-- Gutter -->
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-label mb-0" style="white-space: nowrap;">Gutter</label>
+                                <input type="range" class="form-range" id="collageGutter" min="0" max="40" value="8" style="width: 100px;">
+                                <small class="text-muted" style="min-width: 35px;"><span id="gutterValue">8</span>px</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Radius -->
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-label mb-0" style="white-space: nowrap;">Radius</label>
+                                <input type="range" class="form-range" id="collageRadius" min="0" max="40" value="0" style="width: 100px;">
+                                <small class="text-muted" style="min-width: 35px;"><span id="radiusValue">0</span>px</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Border -->
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-label mb-0" style="white-space: nowrap;">Border</label>
+                                <input type="range" class="form-range" id="collageBorder" min="0" max="20" value="0" style="width: 100px;">
+                                <small class="text-muted" style="min-width: 35px;"><span id="borderValue">0</span>px</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Border Color -->
+                        <div class="col-auto">
+                            <input type="color" class="form-control form-control-color" id="collageBorderColor" value="#ff3b30" title="Border Color" style="width: 50px; height: 32px;">
+                        </div>
+                        
+                        <!-- Background Color -->
+                        <div class="col-auto">
+                            <input type="color" class="form-control form-control-color" id="collageBackground" value="#111111" title="Background Color" style="width: 50px; height: 32px;">
+                        </div>
+                        
+                        <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
+                        
+                        <!-- Swap Button -->
+                        <div class="col-auto">
+                            <button class="btn btn-outline-info btn-sm" onclick="swapImages()" title="Swap images (S)">
+                                <i class="bi bi-arrow-left-right me-1"></i>Swap
+                            </button>
+                        </div>
+                        
+                        <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
+                        
+                        <!-- Save & Clear Buttons -->
+                        <div class="col-auto ms-auto">
+                            <button class="btn btn-info btn-sm me-2" onclick="saveCollage()">
+                                <i class="bi bi-save me-1"></i>Save
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="clearCollage()">
+                                <i class="bi bi-x-circle me-1"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Area - Full Width -->
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-body text-center" style="min-height: 650px; max-height: 910px; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 2rem;">
+                    <div id="uploadedPhotosPreview" class="row g-2" style="display: none; width: 100%;"></div>
+                    <div id="collageCanvasContainer" style="max-width: 50%; max-height: 50%; display: none; margin: 0 auto;">
+                        <canvas id="collageCanvas" style="width: 100%; height: auto; display: block; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);"></canvas>
+                    </div>
+                    <div id="collagePrompt">
+                        <i class="bi bi-images" style="font-size: 4rem; color: #6c757d;"></i>
+                        <p class="mt-3 text-muted">Upload photos to create a collage</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Layout Templates - Full Width -->
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <div id="layoutTemplates" class="d-flex gap-2 overflow-auto pb-2">
+                        <!-- Layout templates will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link {
+        color: #adb5bd;
+        background-color: transparent;
+        border: 1px solid transparent;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: #fff;
+        border-color: #495057;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #fff;
+        background-color: #495057;
+        border-color: #495057;
+    }
+    
+    .card {
+        border: 1px solid #495057;
+    }
+    
+    #uploadPrompt {
+        padding: 100px 0;
+    }
+    
+    .form-range::-webkit-slider-thumb {
+        background: #0d6efd;
+    }
+    
+    .form-range::-moz-range-thumb {
+        background: #0d6efd;
+    }
+</style>
+
+<script>
+// ===== EDIT IMAGE TAB =====
+let canvas = document.getElementById('imageCanvas');
+let ctx = canvas.getContext('2d');
+let originalImage = null;
+let currentImage = null;
+
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                currentImage = originalImage;
+                document.getElementById('uploadPrompt').style.display = 'none';
+                canvas.style.display = 'block';
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function applyFilters() {
+    if (!originalImage) return;
+    
+    const brightness = document.getElementById('brightness').value;
+    const contrast = document.getElementById('contrast').value;
+    const saturation = document.getElementById('saturation').value;
+    const blur = document.getElementById('blur').value;
+    
+    ctx.putImageData(originalImage, 0, 0);
+    
+    // Apply CSS filters
+    canvas.style.filter = `
+        brightness(${brightness}%)
+        contrast(${contrast}%)
+        saturate(${saturation}%)
+        blur(${blur}px)
+    `;
+}
+
+function resetFilters() {
+    document.getElementById('brightness').value = 100;
+    document.getElementById('contrast').value = 100;
+    document.getElementById('saturation').value = 100;
+    document.getElementById('blur').value = 0;
+    canvas.style.filter = '';
+    if (originalImage) {
+        ctx.putImageData(originalImage, 0, 0);
+    }
+}
+
+function downloadImage() {
+    if (!currentImage) {
+        showToast('No image to download', 'warning');
+        return;
+    }
+    
+    const link = document.createElement('a');
+    link.download = 'edited-image.png';
+    link.href = canvas.toDataURL();
+    link.click();
+    showToast('Image downloaded successfully', 'success');
+}
+
+// ===== PHOTO COLLAGE TAB =====
+let collageCanvas = document.getElementById('collageCanvas');
+let collageCtx = collageCanvas.getContext('2d');
+let collageImages = [];
+let selectedLayout = null;
+
+// Image position offsets for manual adjustment
+let imageOffsets = []; // Array of {x: 0, y: 0} for each image
+
+// Drag state
+let isDragging = false;
+let dragImageIndex = -1;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragInitialOffsetX = 0;
+let dragInitialOffsetY = 0;
+
+// Layout templates definitions - [col, row, colSpan, rowSpan]
+const layoutTemplates = [
+    { id: 'layout-1', name: '1 photo', cols: 1, rows: 1, maxPhotos: 1, cells: [[0,0,1,1]] },
+    { id: 'layout-2h', name: '2 horizontal', cols: 2, rows: 1, maxPhotos: 2, cells: [[0,0,1,1], [1,0,1,1]] },
+    { id: 'layout-2v', name: '2 vertical', cols: 1, rows: 2, maxPhotos: 2, cells: [[0,0,1,1], [0,1,1,1]] },
+    { id: 'layout-3h', name: '3 horizontal', cols: 3, rows: 1, maxPhotos: 3, cells: [[0,0,1,1], [1,0,1,1], [2,0,1,1]] },
+    { id: 'layout-3v', name: '3 vertical', cols: 1, rows: 3, maxPhotos: 3, cells: [[0,0,1,1], [0,1,1,1], [0,2,1,1]] },
+    { id: 'layout-3-left', name: '3 left large', cols: 2, rows: 2, maxPhotos: 3, cells: [[0,0,1,2], [1,0,1,1], [1,1,1,1]] },
+    { id: 'layout-3-right', name: '3 right large', cols: 2, rows: 2, maxPhotos: 3, cells: [[0,0,1,1], [0,1,1,1], [1,0,1,2]] },
+    { id: 'layout-3-top', name: '3 top large', cols: 2, rows: 2, maxPhotos: 3, cells: [[0,0,2,1], [0,1,1,1], [1,1,1,1]] },
+    { id: 'layout-3-bottom', name: '3 bottom large', cols: 2, rows: 2, maxPhotos: 3, cells: [[0,0,1,1], [1,0,1,1], [0,1,2,1]] },
+    { id: 'layout-2x2', name: '4 grid', cols: 2, rows: 2, maxPhotos: 4, cells: [[0,0,1,1], [1,0,1,1], [0,1,1,1], [1,1,1,1]] },
+    { id: 'layout-3x3', name: '9 grid', cols: 3, rows: 3, maxPhotos: 9, cells: [[0,0,1,1], [1,0,1,1], [2,0,1,1], [0,1,1,1], [1,1,1,1], [2,1,1,1], [0,2,1,1], [1,2,1,1], [2,2,1,1]] }
+];
+
+// Update slider values display and trigger collage update
+document.getElementById('collageGutter').addEventListener('input', function(e) {
+    document.getElementById('gutterValue').textContent = e.target.value;
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+document.getElementById('collageRadius').addEventListener('input', function(e) {
+    document.getElementById('radiusValue').textContent = e.target.value;
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+document.getElementById('collageBorder').addEventListener('input', function(e) {
+    document.getElementById('borderValue').textContent = e.target.value;
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+// Auto-update collage when settings change
+document.getElementById('collageAspect').addEventListener('change', function() {
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+document.getElementById('collageBorderColor').addEventListener('change', function() {
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+document.getElementById('collageBackground').addEventListener('change', function() {
+    if (selectedLayout && collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+});
+
+// ===== DRAG TO ADJUST IMAGE POSITION =====
+// Setup canvas mouse events for dragging
+collageCanvas.addEventListener('mousedown', handleCanvasMouseDown);
+collageCanvas.addEventListener('mousemove', handleCanvasMouseMove);
+collageCanvas.addEventListener('mouseup', handleCanvasMouseUp);
+collageCanvas.addEventListener('mouseleave', handleCanvasMouseUp);
+
+// Touch events for mobile
+collageCanvas.addEventListener('touchstart', handleCanvasTouchStart);
+collageCanvas.addEventListener('touchmove', handleCanvasTouchMove);
+collageCanvas.addEventListener('touchend', handleCanvasMouseUp);
+
+function getCanvasCoordinates(e) {
+    const rect = collageCanvas.getBoundingClientRect();
+    const scaleX = collageCanvas.width / rect.width;
+    const scaleY = collageCanvas.height / rect.height;
+    
+    let clientX, clientY;
+    if (e.touches && e.touches[0]) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+    
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+function handleCanvasMouseDown(e) {
+    if (!selectedLayout || collageImages.length === 0) return;
+    
+    const coords = getCanvasCoordinates(e);
+    const imageIndex = getImageAtPosition(coords.x, coords.y);
+    
+    if (imageIndex >= 0) {
+        isDragging = true;
+        dragImageIndex = imageIndex;
+        dragStartX = coords.x;
+        dragStartY = coords.y;
+        dragInitialOffsetX = imageOffsets[imageIndex]?.x || 0;
+        dragInitialOffsetY = imageOffsets[imageIndex]?.y || 0;
+        collageCanvas.style.cursor = 'grabbing';
+        e.preventDefault();
+    }
+}
+
+function handleCanvasMouseMove(e) {
+    if (isDragging && dragImageIndex >= 0) {
+        const coords = getCanvasCoordinates(e);
+        const deltaX = coords.x - dragStartX;
+        const deltaY = coords.y - dragStartY;
+        
+        imageOffsets[dragImageIndex] = {
+            x: dragInitialOffsetX + deltaX,
+            y: dragInitialOffsetY + deltaY
+        };
+        
+        createCollageWithLayout();
+        e.preventDefault();
+    } else if (!isDragging && selectedLayout && collageImages.length > 0) {
+        const coords = getCanvasCoordinates(e);
+        const imageIndex = getImageAtPosition(coords.x, coords.y);
+        collageCanvas.style.cursor = imageIndex >= 0 ? 'grab' : 'default';
+    }
+}
+
+function handleCanvasMouseUp(e) {
+    if (isDragging) {
+        isDragging = false;
+        dragImageIndex = -1;
+        collageCanvas.style.cursor = 'default';
+    }
+}
+
+function handleCanvasTouchStart(e) {
+    handleCanvasMouseDown(e);
+}
+
+function handleCanvasTouchMove(e) {
+    handleCanvasMouseMove(e);
+}
+
+function getImageAtPosition(x, y) {
+    if (!selectedLayout) return -1;
+    
+    const layout = layoutTemplates.find(l => l.id === selectedLayout);
+    if (!layout) return -1;
+    
+    const gutter = parseInt(document.getElementById('collageGutter').value);
+    
+    const canvasWidth = collageCanvas.width;
+    const canvasHeight = collageCanvas.height;
+    const totalGutterWidth = gutter * (layout.cols + 1);
+    const totalGutterHeight = gutter * (layout.rows + 1);
+    const cellWidth = (canvasWidth - totalGutterWidth) / layout.cols;
+    const cellHeight = (canvasHeight - totalGutterHeight) / layout.rows;
+    
+    for (let index = 0; index < layout.cells.length && index < collageImages.length; index++) {
+        const [cellX, cellY, w, h] = layout.cells[index];
+        const imgX = gutter + (cellX * cellWidth) + (cellX * gutter);
+        const imgY = gutter + (cellY * cellHeight) + (cellY * gutter);
+        const imgW = (w * cellWidth) + ((w - 1) * gutter);
+        const imgH = (h * cellHeight) + ((h - 1) * gutter);
+        
+        if (x >= imgX && x <= imgX + imgW && y >= imgY && y <= imgY + imgH) {
+            return index;
+        }
+    }
+    
+    return -1;
+}
+
+// Render layout templates
+function renderLayoutTemplates() {
+    const container = document.getElementById('layoutTemplates');
+    let html = '';
+    
+    layoutTemplates.forEach(layout => {
+        const isDisabled = collageImages.length > 0 && collageImages.length < layout.maxPhotos;
+        const tooltipText = isDisabled 
+            ? `Need ${layout.maxPhotos} photos (you have ${collageImages.length})`
+            : `${layout.maxPhotos} photo${layout.maxPhotos > 1 ? 's' : ''}`;
+        
+        // Fixed size for consistent display
+        const svgSize = 80;
+        const maxDim = Math.max(layout.cols, layout.rows);
+        const scale = svgSize / maxDim;
+        const svgWidth = layout.cols * scale;
+        const svgHeight = layout.rows * scale;
+        
+        html += `
+            <div class="layout-template ${selectedLayout === layout.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}" 
+                 onclick="${!isDisabled ? `selectLayout('${layout.id}')` : ''}"
+                 title="${tooltipText}">
+                <svg viewBox="0 0 ${layout.cols * 100} ${layout.rows * 100}" 
+                     width="${svgWidth}" 
+                     height="${svgHeight}"
+                     style="display: block; margin: 0 auto;">
+                    ${layout.cells.map(cell => {
+                        const [x, y, w, h] = cell;
+                        const cellX = x * 100;
+                        const cellY = y * 100;
+                        const cellW = w * 100;
+                        const cellH = h * 100;
+                        return `<rect x="${cellX + 3}" y="${cellY + 3}" width="${cellW - 6}" height="${cellH - 6}" 
+                                     fill="${isDisabled ? '#2c2c2c' : '#495057'}" 
+                                     stroke="${isDisabled ? '#3c3c3c' : '#6c757d'}" 
+                                     stroke-width="3"
+                                     rx="5" ry="5"/>`;
+                    }).join('')}
+                </svg>
+                <small class="d-block text-center mt-1" style="font-size: 0.65rem; color: #adb5bd;">${layout.maxPhotos}</small>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function selectLayout(layoutId) {
+    const layout = layoutTemplates.find(l => l.id === layoutId);
+    if (!layout) return;
+    
+    // Check if user has enough photos
+    if (collageImages.length < layout.maxPhotos) {
+        showToast(`This layout requires ${layout.maxPhotos} photos (you have ${collageImages.length})`, 'warning');
+        return;
+    }
+    
+    selectedLayout = layoutId;
+    renderLayoutTemplates();
+    
+    if (collageImages.length > 0) {
+        createCollageWithLayout();
+    }
+}
+
+document.getElementById('collageUpload').addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    collageImages = [];
+    imageOffsets = [];
+    const previewContainer = document.getElementById('uploadedPhotosPreview');
+    previewContainer.innerHTML = '';
+    
+    let loadedCount = 0;
+    files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                collageImages.push(img);
+                loadedCount++;
+                
+                // Add thumbnail to preview
+                const col = document.createElement('div');
+                col.className = 'col-auto';
+                col.innerHTML = `
+                    <div class="position-relative" style="width: 80px; height: 80px;">
+                        <img src="${event.target.result}" 
+                             class="img-thumbnail" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                `;
+                previewContainer.appendChild(col);
+                
+                if (loadedCount === files.length) {
+                    document.getElementById('collagePrompt').style.display = 'none';
+                    previewContainer.style.display = 'flex';
+                    showToast(`${files.length} photo${files.length > 1 ? 's' : ''} uploaded`, 'success');
+                    
+                    // Re-render templates to update disabled states
+                    renderLayoutTemplates();
+                    
+                    // Auto-select appropriate layout if none selected or current is invalid
+                    if (!selectedLayout || collageImages.length < layoutTemplates.find(l => l.id === selectedLayout)?.maxPhotos) {
+                        // For 2 photos, always use horizontal layout
+                        if (files.length === 2) {
+                            selectLayout('layout-2h');
+                        } else {
+                            // Find exact match or smallest layout that fits
+                            const exactMatch = layoutTemplates.find(l => l.maxPhotos === files.length);
+                            const smallestFit = layoutTemplates.filter(l => l.maxPhotos >= files.length).sort((a, b) => a.maxPhotos - b.maxPhotos)[0];
+                            
+                            if (exactMatch) {
+                                selectLayout(exactMatch.id);
+                            } else if (smallestFit) {
+                                selectLayout(smallestFit.id);
+                            }
+                        }
+                    } else {
+                        createCollageWithLayout();
+                    }
+                }
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+function createCollageWithLayout() {
+    if (collageImages.length === 0 || !selectedLayout) {
+        showToast('Please upload photos and select a layout', 'warning');
+        return;
+    }
+    
+    const layout = layoutTemplates.find(l => l.id === selectedLayout);
+    if (!layout) return;
+    
+    const gutter = parseInt(document.getElementById('collageGutter').value);
+    const radius = parseInt(document.getElementById('collageRadius').value);
+    const borderWidth = parseInt(document.getElementById('collageBorder').value);
+    const borderColor = document.getElementById('collageBorderColor').value;
+    const backgroundColor = document.getElementById('collageBackground').value;
+    const aspect = document.getElementById('collageAspect').value;
+    
+    // Fixed size: 720x720
+    const canvasWidth = 720;
+    const canvasHeight = 720;
+    
+    collageCanvas.width = canvasWidth;
+    collageCanvas.height = canvasHeight;
+    
+    // Enable high-quality image rendering
+    collageCtx.imageSmoothingEnabled = true;
+    collageCtx.imageSmoothingQuality = 'high';
+    
+    // Fill background
+    collageCtx.fillStyle = backgroundColor;
+    collageCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
+    // Calculate cell dimensions
+    // For 2 images horizontal: subtract gutter from total, then divide by cols
+    const totalGutterWidth = gutter * (layout.cols + 1);
+    const totalGutterHeight = gutter * (layout.rows + 1);
+    const cellWidth = (canvasWidth - totalGutterWidth) / layout.cols;
+    const cellHeight = (canvasHeight - totalGutterHeight) / layout.rows;
+    
+    console.log(`Canvas: ${canvasWidth}x${canvasHeight}, Layout: ${layout.cols}x${layout.rows}, Cell: ${cellWidth}x${cellHeight}, Gutter: ${gutter}`);
+    
+    // Draw each image
+    layout.cells.forEach((cell, index) => {
+        if (index >= collageImages.length) return;
+        
+        const [x, y, w, h] = cell;
+        
+        // Calculate position and size for this cell
+        const imgX = gutter + (x * cellWidth) + (x * gutter);
+        const imgY = gutter + (y * cellHeight) + (y * gutter);
+        const imgW = (w * cellWidth) + ((w - 1) * gutter);
+        const imgH = (h * cellHeight) + ((h - 1) * gutter);
+        
+        console.log(`  Image ${index}: x=${imgX}, y=${imgY}, w=${imgW}, h=${imgH}`);
+        
+        // Save context
+        collageCtx.save();
+        
+        // Clip with rounded corners if radius > 0
+        if (radius > 0) {
+            const rad = radius * 2; // Scale radius for canvas resolution
+            collageCtx.beginPath();
+            collageCtx.moveTo(imgX + rad, imgY);
+            collageCtx.lineTo(imgX + imgW - rad, imgY);
+            collageCtx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + rad);
+            collageCtx.lineTo(imgX + imgW, imgY + imgH - rad);
+            collageCtx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - rad, imgY + imgH);
+            collageCtx.lineTo(imgX + rad, imgY + imgH);
+            collageCtx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - rad);
+            collageCtx.lineTo(imgX, imgY + rad);
+            collageCtx.quadraticCurveTo(imgX, imgY, imgX + rad, imgY);
+            collageCtx.closePath();
+            collageCtx.clip();
+        }
+        
+        // Draw image (cover fit) with high quality
+        const img = collageImages[index];
+        const imgAspect = img.width / img.height;
+        const cellAspect = imgW / imgH;
+        
+        let drawWidth, drawHeight, drawX, drawY;
+        if (imgAspect > cellAspect) {
+            drawHeight = imgH;
+            drawWidth = img.width * (imgH / img.height);
+            drawX = imgX - (drawWidth - imgW) / 2;
+            drawY = imgY;
+        } else {
+            drawWidth = imgW;
+            drawHeight = img.height * (imgW / img.width);
+            drawX = imgX;
+            drawY = imgY - (drawHeight - imgH) / 2;
+        }
+        
+        // Apply image offset for drag-to-reposition
+        const offset = imageOffsets[index] || { x: 0, y: 0 };
+        drawX += offset.x;
+        drawY += offset.y;
+        
+        // Draw with high quality settings
+        collageCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        
+        // Restore context
+        collageCtx.restore();
+        
+        // Draw border around this image if enabled
+        if (borderWidth > 0) {
+            collageCtx.strokeStyle = borderColor;
+            collageCtx.lineWidth = borderWidth * 2; // Scale border width for canvas resolution
+            
+            if (radius > 0) {
+                // Border with rounded corners
+                const rad = radius * 2;
+                collageCtx.beginPath();
+                collageCtx.moveTo(imgX + rad, imgY);
+                collageCtx.lineTo(imgX + imgW - rad, imgY);
+                collageCtx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + rad);
+                collageCtx.lineTo(imgX + imgW, imgY + imgH - rad);
+                collageCtx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - rad, imgY + imgH);
+                collageCtx.lineTo(imgX + rad, imgY + imgH);
+                collageCtx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - rad);
+                collageCtx.lineTo(imgX, imgY + rad);
+                collageCtx.quadraticCurveTo(imgX, imgY, imgX + rad, imgY);
+                collageCtx.closePath();
+                collageCtx.stroke();
+            } else {
+                // Rectangle border
+                collageCtx.strokeRect(imgX, imgY, imgW, imgH);
+            }
+        }
+    });
+    
+    // Show canvas container
+    document.getElementById('uploadedPhotosPreview').style.display = 'none';
+    document.getElementById('collageCanvasContainer').style.display = 'block';
+}
+
+function swapImages() {
+    if (collageImages.length < 2) {
+        showToast('Need at least 2 images to swap', 'warning');
+        return;
+    }
+    
+    // Swap first two images and their offsets
+    [collageImages[0], collageImages[1]] = [collageImages[1], collageImages[0]];
+    [imageOffsets[0], imageOffsets[1]] = [imageOffsets[1], imageOffsets[0]];
+    
+    // Redraw collage
+    if (selectedLayout) {
+        createCollageWithLayout();
+        showToast('Images swapped!', 'success');
+    }
+}
+
+function clearCollage() {
+    collageImages = [];
+    imageOffsets = [];
+    selectedLayout = null;
+    document.getElementById('collageCanvasContainer').style.display = 'none';
+    document.getElementById('collagePrompt').style.display = 'block';
+    document.getElementById('uploadedPhotosPreview').style.display = 'none';
+    document.getElementById('uploadedPhotosPreview').innerHTML = '';
+    document.getElementById('collageUpload').value = '';
+    renderLayoutTemplates();
+    showToast('Collage cleared', 'info');
+}
+
+function saveCollage() {
+    const container = document.getElementById('collageCanvasContainer');
+    if (container.style.display === 'none') {
+        showToast('Please create a collage first', 'warning');
+        return;
+    }
+    
+    // Save with maximum quality (1.0 = 100% quality)
+    const link = document.createElement('a');
+    link.download = 'photo-collage-hq.png';
+    link.href = collageCanvas.toDataURL('image/png', 1.0); // PNG with max quality
+    link.click();
+    showToast('High quality collage saved successfully', 'success');
+}
+
+// Initialize layout templates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    renderLayoutTemplates();
+});
+</script>
+
+<style>
+.layout-template {
+    cursor: pointer;
+    padding: 12px;
+    border: 2px solid #495057;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #2c3034;
+    min-width: 100px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.layout-template:hover:not(.disabled) {
+    border-color: #0dcaf0;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(13, 202, 240, 0.2);
+}
+
+.layout-template.selected {
+    border-color: #0dcaf0;
+    background: #1a4d5a;
+    box-shadow: 0 0 15px rgba(13, 202, 240, 0.4);
+}
+
+.layout-template.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: #1a1a1a;
+}
+
+#uploadedPhotosPreview {
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+#layoutTemplates {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+#layoutTemplates::-webkit-scrollbar {
+    height: 8px;
+}
+
+#layoutTemplates::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+#layoutTemplates::-webkit-scrollbar-thumb {
+    background: #495057;
+    border-radius: 4px;
+}
+
+#layoutTemplates::-webkit-scrollbar-thumb:hover {
+    background: #6c757d;
+}
+
+/* Vertical divider */
+.vr {
+    background-color: #495057;
+    opacity: 0.5;
+    width: 1px;
+}
+</style>
+{% endblock %}

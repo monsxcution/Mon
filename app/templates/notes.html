@@ -3,14 +3,32 @@
 {% block content %}
 {# --- PHẦN HTML CHO CÁC CONTEXT MENU (ĐANG BỊ THIẾU) --- #}
 <div id="notes-tab-context-menu" class="custom-context-menu">
-    <div class="menu-item" onclick="window.prepareAddNoteModal()">
+    <div class="menu-item" onclick="window.addNewNoteFromContextMenu()">
         <i class="bi bi-plus-lg me-2"></i> Thêm Ghi Chú Mới
+    </div>
+    <div class="menu-item has-submenu">
+        <i class="bi bi-aspect-ratio me-2"></i> Chế độ xem
+        <i class="bi bi-chevron-right submenu-arrow"></i>
+        <div class="submenu">
+            <div class="menu-item" data-size-modifier="default">
+                <i class="bi bi-check-circle-fill me-2"></i>Mặc định
+            </div>
+            <div class="menu-item" data-size-modifier="h-minus-2">
+                <i class="bi bi-check-circle-fill me-2 d-none"></i>Thấp
+            </div>
+            <div class="menu-item" data-size-modifier="h-minus-4">
+                <i class="bi bi-check-circle-fill me-2 d-none"></i>Thấp nhất
+            </div>
+        </div>
     </div>
 </div>
 
 <div id="note-card-context-menu" class="custom-context-menu">
     <div class="menu-item" id="context-mark-note">
         <i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu
+    </div>
+    <div class="menu-item" id="context-delete-note" style="color: #dc3545;">
+        <i class="bi bi-trash-fill me-2"></i> Xóa Ghi Chú
     </div>
 </div>
 
@@ -33,7 +51,31 @@
             <span style="background-color: #FF7043;" data-color="#FF7043"></span>
         </div>
     </div>
+    <div class="menu-divider"></div>
     <div class="menu-item" id="context-link"><i class="bi bi-link-45deg me-2"></i> Gán Link</div>
+    <div class="menu-item" id="context-profile"><i class="bi bi-person-badge me-2"></i> Gán Profile</div>
+</div>
+
+<div id="profile-span-context-menu" class="custom-context-menu">
+    <div class="menu-item has-submenu">
+        <i class="bi bi-palette-fill"></i> Đổi màu
+        <i class="bi bi-chevron-right submenu-arrow"></i>
+        <div class="submenu">
+            <div class="color-grid">
+                <div class="color-option" data-color="#00e0ff" style="background-color: #00e0ff;" title="Cyan"></div>
+                <div class="color-option" data-color="#ff4757" style="background-color: #ff4757;" title="Red"></div>
+                <div class="color-option" data-color="#2ed573" style="background-color: #2ed573;" title="Green"></div>
+                <div class="color-option" data-color="#ffa502" style="background-color: #ffa502;" title="Orange"></div>
+                <div class="color-option" data-color="#3742fa" style="background-color: #3742fa;" title="Blue"></div>
+                <div class="color-option" data-color="#f368e0" style="background-color: #f368e0;" title="Pink"></div>
+                <div class="color-option" data-color="#54a0ff" style="background-color: #54a0ff;" title="Sky Blue"></div>
+                <div class="color-option" data-color="#ffffff" style="background-color: #ffffff;" title="White"></div>
+            </div>
+        </div>
+    </div>
+    <div class="menu-item" id="context-delete-profile">
+        <i class="bi bi-trash-fill me-2"></i> Xóa
+    </div>
 </div>
 
 {# --- PHẦN GIAO DIỆN CHÍNH (ĐÃ SỬA LẠI CHO ĐÚNG) --- #}
@@ -120,6 +162,68 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="notes-addProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gán Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label for="notes-profile-id" class="form-label">ID</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="notes-profile-id" placeholder="Nhập ID..." autocomplete="off">
+                            <button class="btn btn-outline-secondary" type="button" id="notes-copy-profile-id-btn" title="Copy ID">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="notes-profile-password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="notes-profile-password" placeholder="Nhập Password..." autocomplete="new-password">
+                            <button class="btn btn-outline-secondary" type="button" id="notes-copy-profile-password-btn" title="Copy Password">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="notes-profile-content" class="form-label">Nội dung</label>
+                    <textarea class="form-control" id="notes-profile-content" rows="4" placeholder="Nhập nội dung chi tiết..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger me-auto" id="notes-delete-profile-btn">Xóa Profile</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="notes-save-profile-btn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="notes-confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="mb-0">Bạn có chắc chắn muốn xóa ghi chú này?</p>
+                <small class="text-muted">Hành động này không thể hoàn tác.</small>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
+                <button type="button" class="btn btn-danger" id="notes-confirm-delete-btn">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 
@@ -156,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeNoteId = null;
     let autoSaveTimer = null;
     let savedSelection = null;
+    let blockNextBlurSave = false;
     window.notesData = [];
     window.filteredNotes = [];
 
@@ -226,19 +331,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const col = document.createElement('div');
         col.className = 'note-card-wrapper';
         
-        const markedIconHTML = note.is_marked ? `<i class="bi bi-star-fill text-warning position-absolute top-0 start-0 m-2"></i>` : '';
+        const markedIconHTML = note.is_marked ? `<i class="bi bi-star-fill text-warning me-2" title="Đã đánh dấu"></i>` : '';
         const title = note.title_html || 'Ghi chú không tiêu đề';
         const content = note.content_html || '...';
 
         col.innerHTML = `
             <div class="card h-100" data-note-id="${note.id}">
-                ${markedIconHTML}
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title text-truncate">${title}</h5>
-                    <div class="card-text card-note-body flex-grow-1">${content}</div>
-                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                        <small class="text-muted">${formatTimeAgo(note.modified_at)}</small>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0 text-truncate">${title}</h5>
+                        <div class="d-flex align-items-center flex-shrink-0 ms-2">
+                            ${markedIconHTML}
+                            <small class="text-muted" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">${formatTimeAgo(note.modified_at)}</small>
+                        </div>
                     </div>
+                    <div class="card-text card-note-body flex-grow-1">${content}</div>
                 </div>
             </div>`;
 
@@ -258,6 +365,23 @@ document.addEventListener('DOMContentLoaded', function () {
         container.classList.remove('notes-grid-view');
         container.classList.add('notes-list-view');
     }
+
+    window.closeDetailPanel = () => {
+        listWrapper.classList.remove('shrunk');
+        detailWrapper.classList.remove('visible');
+        container.classList.remove('notes-list-view');
+        container.classList.add('notes-grid-view');
+        document.querySelectorAll('#notes-container .card').forEach(card => card.classList.remove('note-card-active'));
+        activeNoteId = null;
+        
+        // Reset detail panel
+        const detailHeader = detailWrapper.querySelector('.card-header');
+        const detailContent = detailWrapper.querySelector('#notes-detail-content');
+        const detailPlaceholder = detailWrapper.querySelector('#notes-detail-placeholder');
+        detailHeader.innerHTML = '';
+        detailContent.classList.add('d-none');
+        detailPlaceholder.classList.remove('d-none');
+    };
 
     function showNoteDetail(note) {
         activeNoteId = note.id;
@@ -279,6 +403,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </small>
                 <div>
                     <button class="btn btn-sm btn-primary" onclick="window.prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
+                    <button class="btn btn-sm btn-outline-info" onclick="window.setAlarmForNote('${note.id}')" title="Đặt báo thức"><i class="bi bi-alarm"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
                     <button class="btn-close btn-close-white" onclick="window.closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
                 </div>
@@ -287,39 +412,111 @@ document.addEventListener('DOMContentLoaded', function () {
         detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
         const editorEl = document.getElementById('detail-editable-full');
         
-        editorEl.addEventListener('input', () => {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => saveNoteChanges(note.id), 1500);
+        // Set initial content for comparison
+        editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
+        
+        // Focus handler - update initial content
+        editorEl.addEventListener('focus', () => {
+            editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
+        });
+        
+        // Blur handler - save immediately if content changed
+        editorEl.addEventListener('blur', () => {
+            if (blockNextBlurSave) {
+                blockNextBlurSave = false;
+                return;
+            }
+            saveNoteChanges(note.id);
         });
 
         editorEl.addEventListener('contextmenu', handleEditorContextMenu);
+        
+        // Paste handler - auto-save after paste
+        editorEl.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                if (activeNoteId) {
+                    saveNoteChanges(activeNoteId, true);
+                }
+            }, 100);
+        });
         
         detailPlaceholder.classList.add('d-none');
         detailContent.classList.remove('d-none');
     }
 
-    async function saveNoteChanges(noteId) {
+    async function saveNoteChanges(noteId, forceSave = false) {
         if (!noteId) return;
+        
         const editorEl = document.getElementById('detail-editable-full');
         if (!editorEl) return;
+        
+        const initialContent = editorEl.getAttribute('data-initial-content');
+        const currentContent = editorEl.innerHTML;
+        
+        // Skip save if content unchanged and not forced
+        if (!forceSave && currentContent === initialContent) {
+            return;
+        }
+        
         const fullContent = editorEl.innerHTML;
         const parts = fullContent.split('<br>');
-        const payload = { title_html: parts.shift() || '', content_html: parts.join('<br>') };
+        const payload = { 
+            title_html: parts.shift() || '', 
+            content_html: parts.join('<br>') 
+        };
+        
         try {
+            showToast('Đang lưu...', 'info');
+            
             const response = await fetch(`{{ url_for('notes_feature.api_update_note', note_id='') }}${noteId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            
             if (!response.ok) throw new Error('Lỗi khi lưu trên server');
+            
             const updatedNote = await response.json();
             
-            // Update local data
+            // Update local data immediately
             const index = window.notesData.findIndex(n => n.id === noteId);
-            if (index !== -1) window.notesData[index] = updatedNote;
-
-            showToast('Đã tự động lưu!', 'success');
-            fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+            if (index !== -1) {
+                window.notesData[index] = updatedNote;
+            }
+            
+            // Update initial content to new saved state
+            editorEl.setAttribute('data-initial-content', currentContent);
+            
+            showToast('Đã lưu thay đổi!', 'success');
+            
+            // Update only the specific card without full re-render
+            const cardWrapper = document.querySelector(`[data-note-id="${noteId}"]`);
+            if (cardWrapper) {
+                const card = cardWrapper.querySelector('.card');
+                if (card) {
+                    // Update card preview content
+                    const cardTitle = card.querySelector('.card-title');
+                    const cardBody = card.querySelector('.card-note-body');
+                    const timeStamp = card.querySelector('.text-muted[title*="Ngày"]');
+                    
+                    if (cardTitle) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = updatedNote.title_html;
+                        cardTitle.innerHTML = tempDiv.textContent || tempDiv.innerText;
+                    }
+                    
+                    if (cardBody) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = updatedNote.content_html;
+                        cardBody.innerHTML = tempDiv.textContent || tempDiv.innerText;
+                    }
+                    
+                    if (timeStamp) {
+                        timeStamp.innerHTML = `<i class="bi bi-clock-history me-1"></i>${formatTimeAgo(updatedNote.modified_at)}`;
+                    }
+                }
+            }
+            
         } catch (error) {
             showToast('Lỗi khi tự động lưu!', 'error');
         }
@@ -334,21 +531,53 @@ document.addEventListener('DOMContentLoaded', function () {
         notesModal.show();
     };
 
+    window.addNewNoteFromContextMenu = () => {
+        console.log('addNewNoteFromContextMenu called');
+        hideAllContextMenus();
+        window.prepareAddNoteModal();
+    };
+
+    window.setAlarmForNote = (noteId) => {
+        const note = window.notesData.find(n => n.id === noteId);
+        if (!note) return;
+        
+        modalTitle.textContent = 'Đặt Báo Thức';
+        editIdInput.value = noteId;
+        titleInput.innerHTML = note.title_html || '';
+        contentEditor.innerHTML = note.content_html || '';
+        notesModal.show();
+    };
+
+    // Confirm Delete Modal
+    const confirmDeleteModal = new bootstrap.Modal(document.getElementById('notes-confirmDeleteModal'));
+    const confirmDeleteBtn = document.getElementById('notes-confirm-delete-btn');
+    let pendingDeleteNoteId = null;
+
     window.deleteNoteWrapper = async (id, event) => {
         event.stopPropagation();
-        if (!confirm('Bạn có chắc muốn xóa ghi chú này?')) return;
+        pendingDeleteNoteId = id;
+        confirmDeleteModal.show();
+    };
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!pendingDeleteNoteId) return;
+        
         try {
-            const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${id}`, { method: 'POST' });
+            const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${pendingDeleteNoteId}`, { method: 'POST' });
             if (!response.ok) throw new Error('Lỗi khi xóa trên server');
             
-            if (id === activeNoteId) window.closeDetailPanel();
+            if (pendingDeleteNoteId === activeNoteId) window.closeDetailPanel();
+            
+            confirmDeleteModal.hide();
+            pendingDeleteNoteId = null;
             
             await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
             showToast('Đã xóa ghi chú.', 'info');
         } catch (error) {
             showToast('Lỗi: Không thể xóa ghi chú.', 'error');
+            confirmDeleteModal.hide();
         }
-    };
+    });
 
     window.closeDetailPanel = () => {
         listWrapper.classList.remove('shrunk');
@@ -396,14 +625,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function handleTabContextMenu(e) {
         console.log('handleTabContextMenu triggered at:', e.clientX, e.clientY);
-        if (!e.target.closest('.card') && !e.target.closest('#notes-detail-wrapper')) {
+        
+        // Only check if NOT clicking on a note card
+        const noteCard = e.target.closest('.card[data-note-id]');
+        
+        if (!noteCard) {
             console.log('Condition met: showing notesTabMenu');
             e.preventDefault();
             e.stopPropagation();
             hideAllContextMenus();
             showMenu(notesTabMenu, e.clientX, e.clientY);
         } else {
-            console.log('Condition not met: click was on a card or detail panel');
+            console.log('Condition not met: click was on a note card');
         }
     }
 
@@ -464,20 +697,32 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
     });
 
-    // Context menu actions
+    // Context menu actions for note card
     noteCardMenu.addEventListener('click', async (e) => {
+        const markItem = e.target.closest('#context-mark-note');
+        const deleteItem = e.target.closest('#context-delete-note');
+        
         e.stopPropagation();
         const noteId = noteCardMenu.dataset.noteId;
         if (!noteId) return;
-        try {
-            const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
-            if (!response.ok) throw new Error('Server error');
-            await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
-            showToast('Đã cập nhật đánh dấu!', 'success');
-        } catch (error) {
-            showToast('Lỗi khi đánh dấu.', 'error');
-        } finally {
+        
+        if (markItem) {
+            // Handle mark/unmark
+            try {
+                const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
+                if (!response.ok) throw new Error('Server error');
+                await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                showToast('Đã cập nhật đánh dấu!', 'success');
+            } catch (error) {
+                showToast('Lỗi khi đánh dấu.', 'error');
+            } finally {
+                hideAllContextMenus();
+            }
+        } else if (deleteItem) {
+            // Handle delete
             hideAllContextMenus();
+            pendingDeleteNoteId = noteId;
+            confirmDeleteModal.show();
         }
     });
 
@@ -518,6 +763,196 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => saveNoteChanges(activeNoteId), 100);
         }
     });
+
+    // Profile Modal Elements
+    const profileModal = new bootstrap.Modal(document.getElementById('notes-addProfileModal'));
+    const profileIdInput = document.getElementById('notes-profile-id');
+    const profilePasswordInput = document.getElementById('notes-profile-password');
+    const profileContentInput = document.getElementById('notes-profile-content');
+    const saveProfileBtn = document.getElementById('notes-save-profile-btn');
+    const deleteProfileBtn = document.getElementById('notes-delete-profile-btn');
+    const copyProfileIdBtn = document.getElementById('notes-copy-profile-id-btn');
+    const copyProfilePasswordBtn = document.getElementById('notes-copy-profile-password-btn');
+    const profileSpanMenu = document.getElementById('profile-span-context-menu');
+    let currentProfileSpan = null;
+    
+    // Profile: Click "Gán Profile" in context menu
+    document.querySelector('#context-profile').addEventListener('click', () => {
+        const selection = window.getSelection();
+        if (selection.toString().length === 0) {
+            alert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
+            return;
+        }
+        
+        savedSelection = selection.getRangeAt(0).cloneRange();
+        profileIdInput.value = '';
+        profilePasswordInput.value = '';
+        profileContentInput.value = '';
+        deleteProfileBtn.style.display = 'none';
+        blockNextBlurSave = true;
+        hideAllContextMenus();
+        profileModal.show();
+    });
+    
+    // Profile: Save button
+    saveProfileBtn.addEventListener('click', () => {
+        const profileId = profileIdInput.value.trim();
+        const profilePassword = profilePasswordInput.value.trim();
+        const profileContent = profileContentInput.value.trim();
+        
+        if (!profileId) {
+            alert('Vui lòng nhập ID.');
+            return;
+        }
+        
+        if (currentProfileSpan) {
+            // Editing existing profile
+            currentProfileSpan.dataset.profileId = profileId;
+            currentProfileSpan.dataset.profilePassword = profilePassword;
+            currentProfileSpan.dataset.profileContent = profileContent;
+            currentProfileSpan.textContent = profileId;
+        } else if (savedSelection) {
+            // Creating new profile
+            restoreSelection();
+            const span = document.createElement('span');
+            span.className = 'has-profile';
+            span.dataset.profileId = profileId;
+            span.dataset.profilePassword = profilePassword;
+            span.dataset.profileContent = profileContent;
+            span.textContent = profileId;
+            span.style.color = '#00e0ff';
+            
+            savedSelection.deleteContents();
+            savedSelection.insertNode(span);
+        }
+        
+        profileModal.hide();
+        savedSelection = null;
+        currentProfileSpan = null;
+        saveNoteChanges(activeNoteId, true);
+    });
+    
+    // Profile: Delete button
+    deleteProfileBtn.addEventListener('click', () => {
+        if (currentProfileSpan && confirm('Xóa profile này?')) {
+            const text = currentProfileSpan.textContent;
+            currentProfileSpan.replaceWith(document.createTextNode(text));
+            profileModal.hide();
+            currentProfileSpan = null;
+            saveNoteChanges(activeNoteId, true);
+        }
+    });
+    
+    // Profile: Copy buttons
+    copyProfileIdBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(profileIdInput.value);
+        showToast('Đã copy ID!', 'success');
+    });
+    
+    copyProfilePasswordBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(profilePasswordInput.value);
+        showToast('Đã copy Password!', 'success');
+    });
+    
+    // Profile Span Context Menu
+    document.addEventListener('contextmenu', (e) => {
+        const profileSpan = e.target.closest('.has-profile');
+        if (profileSpan) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideAllContextMenus();
+            currentProfileSpan = profileSpan;
+            showMenu(profileSpanMenu, e.clientX, e.clientY);
+        }
+    });
+    
+    // Profile Span: Click to edit
+    document.addEventListener('click', (e) => {
+        const profileSpan = e.target.closest('.has-profile');
+        if (profileSpan && e.target.classList.contains('has-profile')) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentProfileSpan = profileSpan;
+            profileIdInput.value = profileSpan.dataset.profileId || '';
+            profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
+            profileContentInput.value = profileSpan.dataset.profileContent || '';
+            deleteProfileBtn.style.display = 'block';
+            blockNextBlurSave = true;
+            profileModal.show();
+        }
+    });
+    
+    // Profile Span: Change color
+    profileSpanMenu.addEventListener('click', (e) => {
+        const colorOption = e.target.closest('.color-option');
+        if (colorOption && currentProfileSpan) {
+            const newColor = colorOption.dataset.color;
+            currentProfileSpan.style.color = newColor;
+            hideAllContextMenus();
+            saveNoteChanges(activeNoteId, true);
+        }
+    });
+    
+    // Profile Span: Delete
+    document.querySelector('#context-delete-profile').addEventListener('click', () => {
+        if (currentProfileSpan && confirm('Xóa profile này?')) {
+            const text = currentProfileSpan.textContent;
+            currentProfileSpan.replaceWith(document.createTextNode(text));
+            hideAllContextMenus();
+            currentProfileSpan = null;
+            saveNoteChanges(activeNoteId, true);
+        }
+    });
+    
+    // Profile Span: Click to edit
+    document.addEventListener('click', (e) => {
+        const profileSpan = e.target.closest('.has-profile');
+        if (profileSpan) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentProfileSpan = profileSpan;
+            profileIdInput.value = profileSpan.dataset.profileId || '';
+            profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
+            profileContentInput.value = profileSpan.dataset.profileContent || '';
+            deleteProfileBtn.style.display = 'block';
+            profileModal.show();
+        }
+    });
+
+    // --- Card Size Modifier (Chế độ xem) ---
+    function applySavedCardSize() {
+        const savedModifier = localStorage.getItem('notesCardSizeModifier') || 'default';
+        container.classList.remove('h-minus-2', 'h-minus-4');
+        if (savedModifier !== 'default') {
+            container.classList.add(savedModifier);
+        }
+        
+        // Update checkmarks in menu
+        const tabMenu = document.getElementById('notes-tab-context-menu');
+        if (tabMenu) {
+            const allChecks = tabMenu.querySelectorAll('.submenu .bi-check-circle-fill');
+            allChecks.forEach(check => check.classList.add('d-none'));
+            
+            const activeCheck = tabMenu.querySelector(`.submenu [data-size-modifier="${savedModifier}"] i`);
+            if (activeCheck) {
+                activeCheck.classList.remove('d-none');
+            }
+        }
+    }
+
+    // Event listener for size modifier menu
+    const sizeModifierMenu = document.getElementById('notes-tab-context-menu');
+    if (sizeModifierMenu) {
+        sizeModifierMenu.addEventListener('click', (e) => {
+            const sizeItem = e.target.closest('.submenu .menu-item[data-size-modifier]');
+            if (sizeItem) {
+                const modifier = sizeItem.dataset.sizeModifier;
+                localStorage.setItem('notesCardSizeModifier', modifier);
+                applySavedCardSize();
+                hideAllContextMenus();
+            }
+        });
+    }
     
     // Global clicks
     document.addEventListener('click', hideAllContextMenus);
@@ -525,6 +960,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Initial Setup ---
     async function initializeNotesView() {
+        applySavedCardSize(); // Apply saved card size preference
         await fetchAndRenderNotes();
         if (window.notesData.length > 0) {
             showNoteDetail(window.notesData[0]);

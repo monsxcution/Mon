@@ -73,39 +73,62 @@ def api_get_notes():
 def api_add_note():
     data = request.json
     title_html, content_html = data.get("title_html", "").strip(), data.get("content_html", "").strip()
+    reminder_time = data.get("reminder_time") or None
+
     if not title_html and not content_html:
         return jsonify({"error": "Tiêu đề hoặc nội dung không được để trống"}), 400
     
     now = datetime.now(timezone.utc).isoformat()
     new_note = {
         "id": str(uuid.uuid4()), "title_html": title_html, "content_html": content_html,
-        "due_time": data.get("due_time") or None, "status": "active" if data.get("due_time") else "none", "modified_at": now
+        "due_time": reminder_time, 
+        "status": "active" if reminder_time else "none", 
+        "modified_at": now,
+        "is_marked": data.get("is_marked", False) # Ensure is_marked is handled
     }
 
     conn = get_db_connection()
     conn.execute(
-        "INSERT INTO notes (id, title_html, content_html, due_time, status, modified_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (new_note['id'], new_note['title_html'], new_note['content_html'], new_note['due_time'], new_note['status'], new_note['modified_at'])
+        "INSERT INTO notes (id, title_html, content_html, due_time, status, modified_at, is_marked) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (new_note['id'], new_note['title_html'], new_note['content_html'], new_note['due_time'], new_note['status'], new_note['modified_at'], new_note['is_marked'])
     )
     conn.commit()
+    
+    # Fetch the newly created note to return complete data
+    saved_note_row = conn.execute("SELECT * FROM notes WHERE id = ?", (new_note['id'],)).fetchone()
     conn.close()
-    return jsonify(new_note), 201
+    return jsonify(dict(saved_note_row)), 201
 
 @notes_bp.route("/api/update/<note_id>", methods=["POST"])
 def api_update_note(note_id):
     data = request.json
     title_html, content_html = data.get("title_html", "").strip(), data.get("content_html", "").strip()
+    reminder_time = data.get("reminder_time") # Allows setting reminder to null
+
     if not title_html and not content_html:
         return jsonify({"error": "Tiêu đề hoặc nội dung không được để trống"}), 400
     
-    due_time = data.get("due_time") or None
-    status = "active" if due_time else "none" # Simplified status logic, you may need to adjust if "notified" state is handled differently
     modified_at = datetime.now(timezone.utc).isoformat()
 
     conn = get_db_connection()
+    
+    # Get current status to avoid overwriting 'notified'
+    current_note = conn.execute("SELECT status FROM notes WHERE id = ?", (note_id,)).fetchone()
+    if not current_note:
+        conn.close()
+        return jsonify({"error": "Không tìm thấy ghi chú"}), 404
+
+    # Determine the new status
+    if reminder_time:
+        status = "active"
+    elif current_note['status'] == 'active':
+        status = 'none'
+    else: # Keep 'notified' or other statuses if they exist
+        status = current_note['status']
+
     cursor = conn.execute(
         "UPDATE notes SET title_html = ?, content_html = ?, due_time = ?, status = ?, modified_at = ? WHERE id = ?",
-        (title_html, content_html, due_time, status, modified_at, note_id)
+        (title_html, content_html, reminder_time, status, modified_at, note_id)
     )
     conn.commit()
     
