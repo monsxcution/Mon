@@ -96,21 +96,63 @@
                             </button>
                         </div>
                         
-                        <!-- Blemish Removal Button -->
-                        <div class="col-auto">
-                            <button class="btn btn-outline-success btn-sm" onclick="toggleBlemishTool()" id="blemishToolBtn" title="Remove blemishes, moles, tattoos - Click and drag on areas to heal">
+                        <!-- Blemish Removal Button with Settings -->
+                        <div class="col-auto position-relative">
+                            <button class="btn btn-outline-success btn-sm" onclick="toggleBlemishTool()" id="blemishToolBtn" 
+                                    onmouseenter="showBlemishSettings()" onmouseleave="hideBlemishSettings()"
+                                    title="Remove blemishes, moles, tattoos">
                                 <i class="bi bi-bandaid me-1"></i>Heal
                             </button>
+                            
+                            <!-- Blemish Settings Dropdown -->
+                            <div id="blemishSettingsMenu" 
+                                 onmouseenter="showBlemishSettings()" onmouseleave="hideBlemishSettings()"
+                                 style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: #1a1a1a; border: 2px solid #198754; border-radius: 8px; padding: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.8); z-index: 2000; min-width: 280px;">
+                                
+                                <!-- Brush Size -->
+                                <div style="margin-bottom: 12px;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label mb-0" style="color: #adb5bd; font-size: 0.85rem;">Brush Size</label>
+                                        <small class="text-muted"><span id="blemishBrushValue">15</span>px</small>
+                                    </div>
+                                    <input type="range" class="form-range" id="blemishBrushSlider" min="5" max="40" value="15" 
+                                           onchange="updateBlemishBrushSize(this.value)" style="width: 100%;">
+                                </div>
+                                
+                                <!-- Inpaint Radius -->
+                                <div style="margin-bottom: 12px;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label mb-0" style="color: #adb5bd; font-size: 0.85rem;">Heal Radius</label>
+                                        <small class="text-muted"><span id="blemishRadiusValue">5</span>px</small>
+                                    </div>
+                                    <input type="range" class="form-range" id="blemishRadiusSlider" min="3" max="10" value="5" 
+                                           onchange="updateBlemishRadius(this.value)" style="width: 100%;">
+                                    <small class="text-muted" style="font-size: 0.75rem;">Larger = smoother but slower</small>
+                                </div>
+                                
+                                <!-- Algorithm Selection -->
+                                <div style="margin-bottom: 8px; padding-top: 8px; border-top: 1px solid #495057;">
+                                    <label class="form-label mb-2" style="color: #adb5bd; font-size: 0.85rem;">Algorithm</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="blemishMethod" id="methodNS" value="ns" checked>
+                                        <label class="btn btn-outline-success btn-sm" for="methodNS" style="font-size: 0.8rem;">
+                                            Navier-Stokes
+                                            <br><small style="font-size: 0.7rem; opacity: 0.7;">Natural</small>
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="blemishMethod" id="methodTelea" value="telea">
+                                        <label class="btn btn-outline-success btn-sm" for="methodTelea" style="font-size: 0.8rem;">
+                                            Telea
+                                            <br><small style="font-size: 0.7rem; opacity: 0.7;">Fast</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                            </div>
                         </div>
                         
-                        <!-- Crop Button -->
-                        <div class="col-auto">
-                            <button class="btn btn-outline-info btn-sm" onclick="toggleCropTool()" id="cropToolBtn" title="Crop image - Adjust frame and press Enter to apply">
-                                <i class="bi bi-scissors me-1"></i>Crop
-                            </button>
-                        </div>
+                        <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
                         
-                        <!-- Enhance Button -->
                         <div class="col-auto">
                             <button class="btn btn-outline-primary btn-sm" onclick="enhanceImage()" id="enhanceBtn" title="Enhance image quality - CLAHE, sharpen, denoise">
                                 <i class="bi bi-stars me-1"></i>Enhance
@@ -963,13 +1005,45 @@ function clearAllHistory() {
     showToast('All history cleared', 'info');
 }
 
-// ===== BLEMISH REMOVAL TOOL (HEALING BRUSH) =====
+// ===== BLEMISH REMOVAL TOOL (HEALING BRUSH - Backend OpenCV Inpainting) =====
 let blemishToolActive = false;
-let blemishBrushSize = 12; // Reduced from 20 to 12
+let blemishBrushSize = 15; // Optimal size for drawing mask
+let blemishInpaintRadius = 5; // Inpainting radius (3-10)
+let blemishMethod = 'ns'; // 'ns' or 'telea'
 let isHealing = false;
-let healingPoints = [];
-let lastHealX = -1;
-let lastHealY = -1;
+let blemishMaskCanvas = null; // Separate canvas for drawing mask
+let blemishMaskCtx = null;
+let originalImageForBlemish = null; // Store original before healing
+let blemishSettingsTimeout = null; // For hover delay
+
+// Settings UI functions
+function showBlemishSettings() {
+    clearTimeout(blemishSettingsTimeout);
+    document.getElementById('blemishSettingsMenu').style.display = 'block';
+}
+
+function hideBlemishSettings() {
+    blemishSettingsTimeout = setTimeout(() => {
+        document.getElementById('blemishSettingsMenu').style.display = 'none';
+    }, 300); // 300ms delay before hiding
+}
+
+function updateBlemishBrushSize(value) {
+    blemishBrushSize = parseInt(value);
+    document.getElementById('blemishBrushValue').textContent = value;
+}
+
+function updateBlemishRadius(value) {
+    blemishInpaintRadius = parseInt(value);
+    document.getElementById('blemishRadiusValue').textContent = value;
+}
+
+// Get selected method
+function getBlemishMethod() {
+    const nsRadio = document.getElementById('methodNS');
+    const teleaRadio = document.getElementById('methodTelea');
+    return nsRadio.checked ? 'ns' : 'telea';
+}
 
 function toggleBlemishTool() {
     if (collageImages.length === 0) {
@@ -991,8 +1065,22 @@ function toggleBlemishTool() {
         btn.style.backgroundColor = '#198754';
         btn.style.color = 'white';
         singleImageCanvas.style.cursor = 'crosshair';
+        
+        // Create mask canvas
+        if (!blemishMaskCanvas) {
+            blemishMaskCanvas = document.createElement('canvas');
+            blemishMaskCanvas.width = singleImageCanvas.width;
+            blemishMaskCanvas.height = singleImageCanvas.height;
+            blemishMaskCtx = blemishMaskCanvas.getContext('2d');
+            blemishMaskCtx.fillStyle = 'black';
+            blemishMaskCtx.fillRect(0, 0, blemishMaskCanvas.width, blemishMaskCanvas.height);
+        }
+        
+        // Store original image
+        originalImageForBlemish = singleImageCtx.getImageData(0, 0, singleImageCanvas.width, singleImageCanvas.height);
+        
         setupBlemishListeners();
-        showToast('🩹 Click and drag to heal blemishes', 'success');
+        showToast('🩹 Paint over blemishes, then press Enter to heal', 'success');
     } else {
         btn.classList.remove('active');
         btn.style.backgroundColor = '';
@@ -1004,139 +1092,111 @@ function toggleBlemishTool() {
 }
 
 function setupBlemishListeners() {
-    singleImageCanvas.addEventListener('mousedown', startHealing);
-    singleImageCanvas.addEventListener('mousemove', continueHealing);
-    singleImageCanvas.addEventListener('mouseup', endHealing);
-    singleImageCanvas.addEventListener('mouseleave', endHealing);
+    singleImageCanvas.addEventListener('mousedown', startDrawingMask);
+    singleImageCanvas.addEventListener('mousemove', continueDrawingMask);
+    singleImageCanvas.addEventListener('mouseup', endDrawingMask);
+    singleImageCanvas.addEventListener('mouseleave', endDrawingMask);
+    
+    // Listen for Enter key to process healing
+    document.addEventListener('keydown', processBlemishHealing);
 }
 
 function removeBlemishListeners() {
-    singleImageCanvas.removeEventListener('mousedown', startHealing);
-    singleImageCanvas.removeEventListener('mousemove', continueHealing);
-    singleImageCanvas.removeEventListener('mouseup', endHealing);
-    singleImageCanvas.removeEventListener('mouseleave', endHealing);
+    singleImageCanvas.removeEventListener('mousedown', startDrawingMask);
+    singleImageCanvas.removeEventListener('mousemove', continueDrawingMask);
+    singleImageCanvas.removeEventListener('mouseup', endDrawingMask);
+    singleImageCanvas.removeEventListener('mouseleave', endDrawingMask);
+    document.removeEventListener('keydown', processBlemishHealing);
 }
 
-function startHealing(e) {
+function startDrawingMask(e) {
     if (!blemishToolActive) return;
-    
-    // Save canvas state before healing
-    saveCanvasState();
-    
     isHealing = true;
-    healingPoints = [];
-    const rect = singleImageCanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (singleImageCanvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (singleImageCanvas.height / rect.height);
-    lastHealX = x;
-    lastHealY = y;
-    healingPoints.push({x, y});
-    healBlemish(x, y);
+    drawMaskPoint(e);
 }
 
-function continueHealing(e) {
+function continueDrawingMask(e) {
     if (!isHealing || !blemishToolActive) return;
+    drawMaskPoint(e);
+}
+
+function endDrawingMask() {
+    isHealing = false;
+}
+
+function drawMaskPoint(e) {
     const rect = singleImageCanvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (singleImageCanvas.width / rect.width);
     const y = (e.clientY - rect.top) * (singleImageCanvas.height / rect.height);
     
-    // Only heal if moved at least 3 pixels (prevent over-healing)
-    const dist = Math.sqrt((x - lastHealX) ** 2 + (y - lastHealY) ** 2);
-    if (dist < 3) return;
+    // Draw on mask canvas (white = heal this area)
+    blemishMaskCtx.fillStyle = 'white';
+    blemishMaskCtx.beginPath();
+    blemishMaskCtx.arc(x, y, blemishBrushSize, 0, Math.PI * 2);
+    blemishMaskCtx.fill();
     
-    lastHealX = x;
-    lastHealY = y;
-    healingPoints.push({x, y});
-    healBlemish(x, y);
+    // Show visual feedback on main canvas (semi-transparent red overlay)
+    singleImageCtx.save();
+    singleImageCtx.globalAlpha = 0.3;
+    singleImageCtx.fillStyle = '#ff3b30';
+    singleImageCtx.beginPath();
+    singleImageCtx.arc(x, y, blemishBrushSize, 0, Math.PI * 2);
+    singleImageCtx.fill();
+    singleImageCtx.restore();
 }
 
-function endHealing() {
-    isHealing = false;
-    healingPoints = [];
-    lastHealX = -1;
-    lastHealY = -1;
-}
-
-function healBlemish(x, y) {
-    const ctx = singleImageCtx;
-    const radius = blemishBrushSize;
+async function processBlemishHealing(e) {
+    if (!blemishToolActive || e.key !== 'Enter') return;
     
-    // Get surrounding pixels for context-aware healing
-    const surroundRadius = radius * 2.5; // Increased sample area
-    const sampleStartX = Math.max(0, Math.floor(x - surroundRadius));
-    const sampleStartY = Math.max(0, Math.floor(y - surroundRadius));
-    const sampleWidth = Math.min(singleImageCanvas.width - sampleStartX, Math.ceil(surroundRadius * 2));
-    const sampleHeight = Math.min(singleImageCanvas.height - sampleStartY, Math.ceil(surroundRadius * 2));
-    
-    if (sampleWidth <= 0 || sampleHeight <= 0) return;
-    
-    const imageData = ctx.getImageData(sampleStartX, sampleStartY, sampleWidth, sampleHeight);
-    
-    // Sample pixels from around the blemish (not at center)
-    const samples = [];
-    const data = imageData.data;
-    const width = imageData.width;
-    
-    const centerX = x - sampleStartX;
-    const centerY = y - sampleStartY;
-    
-    for (let dy = 0; dy < sampleHeight; dy++) {
-        for (let dx = 0; dx < sampleWidth; dx++) {
-            const distFromCenter = Math.sqrt((dx - centerX) ** 2 + (dy - centerY) ** 2);
-            // Sample from ring around the blemish (not too close, not too far)
-            if (distFromCenter > radius * 1.5 && distFromCenter < surroundRadius * 0.8) {
-                const idx = (dy * width + dx) * 4;
-                samples.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3]
-                });
-            }
-        }
-    }
-    
-    if (samples.length === 0) return;
-    
-    // Apply healing with VERY soft brush (reduced intensity)
-    for (let dy = -radius; dy <= radius; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist <= radius) {
-                const px = Math.floor(x + dx);
-                const py = Math.floor(y + dy);
-                
-                if (px < 0 || px >= singleImageCanvas.width || py < 0 || py >= singleImageCanvas.height) continue;
-                
-                // MUCH softer brush falloff (cubic for even smoother edges)
-                const falloff = 1 - (dist / radius);
-                const strength = falloff * falloff * falloff * 0.4; // Reduced from 1.0 to 0.4 for gentler effect
-                
-                // Get multiple random samples and average them for smoother result
-                let avgR = 0, avgG = 0, avgB = 0;
-                const numSamples = 3; // Average 3 samples
-                for (let i = 0; i < numSamples; i++) {
-                    const sample = samples[Math.floor(Math.random() * samples.length)];
-                    avgR += sample.r;
-                    avgG += sample.g;
-                    avgB += sample.b;
-                }
-                avgR /= numSamples;
-                avgG /= numSamples;
-                avgB /= numSamples;
-                
-                // Get current pixel
-                const currentData = ctx.getImageData(px, py, 1, 1);
-                const current = currentData.data;
-                
-                // Blend sampled color with current pixel (GENTLER)
-                current[0] = Math.floor(current[0] * (1 - strength) + avgR * strength);
-                current[1] = Math.floor(current[1] * (1 - strength) + avgG * strength);
-                current[2] = Math.floor(current[2] * (1 - strength) + avgB * strength);
-                
-                ctx.putImageData(currentData, px, py);
-            }
-        }
+    try {
+        // Save state before processing (for Undo)
+        saveCanvasState();
+        
+        // Get current settings
+        const method = getBlemishMethod();
+        const radius = blemishInpaintRadius;
+        
+        const methodName = method === 'ns' ? 'Navier-Stokes' : 'Telea';
+        showToast(`⏳ Processing with ${methodName} (radius: ${radius})...`, 'info');
+        
+        // Convert canvases to blobs
+        const imageBlob = await new Promise(resolve => singleImageCanvas.toBlob(resolve, 'image/png'));
+        const maskBlob = await new Promise(resolve => blemishMaskCanvas.toBlob(resolve, 'image/png'));
+        
+        // Send to backend with parameters
+        const formData = new FormData();
+        formData.append('image', imageBlob, 'image.png');
+        formData.append('mask', maskBlob, 'mask.png');
+        formData.append('method', method);
+        formData.append('radius', radius.toString());
+        
+        const response = await fetch('/image/api/remove_blemish', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) throw new Error('Healing failed');
+        
+        const healedBlob = await response.blob();
+        const healedUrl = URL.createObjectURL(healedBlob);
+        
+        // Load healed image back to canvas
+        const healedImg = new Image();
+        healedImg.onload = () => {
+            singleImageCtx.drawImage(healedImg, 0, 0);
+            URL.revokeObjectURL(healedUrl);
+            
+            // Reset mask
+            blemishMaskCtx.fillStyle = 'black';
+            blemishMaskCtx.fillRect(0, 0, blemishMaskCanvas.width, blemishMaskCanvas.height);
+            
+            showToast('✨ Blemish removed successfully!', 'success');
+        };
+        healedImg.src = healedUrl;
+        
+    } catch (error) {
+        console.error('Healing error:', error);
+        showToast('❌ Healing failed', 'danger');
     }
 }
 

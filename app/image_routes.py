@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import io
+from io import BytesIO
 
 image_bp = Blueprint('image', __name__, url_prefix='/image')
 
@@ -52,24 +53,9 @@ def upload_image():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@image_bp.route('/api/collage/create', methods=['POST'])
-def create_collage():
-    """Create photo collage"""
-    try:
-        data = request.json
-        images = data.get('images', [])
-        layout = data.get('layout', '1:1')
-        
-        # TODO: Implement collage creation logic
-        
-        return jsonify({
-            'success': True,
-            'message': 'Collage created successfully'
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 # === COLLAGE HISTORY APIs ===
+# Note: Collage creation is handled entirely on frontend using HTML Canvas
+# for better performance and real-time editing experience
 COLLAGE_HISTORY_DIR = os.path.join('data', 'collage_history')
 COLLAGE_HISTORY_JSON = os.path.join('data', 'collage_history.json')
 
@@ -216,25 +202,146 @@ def enhance_web_image():
         img = Image.open(f.stream).convert('RGB')
         bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
-        # Tăng local contrast (CLAHE)
+        # Tăng local contrast (CLAHE) - giảm clipLimit để tránh "nổ" contrast
         lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
         l2 = clahe.apply(l)
         lab = cv2.merge([l2, a, b])
-        bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        bgr_clahe = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-        # Sharpen nhẹ + khử noise JPEG
-        blur = cv2.GaussianBlur(bgr, (0, 0), 1.0)
-        sharp = cv2.addWeighted(bgr, 1.6, blur, -0.6, 0)
-        denoise = cv2.fastNlMeansDenoisingColored(sharp, None, 7, 7, 7, 21)
+        # Sharpen nhẹ nhàng hơn - tránh halo và "cháy" ảnh
+        blur = cv2.GaussianBlur(bgr_clahe, (0, 0), 1.0)
+        sharp = cv2.addWeighted(bgr_clahe, 1.2, blur, -0.2, 0)
+        
+        # Blend mềm với ảnh gốc để giữ tự nhiên
+        blended = cv2.addWeighted(bgr_clahe, 0.6, sharp, 0.4, 0)
+        
+        # Khử noise JPEG
+        denoise = cv2.fastNlMeansDenoisingColored(blended, None, 7, 7, 7, 21)
 
-        # Tăng chi tiết tần số cao bằng DetailEnhance
-        out = cv2.detailEnhance(denoise, sigma_s=15, sigma_r=0.3)
+        # Tăng chi tiết nhẹ nhàng - giảm sigma để tránh quá sắc nét
+        enhanced = cv2.detailEnhance(denoise, sigma_s=10, sigma_r=0.2)
+        
+        # Bilateral filter cuối để ảnh mượt tự nhiên như Pixlr
+        out = cv2.bilateralFilter(enhanced, d=5, sigmaColor=30, sigmaSpace=20)
         
         # Encode to PNG
         _, buf = cv2.imencode('.png', out)
         
         return (buf.tobytes(), 200, {'Content-Type': 'image/png'})
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@image_bp.route('/api/remove_blemish', methods=['POST'])
+def remove_blemish():
+    """
+    Remove blemishes using OpenCV inpainting (professional healing)
+    - Support both Navier-Stokes (NS) and Telea algorithms
+    - Adjustable inpaint radius
+    - Pre/post processing for better results
+    """
+    try:
+        # Get image and mask
+        if 'image' not in request.files or 'mask' not in request.files:
+            return jsonify({'success': False, 'error': 'Image and mask required'}), 400
+        
+        image_file = request.files['image']
+        mask_file = request.files['mask']
+        
+        # Get parameters
+        method = request.form.get('method', 'ns')  # 'ns' or 'telea'
+        radius = int(request.form.get('radius', 5))  # 3-10 range
+        
+        # Load image
+        img = Image.open(image_file.stream).convert('RGB')
+        bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        
+        # Load mask (white = area to heal, black = keep)
+        mask_img = Image.open(mask_file.stream).convert('L')
+        mask = np.array(mask_img)
+        
+        # Pre-process: Bilateral filter for better edge preservation
+        bgr_smooth = cv2.bilateralFilter(bgr, d=5, sigmaColor=50, sigmaSpace=50)
+        
+        # Dilate mask slightly for better blending
+        kernel = np.ones((3,3), np.uint8)
+        mask_dilated = cv2.dilate(mask, kernel, iterations=2)
+        
+        # Choose inpainting method
+        if method == 'telea':
+            # Telea: Fast Marching Method (faster, good for small areas)
+            healed = cv2.inpaint(bgr_smooth, mask_dilated, inpaintRadius=radius, flags=cv2.INPAINT_TELEA)
+        else:
+            # Navier-Stokes: Fluid dynamics (slower, more natural for large areas)
+            healed = cv2.inpaint(bgr_smooth, mask_dilated, inpaintRadius=radius, flags=cv2.INPAINT_NS)
+        
+        # Post-process: Edge-preserving smoothing on healed areas only
+        # Create soft mask for blending
+        mask_float = mask_dilated.astype(float) / 255.0
+        mask_blur = cv2.GaussianBlur(mask_float, (7, 7), 0)
+        mask_3ch = np.stack([mask_blur] * 3, axis=2)
+        
+        # Blend original with healed using soft mask
+        result = (bgr * (1 - mask_3ch) + healed * mask_3ch).astype(np.uint8)
+        
+        # Final touch: Subtle bilateral filter on result for seamless blending
+        result = cv2.bilateralFilter(result, d=3, sigmaColor=20, sigmaSpace=20)
+        
+        # Encode to PNG
+        _, buf = cv2.imencode('.png', result)
+        
+        return (buf.tobytes(), 200, {'Content-Type': 'image/png'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@image_bp.route('/api/remove_blemish_v2', methods=['POST'])
+def remove_blemish_v2():
+    """
+    Remove blemishes using LaMa Deep Learning (AI-powered)
+    - State-of-the-art inpainting quality
+    - Slower than OpenCV but much better results
+    - Great for large areas and complex textures
+    """
+    try:
+        # Get image and mask
+        if 'image' not in request.files or 'mask' not in request.files:
+            return jsonify({'success': False, 'error': 'Image and mask required'}), 400
+        
+        image_file = request.files['image']
+        mask_file = request.files['mask']
+        
+        # Load image
+        img = Image.open(image_file.stream).convert('RGB')
+        
+        # Load mask (white = area to heal, black = keep)
+        mask_img = Image.open(mask_file.stream).convert('L')
+        
+        # Import LaMa module
+        try:
+            from app.lama_inpainting import lama_inpaint
+        except ImportError as e:
+            return jsonify({
+                'success': False, 
+                'error': 'LaMa not available. Please install dependencies.'
+            }), 500
+        
+        # Run LaMa inpainting
+        print("[API] Starting LaMa inpainting...")
+        result_img = lama_inpaint(img, mask_img)
+        print("[API] LaMa inpainting completed!")
+        
+        # Convert to bytes
+        buf = BytesIO()
+        result_img.save(buf, format='PNG')
+        buf.seek(0)
+        
+        return (buf.getvalue(), 200, {'Content-Type': 'image/png'})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
