@@ -110,6 +110,13 @@
                             </button>
                         </div>
                         
+                        <!-- Enhance Button -->
+                        <div class="col-auto">
+                            <button class="btn btn-outline-primary btn-sm" onclick="enhanceImage()" id="enhanceBtn" title="Enhance image quality - CLAHE, sharpen, denoise">
+                                <i class="bi bi-stars me-1"></i>Enhance
+                            </button>
+                        </div>
+                        
                         <div class="col-auto"><div class="vr" style="height: 30px;"></div></div>
                         
                         <!-- Save & Clear Buttons -->
@@ -1225,7 +1232,7 @@ function showCropOverlay() {
             <!-- Crop frame -->
             <rect id="cropFrame" x="${cropRect.x}" y="${cropRect.y}" 
                   width="${cropRect.width}" height="${cropRect.height}" 
-                  fill="none" stroke="#00ff00" stroke-width="2"/>
+                  fill="none" stroke="#00ffff" stroke-width="2"/>
             
             <!-- Grid lines (rule of thirds) -->
             <line x1="${cropRect.x + cropRect.width/3}" y1="${cropRect.y}" 
@@ -1242,16 +1249,16 @@ function showCropOverlay() {
                   stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
             
             <!-- Corner handles (larger, easier to grab) -->
-            <circle cx="${cropRect.x}" cy="${cropRect.y}" r="10" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="nw" style="pointer-events: all; cursor: nw-resize;"/>
-            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y}" r="10" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="ne" style="pointer-events: all; cursor: ne-resize;"/>
-            <circle cx="${cropRect.x}" cy="${cropRect.y + cropRect.height}" r="10" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="sw" style="pointer-events: all; cursor: sw-resize;"/>
-            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y + cropRect.height}" r="10" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="se" style="pointer-events: all; cursor: se-resize;"/>
+            <circle cx="${cropRect.x}" cy="${cropRect.y}" r="10" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="nw" style="pointer-events: all; cursor: nw-resize;"/>
+            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y}" r="10" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="ne" style="pointer-events: all; cursor: ne-resize;"/>
+            <circle cx="${cropRect.x}" cy="${cropRect.y + cropRect.height}" r="10" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="sw" style="pointer-events: all; cursor: sw-resize;"/>
+            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y + cropRect.height}" r="10" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="se" style="pointer-events: all; cursor: se-resize;"/>
             
             <!-- Edge handles -->
-            <circle cx="${cropRect.x + cropRect.width/2}" cy="${cropRect.y}" r="8" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="n" style="pointer-events: all; cursor: n-resize;"/>
-            <circle cx="${cropRect.x + cropRect.width/2}" cy="${cropRect.y + cropRect.height}" r="8" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="s" style="pointer-events: all; cursor: s-resize;"/>
-            <circle cx="${cropRect.x}" cy="${cropRect.y + cropRect.height/2}" r="8" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="w" style="pointer-events: all; cursor: w-resize;"/>
-            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y + cropRect.height/2}" r="8" fill="#00ff00" stroke="white" stroke-width="2" class="crop-handle" data-handle="e" style="pointer-events: all; cursor: e-resize;"/>
+            <circle cx="${cropRect.x + cropRect.width/2}" cy="${cropRect.y}" r="8" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="n" style="pointer-events: all; cursor: n-resize;"/>
+            <circle cx="${cropRect.x + cropRect.width/2}" cy="${cropRect.y + cropRect.height}" r="8" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="s" style="pointer-events: all; cursor: s-resize;"/>
+            <circle cx="${cropRect.x}" cy="${cropRect.y + cropRect.height/2}" r="8" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="w" style="pointer-events: all; cursor: w-resize;"/>
+            <circle cx="${cropRect.x + cropRect.width}" cy="${cropRect.y + cropRect.height/2}" r="8" fill="#00ffff" stroke="white" stroke-width="2" class="crop-handle" data-handle="e" style="pointer-events: all; cursor: e-resize;"/>
         </svg>
     `;
     
@@ -1493,10 +1500,9 @@ function applyCrop() {
     croppedImage.onload = function() {
         collageImages[0] = croppedImage;
         
-        // Save to cache
+        // Save to cache only (not history - history is for uploaded images only)
         const imageDataURLs = [croppedImage.src];
         saveImageToCache(imageDataURLs, 'collage');
-        saveToHistory(imageDataURLs);
         
         // Clear history and save new state
         canvasHistory = [];
@@ -1506,6 +1512,88 @@ function applyCrop() {
         toggleCropTool();
     };
     croppedImage.src = singleImageCanvas.toDataURL('image/png');
+}
+
+// ===== IMAGE ENHANCEMENT =====
+async function enhanceImage() {
+    if (collageImages.length === 0) {
+        showToast('Upload a photo first!', 'warning');
+        return;
+    }
+    
+    // Only works in single image mode
+    if (collageImages.length > 1) {
+        showToast('Enhance tool only works with single images', 'info');
+        return;
+    }
+    
+    const btn = document.getElementById('enhanceBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enhancing...';
+    
+    try {
+        // Save state before enhancement
+        saveCanvasState();
+        
+        // Convert canvas to blob
+        const blob = await new Promise(resolve => {
+            singleImageCanvas.toBlob(resolve, 'image/png');
+        });
+        
+        // Create FormData
+        const formData = new FormData();
+        formData.append('image', blob, 'image.png');
+        
+        // Call enhancement API
+        const response = await fetch('/image/api/enhance_web_image', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Enhancement failed');
+        }
+        
+        // Get enhanced image
+        const enhancedBlob = await response.blob();
+        const enhancedURL = URL.createObjectURL(enhancedBlob);
+        
+        // Load and display enhanced image
+        const enhancedImg = new Image();
+        enhancedImg.onload = function() {
+            // Update canvas
+            singleImageCanvas.width = enhancedImg.width;
+            singleImageCanvas.height = enhancedImg.height;
+            singleImageCtx.clearRect(0, 0, singleImageCanvas.width, singleImageCanvas.height);
+            singleImageCtx.drawImage(enhancedImg, 0, 0);
+            
+            // Update collage images array
+            collageImages[0] = enhancedImg;
+            
+            // Save to cache
+            const imageDataURLs = [singleImageCanvas.toDataURL('image/png')];
+            saveImageToCache(imageDataURLs, 'collage');
+            
+            // Save new state for undo
+            saveCanvasState();
+            
+            // Clean up
+            URL.revokeObjectURL(enhancedURL);
+            
+            showToast('✨ Image enhanced successfully!', 'success');
+        };
+        enhancedImg.onerror = function() {
+            throw new Error('Failed to load enhanced image');
+        };
+        enhancedImg.src = enhancedURL;
+        
+    } catch (error) {
+        console.error('Enhancement error:', error);
+        showToast('Enhancement failed: ' + error.message, 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i>Enhance';
+    }
 }
 
 // ===== LOCKED DRAG WITH OBJECT-POSITION =====

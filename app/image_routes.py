@@ -3,6 +3,10 @@ import os
 import json
 from datetime import datetime
 import uuid
+import cv2
+import numpy as np
+from PIL import Image
+import io
 
 image_bp = Blueprint('image', __name__, url_prefix='/image')
 
@@ -194,3 +198,43 @@ def delete_collage(collage_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@image_bp.route('/api/enhance_web_image', methods=['POST'])
+def enhance_web_image():
+    """
+    Enhance image quality using OpenCV:
+    - CLAHE for local contrast
+    - Sharpen + denoise
+    - Detail enhancement
+    """
+    try:
+        f = request.files.get('image')
+        if not f:
+            return jsonify({'success': False, 'error': 'No image provided'}), 400
+        
+        # Load image
+        img = Image.open(f.stream).convert('RGB')
+        bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+        # Tăng local contrast (CLAHE)
+        lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        l2 = clahe.apply(l)
+        lab = cv2.merge([l2, a, b])
+        bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
+        # Sharpen nhẹ + khử noise JPEG
+        blur = cv2.GaussianBlur(bgr, (0, 0), 1.0)
+        sharp = cv2.addWeighted(bgr, 1.6, blur, -0.6, 0)
+        denoise = cv2.fastNlMeansDenoisingColored(sharp, None, 7, 7, 7, 21)
+
+        # Tăng chi tiết tần số cao bằng DetailEnhance
+        out = cv2.detailEnhance(denoise, sigma_s=15, sigma_r=0.3)
+        
+        # Encode to PNG
+        _, buf = cv2.imencode('.png', out)
+        
+        return (buf.tobytes(), 200, {'Content-Type': 'image/png'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
