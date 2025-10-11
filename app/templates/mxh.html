@@ -11,9 +11,6 @@
         
         <!-- Action buttons on the right -->
         <div class="d-flex gap-2 align-items-center flex-wrap">
-            <button class="btn btn-sm btn-success" onclick="testTelegramMenu(event)">
-                <i class="bi bi-bug me-1"></i> Test Telegram Menu
-            </button>
             <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#mxh-view-mode-modal">
                 <i class="bi bi-grid-3x3-gap me-1"></i> Chế Độ Xem
             </button>
@@ -435,6 +432,7 @@ let currentContextAccountId = null;
 let autoRefreshTimer = null;
 let isRendering = false;
 let pendingUpdates = false;
+let activeGroupId = null; // null = show all groups, otherwise show specific group only
 
 // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
 // Debounce function - prevents excessive API calls
@@ -611,37 +609,7 @@ async function getNextCardNumber(groupId) {
 }
 
 // Toggle group visibility
-function toggleGroupCards(event, cardsContainerId, toggleButtonId, groupId) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    const cardsContainer = document.getElementById(cardsContainerId);
-    const toggleButton = document.getElementById(toggleButtonId);
-    
-    // Find the eye icon element
-    const eyeIcon = toggleButton.querySelector('.bi-eye-fill, .bi-eye-slash-fill');
-    
-    if (cardsContainer.style.display === 'none') {
-        // Show cards
-        cardsContainer.style.display = 'flex';
-        if (eyeIcon) {
-            eyeIcon.classList.remove('bi-eye-slash-fill');
-            eyeIcon.classList.add('bi-eye-fill');
-        }
-        localStorage.setItem(`group_${groupId}_visible`, 'true');
-    } else {
-        // Hide cards
-        cardsContainer.style.display = 'none';
-        if (eyeIcon) {
-            eyeIcon.classList.remove('bi-eye-fill');
-            eyeIcon.classList.add('bi-eye-slash-fill');
-        }
-        localStorage.setItem(`group_${groupId}_visible`, 'false');
-    }
-}
-
-// ===== RENDER GROUP NAVIGATION =====
+// ===== RENDER GROUP NAVIGATION WITH BADGES =====
 function renderGroupsNav() {
     const groupsNavContainer = document.getElementById('mxh-groups-nav');
     if (!groupsNavContainer) return;
@@ -654,23 +622,133 @@ function renderGroupsNav() {
     uniqueGroupIds.forEach(groupId => {
         const group = mxhGroups.find(g => g.id == groupId);
         if (group) {
-            const toggleButtonId = `toggle-${groupId}`;
-            const cardsContainerId = `cards-${groupId}`;
-            const isVisible = localStorage.getItem(`group_${groupId}_visible`) !== 'false';
+            // Calculate badge count for this group
+            const badgeCount = calculateGroupBadge(groupId);
+            const isActive = activeGroupId === groupId;
             
             html += `
-                <button class="btn btn-sm btn-outline-light" id="${toggleButtonId}" 
-                        onclick="toggleGroupCards(event, '${cardsContainerId}', '${toggleButtonId}', '${groupId}')"
-                        style="border-color: ${group.color};">
-                    <i class="bi ${group.icon || 'bi-people-fill'}" style="color: ${group.color};"></i>
+                <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-light'}" 
+                        onclick="selectGroup('${groupId}')"
+                        style="position: relative; ${isActive ? '' : 'border-color: ' + group.color + ';'}">
+                    <i class="bi ${group.icon || 'bi-people-fill'}" style="color: ${isActive ? '#fff' : group.color};"></i>
                     ${group.name}
-                    <i class="bi ${isVisible ? 'bi-eye-fill' : 'bi-eye-slash-fill'} ms-1"></i>
+                    ${badgeCount > 0 ? `<span class="group-badge" style="background-color: ${group.color};">${badgeCount}</span>` : ''}
                 </button>
             `;
         }
     });
     
+    // Add "All" button
+    const isAllActive = activeGroupId === null;
+    html = `
+        <button class="btn btn-sm ${isAllActive ? 'btn-primary' : 'btn-outline-secondary'}" 
+                onclick="selectGroup(null)">
+            <i class="bi bi-grid-3x3-gap"></i> Tất Cả
+        </button>
+    ` + html;
+    
     groupsNavContainer.innerHTML = html;
+    
+    // Update main MXH nav badge
+    updateMainNavBadge();
+}
+
+// Calculate badge count for a specific group (only count cards with blink animation)
+function calculateGroupBadge(groupId) {
+    const now = new Date();
+    let count = 0;
+    
+    mxhAccounts.forEach(account => {
+        if (account.group_id != groupId) return;
+        
+        // Check if notice countdown finished (causes blink)
+        if (account.notice) {
+            const noticeObj = ensureNoticeParsed(account.notice);
+            if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
+                const startDate = new Date(noticeObj.start_at);
+                const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
+                if (now >= endDate) {
+                    count++; // Notice expired = blink
+                }
+            }
+        }
+        
+        // WeChat: Check if account is 1 year old AND NOT Hong Kong number (causes blink)
+        if (account.platform === 'wechat' && account.wechat_created_year) {
+            const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
+            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 365) {
+                // Check if Hong Kong number
+                const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
+                const isHongKongNumber = primaryPhone.startsWith('852');
+                if (!isHongKongNumber) {
+                    count++; // 1 year old + NOT HK number = blink
+                }
+            }
+        }
+        
+        // Check secondary account for WeChat (only if blinks)
+        if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
+            const secCreatedDate = new Date(account.secondary_wechat_created_year, account.secondary_wechat_created_month - 1, account.secondary_wechat_created_day);
+            const secDiffDays = Math.ceil((now - secCreatedDate) / (1000 * 60 * 60 * 24));
+            if (secDiffDays >= 365) {
+                // Check if Hong Kong number
+                const secondaryPhone = (account.secondary_phone || '').replace(/[\s+]/g, '');
+                const isHongKongNumber = secondaryPhone.startsWith('852');
+                if (!isHongKongNumber) {
+                    count++; // 1 year old + NOT HK number = blink
+                }
+            }
+        }
+    });
+    
+    return count;
+}
+
+// Update badge dots on main MXH nav tab
+function updateMainNavBadge() {
+    const mxhNavLink = document.querySelector('a[href*="mxh"]');
+    if (!mxhNavLink) return;
+    
+    // Remove existing badge container
+    const existingBadge = mxhNavLink.querySelector('.nav-badge-container');
+    if (existingBadge) existingBadge.remove();
+    
+    // Get unique groups that have badges
+    const uniqueGroupIds = [...new Set(mxhAccounts.map(acc => acc.group_id).filter(id => id))];
+    const groupsWithBadges = [];
+    
+    uniqueGroupIds.forEach(groupId => {
+        const badgeCount = calculateGroupBadge(groupId);
+        if (badgeCount > 0) {
+            const group = mxhGroups.find(g => g.id == groupId);
+            if (group) {
+                groupsWithBadges.push(group);
+            }
+        }
+    });
+    
+    // Create badge dots
+    if (groupsWithBadges.length > 0) {
+        const badgeContainer = document.createElement('div');
+        badgeContainer.className = 'nav-badge-container';
+        
+        groupsWithBadges.slice(0, 3).forEach(group => { // Max 3 dots
+            const dot = document.createElement('div');
+            dot.className = 'nav-badge-dot';
+            dot.style.backgroundColor = group.color;
+            badgeContainer.appendChild(dot);
+        });
+        
+        mxhNavLink.appendChild(badgeContainer);
+    }
+}
+
+// Select a specific group (or null for all)
+function selectGroup(groupId) {
+    activeGroupId = groupId === 'null' ? null : groupId;
+    renderGroupsNav();
+    renderMXHAccounts();
 }
 
 // ===== DATETIME NORMALIZATION HELPERS =====
@@ -726,6 +804,12 @@ function renderMXHAccounts() {
     const accountsByGroup = {};
     mxhAccounts.forEach(account => {
         const groupId = account.group_id || 'no-group';
+        
+        // Filter by active group if one is selected
+        if (activeGroupId !== null && groupId != activeGroupId) {
+            return; // Skip this account
+        }
+        
         if (!accountsByGroup[groupId]) {
             accountsByGroup[groupId] = [];
         }
@@ -751,10 +835,10 @@ function renderMXHAccounts() {
         if (group) {
             const cardsContainerId = `cards-${groupId}`;
             
-            // Just render cards container without header
+            // Render cards container (always visible now, filtering done at account level)
             html += `
                 <div class="mb-4">
-                    <div class="row g-2" id="${cardsContainerId}" style="display: none;">
+                    <div class="row g-2" id="${cardsContainerId}">
             `;
             
             accounts.forEach(account => {
@@ -1211,7 +1295,8 @@ function showWeChatContextMenu(event, accountId, isSecondary = false) {
 function configureNoticeToggleFor(menuId, account) {
     const el = document.querySelector(`#${menuId} [id$="-notice-toggle"]`);
     if (!el) return;
-    const hasNotice = !!(account.notice && account.notice.enabled);
+    const noticeObj = ensureNoticeParsed(account.notice);
+    const hasNotice = !!(noticeObj && noticeObj.enabled);
     // set action + icon + text
     el.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
     el.innerHTML = hasNotice
@@ -1285,8 +1370,9 @@ function showUnifiedContextMenu(event, accountId, platform, isSecondary = false)
     
     // Configure notice toggle
     const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
-    if (noticeToggle && account.notice) {
-        const hasNotice = !!(account.notice.enabled);
+    if (noticeToggle) {
+        const noticeObj = ensureNoticeParsed(account.notice);
+        const hasNotice = !!(noticeObj && noticeObj.enabled);
         noticeToggle.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
         noticeToggle.innerHTML = hasNotice
             ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
@@ -1308,11 +1394,44 @@ function showUnifiedContextMenu(event, accountId, platform, isSecondary = false)
         statusRescueItems.forEach(item => item.style.display = 'none');
     }
     
-    // Position and show menu
+    // Position and show menu (auto reposition if overflow)
     contextMenu.style.display = 'block';
+    // Temporarily set left/top for measurement
     contextMenu.style.left = event.pageX + 'px';
     contextMenu.style.top = event.pageY + 'px';
-    
+
+    // Calculate menu size and viewport
+    let menuRect = contextMenu.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const margin = 8;
+
+    let left = event.pageX;
+    let top = event.pageY;
+
+    // If menu overflows right, shift left
+    if (menuRect.right > viewportWidth) {
+        left = Math.max(margin, viewportWidth - menuRect.width - margin + window.scrollX);
+    }
+
+    // If menu overflows bottom, shift menu lên trên (hoặc sát đáy)
+    if (menuRect.bottom > viewportHeight) {
+        // Nếu đủ chỗ phía trên chuột thì show lên trên
+        if (event.pageY - menuRect.height > margin) {
+            top = event.pageY - menuRect.height;
+        } else {
+            // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+            top = viewportHeight - menuRect.height - margin + window.scrollY;
+            if (top < margin + window.scrollY) top = margin + window.scrollY;
+        }
+    }
+
+    contextMenu.style.left = left + 'px';
+    contextMenu.style.top = top + 'px';
+
+    // Đo lại lần nữa nếu cần (menu có thể thay đổi kích thước sau khi set lại top/left)
+    // (Không cần lặp lại nhiều lần, vì đã clamp sát đáy)
+
     setTimeout(() => {
         document.addEventListener('click', hideUnifiedContextMenu, { once: true });
     }, 100);
@@ -2385,28 +2504,6 @@ window.flipCard = function(element, event) {
     const cardContainer = element.closest('.mxh-card-container');
     if (cardContainer) {
         cardContainer.classList.toggle('flipped');
-    }
-};
-
-// Test function for Telegram context menu
-window.testTelegramMenu = function(event) {
-    event.preventDefault();
-    console.log('=== TESTING TELEGRAM MENU ===');
-    
-    // Check if menu element exists
-    const menu = document.getElementById('telegram-context-menu');
-    console.log('Menu element found:', !!menu);
-    
-    // Check if function exists
-    console.log('showTelegramContextMenu function:', typeof window.showTelegramContextMenu);
-    console.log('handleCardContextMenu function:', typeof window.handleCardContextMenu);
-    
-    // Try to show menu at mouse position
-    if (menu && typeof window.showTelegramContextMenu === 'function') {
-        window.showTelegramContextMenu(event, 121); // Test with known Telegram ID
-        console.log('✅ Menu should be visible now!');
-    } else {
-        console.error('❌ Menu or function not available!');
     }
 };
 

@@ -30,13 +30,21 @@ body {
 }
 
 .main-nav .nav-link {
-      font-weight: 500;
-      color: var(--text-color);
+    font-weight: 500;
+    color: var(--text-color);
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
 }
 
 .main-nav .nav-link.active {
-      background-color: var(--primary-color) !important;
-      color: #fff !important;
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
 }
 
 .tab-content {
@@ -986,4 +994,57 @@ body {
     margin-left: 4px;
     font-size: 0.8rem;
 }
+
+/* === Date Input Width Constraints === */
+/* Limit date/month inputs to 2 digits width, year to 4 digits */
+input[id$="-day"],
+input[id$="-month"] {
+    max-width: 50px !important;
+}
+
+input[id$="-year"] {
+    max-width: 70px !important;
+}
+
+/* === Badge Styles for Group Tabs === */
+.group-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    padding: 0 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+/* Badge for main MXH tab */
+.nav-link {
+    position: relative;
+}
+
+.nav-badge-container {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+}
+
+.nav-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 
