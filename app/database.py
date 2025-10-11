@@ -96,6 +96,22 @@ def init_database():
         )"""
     )
     
+    # Migration: Add email_reset_date column for Telegram accounts
+    try:
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(mxh_accounts)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'email_reset_date' not in columns:
+            conn.execute("ALTER TABLE mxh_accounts ADD COLUMN email_reset_date TEXT")
+            print("✅ Added email_reset_date column to mxh_accounts table")
+        
+        if 'notice' not in columns:
+            conn.execute("ALTER TABLE mxh_accounts ADD COLUMN notice TEXT")
+            print("✅ Added notice column to mxh_accounts table")
+    except Exception as e:
+        print(f"Migration note: {e}")
+    
     conn.commit()
     conn.close()
     print("Database initialized successfully.")

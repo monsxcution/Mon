@@ -11,6 +11,9 @@
         
         <!-- Action buttons on the right -->
         <div class="d-flex gap-2 align-items-center flex-wrap">
+            <button class="btn btn-sm btn-success" onclick="testTelegramMenu(event)">
+                <i class="bi bi-bug me-1"></i> Test Telegram Menu
+            </button>
             <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#mxh-view-mode-modal">
                 <i class="bi bi-grid-3x3-gap me-1"></i> Chế Độ Xem
             </button>
@@ -63,13 +66,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="mxh-username" class="form-label">Tên người dùng</label>
-                    <input type="text" class="form-control" id="mxh-username" placeholder="Nhập tên người dùng..." required>
+                <div class="mb-2">
+                    <label for="mxh-username" class="form-label mb-1">Tên người dùng</label>
+                    <input type="text" class="form-control form-control-sm" id="mxh-username" placeholder="Nhập tên người dùng..." required>
                 </div>
-                <div class="mb-3">
-                    <label for="mxh-platform" class="form-label">Nền tảng</label>
-                    <select class="form-select" id="mxh-platform" required>
+                <div class="mb-2">
+                    <label for="mxh-platform" class="form-label mb-1">Nền tảng</label>
+                    <select class="form-select form-select-sm" id="mxh-platform" required>
                         <option value="">Chọn nền tảng...</option>
                         <option value="facebook">Facebook</option>
                         <option value="instagram">Instagram</option>
@@ -79,36 +82,104 @@
                         <option value="telegram">Telegram</option>
                         <option value="whatsapp">WhatsApp</option>
                     </select>
-                    <div class="form-text">Card sẽ tự động được đưa vào nhóm theo nền tảng đã chọn</div>
+                    <div class="form-text small">Card sẽ tự động được đưa vào nhóm theo nền tảng đã chọn</div>
                 </div>
-                <div class="mb-3">
-                    <label for="mxh-url" class="form-label">URL (tùy chọn)</label>
-                    <input type="url" class="form-control" id="mxh-url" placeholder="https://...">
+                <div class="mb-2">
+                    <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
+                    <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Ngày Tạo</label>
-                    <div class="row">
+                <div class="mb-2">
+                    <label class="form-label mb-1">Ngày Tạo</label>
+                    <div class="row g-1">
                         <div class="col-4">
-                            <input type="number" class="form-control" id="mxh-day" placeholder="Ngày" min="1" max="31" required>
+                            <input type="number" class="form-control form-control-sm" id="mxh-day" placeholder="Ngày" min="1" max="31" required>
                         </div>
                         <div class="col-4">
-                            <input type="number" class="form-control" id="mxh-month" placeholder="Tháng" min="1" max="12" required>
+                            <input type="number" class="form-control form-control-sm" id="mxh-month" placeholder="Tháng" min="1" max="12" required>
                         </div>
                         <div class="col-4">
-                            <input type="number" class="form-control" id="mxh-year" placeholder="Năm" min="2000" max="2030" required>
+                            <input type="number" class="form-control form-control-sm" id="mxh-year" placeholder="Năm" min="2000" max="2030" required>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="mxh-save-account-btn">Tạo Card</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary btn-sm" id="mxh-save-account-btn">Tạo Card</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- WeChat Context Menu -->
+<!-- Unified Context Menu for All Platforms -->
+<div id="unified-context-menu" class="custom-context-menu" style="display: none;">
+    <!-- Thông tin -->
+    <div class="menu-item" data-action="edit">
+        <i class="bi bi-pencil-square me-2"></i> Thông tin
+    </div>
+    
+    <!-- Trạng Thái (with submenu) -->
+    <div class="menu-item has-submenu" id="status-submenu-item">
+        <i class="bi bi-circle-fill me-2"></i> Trạng Thái
+        <i class="bi bi-chevron-right ms-auto"></i>
+        <div class="submenu" id="status-submenu">
+            <div class="menu-item status-normal" data-action="status-available">
+                <i class="bi bi-check-circle-fill me-2 text-success"></i> Available
+            </div>
+            <div class="menu-item status-normal" data-action="status-die">
+                <i class="bi bi-x-circle-fill me-2 text-danger"></i> Die
+            </div>
+            <div class="menu-item status-normal" data-action="status-disabled">
+                <i class="bi bi-slash-circle me-2 text-warning"></i> Vô hiệu hóa
+            </div>
+            <!-- Rescue options (shown when disabled) -->
+            <div class="menu-item status-rescue" data-action="rescue-success" style="display: none;">
+                <i class="bi bi-heart-fill me-2 text-success"></i> Được Cứu
+            </div>
+            <div class="menu-item status-rescue" data-action="rescue-failed" style="display: none;">
+                <i class="bi bi-heartbreak-fill me-2 text-danger"></i> Cứu Thất Bại
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thông báo -->
+    <div class="menu-item" id="unified-notice-toggle" data-action="set-notice">
+        <i class="bi bi-bell-fill me-2"></i> Thông báo
+    </div>
+    
+    <!-- WeChat specific: Đã Quét -->
+    <div class="menu-item wechat-only" data-action="mark-scanned" style="display: none;">
+        <i class="bi bi-check-circle-fill me-2"></i> Đã Quét
+    </div>
+    
+    <!-- Copy SĐT -->
+    <div class="menu-item" data-action="copy-phone" id="copy-phone-item" style="display: none;">
+        <i class="bi bi-copy me-2"></i> Copy SĐT
+    </div>
+    
+    <!-- Copy Email -->
+    <div class="menu-item" data-action="copy-email" id="copy-email-item" style="display: none;">
+        <i class="bi bi-envelope me-2"></i> Copy Email
+    </div>
+    
+    <!-- WeChat specific: Reset lượt quét -->
+    <div class="menu-item wechat-only" data-action="reset-scan" style="display: none;">
+        <i class="bi bi-arrow-clockwise me-2"></i> Reset lượt quét
+    </div>
+    
+    <!-- Đổi số hiệu -->
+    <div class="menu-item" data-action="change-number">
+        <i class="bi bi-123 me-2"></i> Đổi số hiệu
+    </div>
+    
+    <!-- Xóa Card -->
+    <div class="menu-item" data-action="delete" style="color: #dc3545;">
+        <i class="bi bi-trash-fill me-2"></i> Xóa Card
+    </div>
+</div>
+
+<!-- Legacy menus (keep for backward compatibility, will be removed later) -->
 <div id="wechat-context-menu" class="custom-context-menu" style="display: none;">
     <div class="menu-item" data-action="edit">
         <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa thông tin
@@ -116,10 +187,10 @@
     <div class="menu-item" data-action="mark-scanned">
         <i class="bi bi-check-circle-fill me-2"></i> Đã Quét
     </div>
-    <div class="menu-item" data-action="toggle-mute" id="mute-account-item">
-        <i class="bi bi-volume-mute-fill me-2"></i> <span id="mute-text">Câm</span>
+    <div class="menu-item" id="wechat-notice-toggle" data-action="set-notice">
+        <i class="bi bi-bell-fill me-2"></i> Thông báo
     </div>
-    <div class="menu-item" data-action="copy-phone" id="copy-phone-item" style="display: none;">
+    <div class="menu-item" data-action="copy-phone" id="copy-phone-item-old" style="display: none;">
         <i class="bi bi-copy me-2"></i> Copy SĐT
     </div>
     <div class="menu-item" data-action="reset-scan">
@@ -148,8 +219,27 @@
     </div>
 </div>
 
+<!-- Telegram Context Menu -->
+<div id="telegram-context-menu" class="custom-context-menu" style="display: none;">
+    <div class="menu-item" id="telegram-notice-toggle" data-action="set-notice">
+        <i class="bi bi-bell-fill me-2"></i> Thông báo
+    </div>
+    <div class="menu-item" data-action="copy-phone-telegram">
+        <i class="bi bi-telephone-fill me-2"></i> Copy SĐT
+    </div>
+    <div class="menu-item" data-action="edit-generic">
+        <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa thông tin
+    </div>
+    <div class="menu-item" data-action="delete-generic" style="color: #dc3545;">
+        <i class="bi bi-trash-fill me-2"></i> Xóa Card
+    </div>
+</div>
+
 <!-- Generic Platform Context Menu -->
 <div id="generic-context-menu" class="custom-context-menu" style="display: none;">
+    <div class="menu-item" id="generic-notice-toggle" data-action="set-notice">
+        <i class="bi bi-bell-fill me-2"></i> Thông báo
+    </div>
     <div class="menu-item" data-action="edit-generic">
         <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa thông tin
     </div>
@@ -163,52 +253,51 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-wechat me-2"></i>Quản Lý Tài Khoản WeChat</h5>
+                <h5 class="modal-title"><i class="bi bi-wechat me-2"></i>Thông Tin</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="wechat-card-name" class="form-label">Tên Card</label>
-                    <input type="text" class="form-control" id="wechat-card-name" required>
-                </div>
-                <div class="row mb-3">
+                <div class="row mb-2">
                     <div class="col-md-6">
-                        <label for="wechat-username" class="form-label">Tên Người Dùng</label>
-                        <input type="text" class="form-control" id="wechat-username" required>
+                        <label for="wechat-card-name" class="form-label mb-1">Số Card</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" required>
                     </div>
                     <div class="col-md-6">
-                        <label for="wechat-phone" class="form-label">Số Điện Thoại</label>
-                        <input type="text" class="form-control" id="wechat-phone" placeholder="Nhập số điện thoại...">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="wechat-status" class="form-label">Trạng Thái Tài Khoản</label>
-                        <select class="form-select" id="wechat-status" required>
+                        <label for="wechat-status" class="form-label mb-1">Trạng Thái</label>
+                        <select class="form-select form-select-sm" id="wechat-status" required>
                             <option value="available">Available</option>
                             <option value="disabled">Die</option>
-                            <option value="muted">Câm</option>
                         </select>
                     </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Ngày Tạo</label>
-                        <div class="row">
-                            <div class="col-4">
-                                <input type="number" class="form-control" id="wechat-day" placeholder="Ngày" min="1" max="31" required>
-                            </div>
-                            <div class="col-4">
-                                <input type="number" class="form-control" id="wechat-month" placeholder="Tháng" min="1" max="12" required>
-                            </div>
-                            <div class="col-4">
-                                <input type="number" class="form-control" id="wechat-year" placeholder="Năm" min="2020" max="2030" required>
-                            </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="wechat-username" class="form-label mb-1">Tên Người Dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-username" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="wechat-phone" class="form-label mb-1">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại...">
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Ngày Tạo</label>
+                    <div class="row g-1">
+                        <div class="col-4">
+                            <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="Ngày" min="1" max="31" required>
+                        </div>
+                        <div class="col-4">
+                            <input type="number" class="form-control form-control-sm" id="wechat-month" placeholder="Tháng" min="1" max="12" required>
+                        </div>
+                        <div class="col-4">
+                            <input type="number" class="form-control form-control-sm" id="wechat-year" placeholder="Năm" min="2020" max="2030" required>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="wechat-apply-btn">Apply</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="wechat-apply-btn">Apply</button>
             </div>
         </div>
     </div>
@@ -219,36 +308,36 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa Tài Khoản</h5>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Thông Tin</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row mb-3">
+                <div class="row mb-2">
                     <div class="col-md-6">
-                        <label for="generic-username" class="form-label">Tên đăng nhập</label>
-                        <input type="text" class="form-control" id="generic-username" placeholder="Nhập tên đăng nhập...">
+                        <label for="generic-username" class="form-label mb-1">Tên đăng nhập</label>
+                        <input type="text" class="form-control form-control-sm" id="generic-username" placeholder="Nhập tên đăng nhập...">
                     </div>
                     <div class="col-md-6">
-                        <label for="generic-password" class="form-label">Mật khẩu</label>
-                        <input type="password" class="form-control" id="generic-password" placeholder="Nhập mật khẩu...">
+                        <label for="generic-password" class="form-label mb-1">Mật khẩu</label>
+                        <input type="password" class="form-control form-control-sm" id="generic-password" placeholder="Nhập mật khẩu...">
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="generic-display-name" class="form-label">Tên người dùng</label>
-                    <input type="text" class="form-control" id="generic-display-name" placeholder="Nhập tên người dùng...">
+                <div class="mb-2">
+                    <label for="generic-display-name" class="form-label mb-1">Tên người dùng</label>
+                    <input type="text" class="form-control form-control-sm" id="generic-display-name" placeholder="Nhập tên người dùng...">
                 </div>
-                <div class="mb-3">
-                    <label for="generic-phone" class="form-label">Số điện thoại</label>
-                    <input type="text" class="form-control" id="generic-phone" placeholder="Nhập số điện thoại...">
+                <div class="mb-2">
+                    <label for="generic-phone" class="form-label mb-1">Số điện thoại</label>
+                    <input type="text" class="form-control form-control-sm" id="generic-phone" placeholder="Nhập số điện thoại...">
                 </div>
-                <div class="mb-3">
-                    <label for="generic-url" class="form-label">URL</label>
-                    <input type="url" class="form-control" id="generic-url" placeholder="Nhập URL...">
+                <div class="mb-2">
+                    <label for="generic-url" class="form-label mb-1">URL</label>
+                    <input type="url" class="form-control form-control-sm" id="generic-url" placeholder="Nhập URL...">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="generic-apply-btn">Áp dụng</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary btn-sm" id="generic-apply-btn">Áp dụng</button>
             </div>
         </div>
     </div>
@@ -272,6 +361,36 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-primary" id="apply-card-number-btn">Áp Dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notice Modal -->
+<div class="modal fade" id="noticeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bell-fill me-2"></i>Đặt Thông Báo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="noticeTitle" class="form-label">Chữ tùy chọn</label>
+                    <input type="text" class="form-control" id="noticeTitle" placeholder="Reg" value="Reg">
+                </div>
+                <div class="mb-3">
+                    <label for="noticeDays" class="form-label">Số ngày</label>
+                    <input type="number" class="form-control" id="noticeDays" min="1" step="1" value="7">
+                </div>
+                <div class="mb-3">
+                    <label for="noticeNote" class="form-label">Nội dung</label>
+                    <textarea class="form-control" id="noticeNote" rows="3" placeholder="Ghi chú..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitNotice()">Lưu</button>
             </div>
         </div>
     </div>
@@ -368,9 +487,17 @@ async function loadMXHData(forceRender = true) {
         if (accountsResponse.ok) {
             const newAccounts = await accountsResponse.json();
             
+            // Debug: log first account with notice
+            const accWithNotice = newAccounts.find(a => a.notice && a.notice.enabled);
+            if (accWithNotice) {
+                console.log('🔔 Account with notice found:', accWithNotice.id, accWithNotice.notice);
+            }
+            
             // Smart update: only render if data actually changed
             const dataChanged = JSON.stringify(newAccounts) !== JSON.stringify(mxhAccounts);
             mxhAccounts = newAccounts;
+            
+            console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: newAccounts.length });
             
             if (forceRender || dataChanged) {
                 renderGroupsNav(); // Render groups navigation first
@@ -466,11 +593,15 @@ function getPlatformColor(platform) {
     return colors[platform] || '#6c757d';
 }
 
-// Get next card number
-async function getNextCardNumber() {
-    const numbers = mxhAccounts.map(acc => parseInt(acc.card_name)).filter(n => !isNaN(n));
+// Get next card number (per platform/group)
+async function getNextCardNumber(groupId) {
+    // Get all accounts in the same group
+    const groupAccounts = mxhAccounts.filter(acc => acc.group_id === groupId);
+    const numbers = groupAccounts.map(acc => parseInt(acc.card_name)).filter(n => !isNaN(n));
+    
     if (numbers.length === 0) return 1;
     
+    // Find first available number starting from 1
     for (let i = 1; i <= numbers.length + 1; i++) {
         if (!numbers.includes(i)) {
             return i;
@@ -542,6 +673,26 @@ function renderGroupsNav() {
     groupsNavContainer.innerHTML = html;
 }
 
+// ===== DATETIME NORMALIZATION HELPERS =====
+// Cắt microseconds về 3 chữ số và thêm 'Z' nếu thiếu timezone
+function normalizeISOForJS(iso) {
+    if (!iso) return null;
+    let s = String(iso).trim();
+    // thay ' ' -> 'T' nếu có
+    s = s.replace(' ', 'T');
+    // Nếu có 'Z' thì ok; nếu có +00:00 thì vẫn ok
+    if (!/[zZ]|[+\-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+    // Chuẩn hoá phần .xxxxx... về 3 chữ số
+    s = s.replace(/(\.\d{3})\d+/, '$1'); // giữ .mmm
+    return s;
+}
+
+function ensureNoticeParsed(notice) {
+    let n = (typeof notice === 'string') ? (()=>{ try{return JSON.parse(notice)}catch{return {}} })() : (notice || {});
+    if (n && n.start_at) n.start_at = normalizeISOForJS(n.start_at);
+    return n;
+}
+
 // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION =====
 // Render MXH Accounts with performance optimizations and scroll position preservation
 function renderMXHAccounts() {
@@ -607,12 +758,11 @@ function renderMXHAccounts() {
             `;
             
             accounts.forEach(account => {
+                const now = new Date(); // Dùng chung cho mọi platform
                 const isDisabled = account.status === 'disabled';
                 let isAnniversary = false;
-                const isMuted = account.muted_until && new Date(account.muted_until) > new Date();
                 
                 // Secondary account variables
-                const isSecondaryMuted = account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date();
                 let isSecondaryAnniversary = false;
                 let secondaryAccountAgeDisplay = '';
                 let secondaryAgeColor = '#fff';
@@ -620,9 +770,7 @@ function renderMXHAccounts() {
                 let secondaryBorderStyle = '';
                 
                 // Calculate secondary border style
-                if (isSecondaryMuted) {
-                    secondaryBorderStyle = 'border-left: 4px solid #ffc107;';
-                } else if (account.secondary_status === 'disabled') {
+                if (account.secondary_status === 'disabled') {
                     secondaryBorderStyle = 'border-left: 4px solid #dc3545;';
                 }
                 
@@ -633,7 +781,6 @@ function renderMXHAccounts() {
                 
                 if (account.platform === 'wechat' && account.wechat_created_year) {
                     const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-                    const now = new Date();
                     const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
 
                     if (diffDays >= 365) {
@@ -729,11 +876,65 @@ function renderMXHAccounts() {
                 
                 const contextMenuFunction = account.platform === 'wechat' ? 'showWeChatContextMenu' : 'showGenericContextMenu';
                 
+                // Notice countdown logic
+                let noticeHtml = '';
+                let extraClass = '';
+                let tipHtml = '';
+                const n = ensureNoticeParsed(account.notice);
+                
+                // Debug log
+                if (account.id === noticeTargetId) {
+                    console.log('Notice debug for account', account.id, ':', n);
+                }
+                
+                if (n.enabled && n.start_at && n.days > 0) {
+                    const start = new Date(n.start_at);
+                    const end = new Date(start.getTime() + n.days * 86400000);
+                    const remainMs = end - now;
+                    const remainDays = Math.ceil(remainMs / 86400000);
+                    
+                    if (remainDays > 0) {
+                        // Format display: days (d) or months (m)
+                        let timeDisplay;
+                        if (remainDays >= 30) {
+                            const remainMonths = Math.floor(remainDays / 30);
+                            timeDisplay = `${remainMonths}m`;
+                        } else {
+                            timeDisplay = `${remainDays}d`;
+                        }
+                        noticeHtml = `<div class="notice-line">${escapeHtml(n.title)}: ${timeDisplay}</div>`;
+                    } else {
+                        noticeHtml = `<div class="notice-line expired">${escapeHtml(n.title)}: đã đến hạn</div>`;
+                        extraClass = 'notice-expired-blink';
+                    }
+                    
+                    // Tooltip also uses short format
+                    let tooltipTime;
+                    if (n.days >= 30) {
+                        const months = Math.floor(n.days / 30);
+                        tooltipTime = `${months}m`;
+                    } else {
+                        tooltipTime = `${n.days}d`;
+                    }
+                    tipHtml = `<div class="notice-tooltip"><div class="notice-tooltip-title">${escapeHtml(n.title)} – ${tooltipTime}</div><div class="notice-tooltip-note">${escapeHtml(n.note || '')}</div></div>`;
+                }
+                
+                // Determine account status and styling
+                let statusClass = 'account-status-available';
+                let statusIcon = '';
+                let accountStatus = account.status || 'active';
+                
+                if (accountStatus === 'die') {
+                    statusClass = 'account-status-die';
+                    statusIcon = '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>';
+                } else if (accountStatus === 'disabled') {
+                    statusClass = 'account-status-disabled';
+                    statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
+                }
+                
                 // Border styling based on status
                 let borderStyle = '';
-                if (isMuted) {
-                    borderStyle = 'border-left: 4px solid #ffc107;';
-                } else if (isDisabled) {
+                if (isDisabled) {
                     borderStyle = 'border-left: 4px solid #dc3545;';
                 } else if (isAnniversary) {
                     // Check if primary account has Hong Kong number (+852)
@@ -754,9 +955,9 @@ function renderMXHAccounts() {
                 
                 html += `
                     <div class="col" style="padding: 2px;">
-                        <div class="mxh-card-container">
+                        <div class="mxh-card-container ${extraClass}">
                             <div class="mxh-card-inner">
-                                <div class="mxh-card-front" oncontextmenu="${account.platform === 'wechat' ? 'showWeChatContextMenu(event, ' + account.id + ', false)' : 'showGenericContextMenu(event, ' + account.id + ')'}; return false;">
+                                <div class="mxh-card-front" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
                                     <div class="card tool-card mxh-card" style="${borderStyle}">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -767,28 +968,21 @@ function renderMXHAccounts() {
                                                 </div>
                                             </div>
                                             
-                                            <div class="text-center mb-1" onclick="toggleAccountStatus(event, ${account.id}, false)" style="cursor: pointer;" title="Click để thay đổi trạng thái">
-                                                ${isDisabled ? 
-                                                    `<small style="color: #dc3545; font-size: 0.75rem; font-weight: 500;"><i class="bi bi-x-circle-fill me-1"></i>Die</small>` : 
-                                                    (isMuted ? 
-                                                        `<small style="color: #ff8c00; font-size: 0.75rem; font-weight: 500;"><i class="bi bi-volume-mute-fill me-1"></i>Câm</small>` : 
-                                                        `<small style="color: #07c160; font-size: 0.75rem; font-weight: 500;">Available${isAnniversary ? ' <i class="bi bi-wechat"></i>' : ''}</small>`
-                                                    )
-                                                }
-                                            </div>
+                                            ${noticeHtml}
+                                            ${tipHtml}
                                             
                                             <div class="text-center mb-1">
                                                 <small 
-                                                    class="text-white editable-field" 
+                                                    class="${statusClass} editable-field" 
                                                     contenteditable="true" 
                                                     data-account-id="${account.id}" 
                                                     data-field="username" 
                                                     data-is-secondary="false"
-                                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block;"
+                                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
                                                     onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
                                                     onmouseleave="this.style.backgroundColor='transparent'"
                                                     onclick="event.stopPropagation()"
-                                                >${account.username || 'Click để nhập'}</small>
+                                                >${account.username || 'Click để nhập'}${statusIcon}</small>
                                                 <small 
                                                     class="text-muted editable-field" 
                                                     contenteditable="true" 
@@ -827,16 +1021,6 @@ function renderMXHAccounts() {
                                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                                     <h6 class="card-title mb-0" style="font-size: 1.26rem; font-weight: 600;">${account.secondary_card_name || account.card_name} <small style="font-size: 0.7rem;">Phụ</small></h6>
                                                     ${secondaryAccountAgeDisplay ? `<small style="color: ${secondaryAgeColor}; font-size: 0.7rem; font-weight: 500;">${secondaryAccountAgeDisplay}</small>` : ''}
-                                                </div>
-                                                
-                                                <div class="text-center mb-1" onclick="toggleAccountStatus(event, ${account.id}, true)" style="cursor: pointer;" title="Click để thay đổi trạng thái">
-                                                    ${(account.secondary_status === 'disabled') ? 
-                                                        `<small style="color: #dc3545; font-size: 0.75rem; font-weight: 500;"><i class="bi bi-x-circle-fill me-1"></i>Die</small>` : 
-                                                        (isSecondaryMuted ? 
-                                                            `<small style="color: #ff8c00; font-size: 0.75rem; font-weight: 500;"><i class="bi bi-volume-mute-fill me-1"></i>Câm</small>` : 
-                                                            `<small style="color: #07c160; font-size: 0.75rem; font-weight: 500;">Available${isSecondaryAnniversary ? ' <i class="bi bi-wechat"></i>' : ''}</small>`
-                                                        )
-                                                    }
                                                 </div>
                                                 
                                                 <div class="text-center mb-1">
@@ -906,10 +1090,40 @@ function renderMXHAccounts() {
     container.innerHTML = '';
     container.appendChild(tempDiv);
     
+    // Enable tooltip on hover for notice with smart positioning
+    requestAnimationFrame(() => {
+        document.querySelectorAll('.mxh-card-container').forEach(card => {
+            const tip = card.querySelector('.notice-tooltip');
+            if (tip) {
+                card.addEventListener('mouseenter', () => {
+                    // Smart positioning: check if card is near left or right edge
+                    const rect = card.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    
+                    // Remove previous positioning classes
+                    tip.classList.remove('tooltip-left', 'tooltip-right');
+                    
+                    // If card is on the left third of screen, show tooltip on right
+                    if (rect.left < viewportWidth / 3) {
+                        tip.classList.add('tooltip-right');
+                    }
+                    // If card is on the right third of screen, show tooltip on left
+                    else if (rect.right > (viewportWidth * 2) / 3) {
+                        tip.classList.add('tooltip-left');
+                    }
+                    // Default: show on right (original behavior)
+                    
+                    tip.classList.add('show');
+                });
+                card.addEventListener('mouseleave', () => tip.classList.remove('show'));
+            }
+        });
+    });
+    
     // Restore visibility states efficiently
     requestAnimationFrame(() => {
         Object.keys(accountsByGroup).forEach(groupId => {
-            const isVisible = localStorage.getItem(`group_${groupId}_visible`) === 'true';
+            const isVisible = localStorage.getItem(`group_${groupId}_visible`) !== 'false';
             const cardsContainerId = `cards-${groupId}`;
             const toggleButtonId = `toggle-${groupId}`;
             const cardsContainer = document.getElementById(cardsContainerId);
@@ -974,18 +1188,6 @@ function showWeChatContextMenu(event, accountId, isSecondary = false) {
         const statusToCheck = isSecondary ? account.secondary_status : account.status;
         const phoneToCopy = isSecondary ? account.secondary_phone : account.phone;
         
-        // Check if muted
-        const isMuted = isSecondary ? 
-            (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) :
-            (account.muted_until && new Date(account.muted_until) > new Date());
-        const muteItem = document.getElementById('mute-account-item');
-        
-        if (isMuted) {
-            muteItem.innerHTML = '<i class="bi bi-volume-up-fill me-2"></i> <span id="mute-text">Bỏ câm</span>';
-        } else {
-            muteItem.innerHTML = '<i class="bi bi-volume-mute-fill me-2"></i> <span id="mute-text">Câm</span>';
-        }
-        
         if (statusToCheck === 'disabled') {
             toggleStatusItem.style.display = 'none';
             rescueItem.style.display = 'block';
@@ -996,11 +1198,25 @@ function showWeChatContextMenu(event, accountId, isSecondary = false) {
         }
         
         copyPhoneItem.style.display = phoneToCopy ? 'block' : 'none';
+        
+        // Configure notice toggle
+        configureNoticeToggleFor('wechat-context-menu', account);
     }
     
     setTimeout(() => {
         document.addEventListener('click', hideWeChatContextMenu, { once: true });
     }, 100);
+}
+
+function configureNoticeToggleFor(menuId, account) {
+    const el = document.querySelector(`#${menuId} [id$="-notice-toggle"]`);
+    if (!el) return;
+    const hasNotice = !!(account.notice && account.notice.enabled);
+    // set action + icon + text
+    el.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
+    el.innerHTML = hasNotice
+        ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
+        : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
 }
 
 function hideWeChatContextMenu() {
@@ -1018,6 +1234,12 @@ function showGenericContextMenu(event, accountId) {
     contextMenu.style.left = event.pageX + 'px';
     contextMenu.style.top = event.pageY + 'px';
     
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    if (account) {
+        // Configure notice toggle
+        configureNoticeToggleFor('generic-context-menu', account);
+    }
+    
     setTimeout(() => {
         document.addEventListener('click', hideGenericContextMenu, { once: true });
     }, 100);
@@ -1025,6 +1247,130 @@ function showGenericContextMenu(event, accountId) {
 
 function hideGenericContextMenu() {
     document.getElementById('generic-context-menu').style.display = 'none';
+    resumeAutoRefresh();
+}
+
+// ===== UNIFIED CONTEXT MENU (New) =====
+function showUnifiedContextMenu(event, accountId, platform, isSecondary = false) {
+    event.preventDefault();
+    event.stopPropagation();
+    currentContextAccountId = accountId;
+    currentEditingIsSecondary = isSecondary;
+    pauseAutoRefresh();
+    
+    const contextMenu = document.getElementById('unified-context-menu');
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    
+    if (!account) return;
+    
+    // Show/hide WeChat-specific items
+    const wechatOnlyItems = contextMenu.querySelectorAll('.wechat-only');
+    wechatOnlyItems.forEach(item => {
+        item.style.display = platform === 'wechat' ? 'block' : 'none';
+    });
+    
+    // Show/hide phone item if phone exists
+    const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
+    const phone = isSecondary ? account.secondary_phone : account.phone;
+    if (copyPhoneItem) {
+        copyPhoneItem.style.display = phone ? 'block' : 'none';
+    }
+    
+    // Show/hide email item if email exists (for Telegram, etc.)
+    const copyEmailItem = contextMenu.querySelector('#copy-email-item');
+    if (copyEmailItem) {
+        // Add logic to show email if account has email field
+        copyEmailItem.style.display = account.email ? 'block' : 'none';
+    }
+    
+    // Configure notice toggle
+    const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
+    if (noticeToggle && account.notice) {
+        const hasNotice = !!(account.notice.enabled);
+        noticeToggle.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
+        noticeToggle.innerHTML = hasNotice
+            ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
+            : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
+    }
+    
+    // Configure status submenu based on current status
+    const currentStatus = isSecondary ? account.secondary_status : account.status;
+    const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
+    const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
+    
+    if (currentStatus === 'disabled') {
+        // Hide normal options, show rescue options
+        statusNormalItems.forEach(item => item.style.display = 'none');
+        statusRescueItems.forEach(item => item.style.display = 'block');
+    } else {
+        // Show normal options, hide rescue options
+        statusNormalItems.forEach(item => item.style.display = 'block');
+        statusRescueItems.forEach(item => item.style.display = 'none');
+    }
+    
+    // Position and show menu
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = event.pageX + 'px';
+    contextMenu.style.top = event.pageY + 'px';
+    
+    setTimeout(() => {
+        document.addEventListener('click', hideUnifiedContextMenu, { once: true });
+    }, 100);
+}
+
+function hideUnifiedContextMenu() {
+    document.getElementById('unified-context-menu').style.display = 'none';
+    resumeAutoRefresh();
+}
+
+// Handle Card Context Menu - Use Unified Menu
+window.handleCardContextMenu = function(event, accountId, platform) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Context menu for platform:', platform, 'account:', accountId);
+    
+    // Use unified context menu for all platforms
+    showUnifiedContextMenu(event, accountId, platform, false);
+}
+
+window.showTelegramContextMenu = function(event, accountId) {
+    event.preventDefault();
+    event.stopPropagation(); // CRITICAL: Stop event from bubbling to dashboard menu
+    currentContextAccountId = accountId;
+    pauseAutoRefresh();
+    
+    console.log('Telegram context menu opened for account:', accountId);
+    
+    // Hide all other context menus first
+    document.getElementById('wechat-context-menu').style.display = 'none';
+    document.getElementById('generic-context-menu').style.display = 'none';
+    
+    const contextMenu = document.getElementById('telegram-context-menu');
+    if (!contextMenu) {
+        console.error('Telegram context menu element not found!');
+        return;
+    }
+    
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = event.pageX + 'px';
+    contextMenu.style.top = event.pageY + 'px';
+    
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    if (account) {
+        // Configure notice toggle
+        configureNoticeToggleFor('telegram-context-menu', account);
+    }
+    
+    setTimeout(() => {
+        document.addEventListener('click', hideTelegramContextMenu, { once: true });
+    }, 100);
+}
+
+function hideTelegramContextMenu() {
+    const contextMenu = document.getElementById('telegram-context-menu');
+    if (contextMenu) {
+        contextMenu.style.display = 'none';
+    }
     resumeAutoRefresh();
 }
 
@@ -1081,56 +1427,141 @@ async function markAccountAsScanned(event) {
     hideWeChatContextMenu();
 }
 
-async function toggleMuteAccount(event) {
+// Notice modal functions
+let noticeTargetId = null;
+function openNoticeModal(event) {
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
     if (!currentContextAccountId) return;
     
-    const contextMenu = document.getElementById('wechat-context-menu');
-    const isSecondary = contextMenu.dataset.isSecondary === 'true';
+    noticeTargetId = currentContextAccountId;
+    document.getElementById('noticeTitle').value = 'Reg';
+    document.getElementById('noticeDays').value = 5;
+    document.getElementById('noticeNote').value = '';
     
-    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
-    if (!account) return;
+    const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
+    modal.show();
     
-    const isMuted = isSecondary ?
-        (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) :
-        (account.muted_until && new Date(account.muted_until) > new Date());
-    const endpoint = isMuted ? 'unmute' : 'mute';
+    hideWeChatContextMenu();
+    hideGenericContextMenu();
+    hideTelegramContextMenu();
+}
+
+async function submitNotice() {
+    const title = document.getElementById('noticeTitle').value.trim();
+    const days = parseInt(document.getElementById('noticeDays').value, 10) || 0;
+    const note = document.getElementById('noticeNote').value.trim();
     
-    // Instant local update
-    const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
-    if (accountIndex !== -1) {
-        const mutedKey = isSecondary ? 'secondary_muted_until' : 'muted_until';
-        if (isMuted) {
-            mxhAccounts[accountIndex][mutedKey] = null;
-        } else {
-            const muteUntil = new Date();
-            muteUntil.setDate(muteUntil.getDate() + 30);
-            mxhAccounts[accountIndex][mutedKey] = muteUntil.toISOString();
-        }
+    if (!noticeTargetId || !title || days <= 0) {
+        showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+        return;
     }
-    renderMXHAccounts();
     
     try {
-        const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/${endpoint}`, {
-            method: 'POST',
+        // Pause auto-refresh to prevent race condition
+        stopAutoRefresh();
+        
+        const response = await fetch(`/mxh/api/accounts/${noticeTargetId}/notice`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_secondary: isSecondary })
+            body: JSON.stringify({ title, days, note })
         });
         
         if (response.ok) {
-            showToast(isMuted ? '✅ Đã bỏ câm!' : '✅ Đã câm 30 ngày!', 'success');
+            showToast('✅ Đã đặt thông báo!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('noticeModal'));
+            modal.hide();
+            
+            // Update local data immediately to trigger render
+            const account = mxhAccounts.find(a => a.id === noticeTargetId);
+            if (account) {
+                account.notice = {
+                    enabled: true,
+                    title: title,
+                    days: days,
+                    note: note,
+                    start_at: new Date().toISOString()
+                };
+                console.log('✅ Updated local notice for account', noticeTargetId, account.notice);
+            }
+            
+            // Force re-render with updated data
+            renderMXHAccounts();
+            
+            // Resume auto-refresh after render
+            setTimeout(() => startAutoRefresh(), 100);
         } else {
-            showToast('Lỗi!', 'error');
-            await loadMXHData(false);
+            showToast('Lỗi khi đặt thông báo!', 'error');
+            startAutoRefresh(); // Resume even on error
         }
     } catch (error) {
         showToast('Lỗi kết nối!', 'error');
-        await loadMXHData(false);
+        startAutoRefresh(); // Resume even on error
     }
+    noticeTargetId = null;
+}
+
+async function clearNotice(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (!currentContextAccountId) return;
+    
+    try {
+        // Pause auto-refresh to prevent race condition
+        stopAutoRefresh();
+        
+        const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/notice`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('✅ Đã tắt thông báo!', 'success');
+            
+            // Update local data immediately to trigger render
+            const account = mxhAccounts.find(a => a.id === currentContextAccountId);
+            if (account) {
+                account.notice = {
+                    enabled: false,
+                    title: '',
+                    days: 0,
+                    note: '',
+                    start_at: null
+                };
+                console.log('✅ Cleared local notice for account', currentContextAccountId);
+            }
+            
+            // Force re-render with updated data
+            renderMXHAccounts();
+            
+            // Resume auto-refresh after render
+            setTimeout(() => startAutoRefresh(), 100);
+        } else {
+            showToast('Lỗi khi xóa thông báo!', 'error');
+            startAutoRefresh(); // Resume even on error
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối!', 'error');
+        startAutoRefresh(); // Resume even on error
+    }
+    
     hideWeChatContextMenu();
+    hideGenericContextMenu();
+    hideTelegramContextMenu();
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 function copyPhoneNumber(event) {
@@ -1151,6 +1582,21 @@ function copyPhoneNumber(event) {
         }
     }
     hideWeChatContextMenu();
+}
+
+function copyEmail(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (!currentContextAccountId) return;
+    
+    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+    if (account && account.email) {
+        navigator.clipboard.writeText(account.email);
+        showToast('Đã copy Email!', 'success');
+    }
+    hideUnifiedContextMenu();
 }
 
 async function resetScanCount(event) {
@@ -1254,6 +1700,93 @@ async function toggleAccountStatus(event, accountId = null, isSecondary = null) 
     const contextMenu = document.getElementById('wechat-context-menu');
     if (contextMenu && contextMenu.style.display === 'block') {
         hideWeChatContextMenu();
+    }
+}
+
+// ===== UPDATE ACCOUNT STATUS (Unified Menu) =====
+async function updateAccountStatus(newStatus) {
+    if (!currentContextAccountId) return;
+    
+    const isSecondary = currentEditingIsSecondary || false;
+    
+    // Instant local update
+    const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+    if (accountIndex !== -1) {
+        const statusKey = isSecondary ? 'secondary_status' : 'status';
+        mxhAccounts[accountIndex][statusKey] = newStatus;
+    }
+    renderMXHAccounts();
+    
+    try {
+        const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                status: newStatus,
+                is_secondary: isSecondary 
+            })
+        });
+        
+        if (response.ok) {
+            const statusText = newStatus === 'active' ? 'Available' : 
+                              newStatus === 'die' ? 'Die' : 'Vô hiệu hóa';
+            showToast(`✅ Đã đổi sang ${statusText}!`, 'success');
+        } else {
+            showToast('Lỗi!', 'error');
+            await loadMXHData(false);
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối!', 'error');
+        await loadMXHData(false);
+    }
+}
+
+// ===== RESCUE ACCOUNT (Unified Menu) =====
+async function rescueAccountUnified(result) {
+    if (!currentContextAccountId) return;
+    
+    const isSecondary = currentEditingIsSecondary || false;
+    
+    // Instant local update
+    const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+    if (accountIndex !== -1) {
+        if (result === 'success') {
+            // Cứu thành công - chuyển về active
+            const statusKey = isSecondary ? 'secondary_status' : 'status';
+            const dieKey = isSecondary ? 'secondary_die_date' : 'die_date';
+            const rescueSuccessKey = isSecondary ? 'secondary_rescue_success_count' : 'rescue_success_count';
+            
+            mxhAccounts[accountIndex][statusKey] = 'active';
+            mxhAccounts[accountIndex][dieKey] = null;
+            mxhAccounts[accountIndex][rescueSuccessKey] = (mxhAccounts[accountIndex][rescueSuccessKey] || 0) + 1;
+        } else {
+            // Cứu thất bại - giữ disabled, tăng rescue_count
+            const rescueKey = isSecondary ? 'secondary_rescue_count' : 'rescue_count';
+            mxhAccounts[accountIndex][rescueKey] = (mxhAccounts[accountIndex][rescueKey] || 0) + 1;
+        }
+    }
+    renderMXHAccounts();
+    
+    try {
+        const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/rescue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                result: result,
+                is_secondary: isSecondary 
+            })
+        });
+        
+        if (response.ok) {
+            const message = result === 'success' ? '✅ Đã cứu thành công!' : '📝 Đã ghi nhận cứu thất bại!';
+            showToast(message, 'success');
+        } else {
+            showToast('Lỗi!', 'error');
+            await loadMXHData(false);
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối!', 'error');
+        await loadMXHData(false);
     }
 }
 
@@ -1371,6 +1904,38 @@ async function deleteAccount(accountId) {
     }
 }
 
+// Telegram Context Menu Actions
+async function copyTelegramPhone(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (!currentContextAccountId) return;
+    
+    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+    if (!account || !account.phone) {
+        showToast('⚠️ Không có số điện thoại!', 'warning');
+        hideTelegramContextMenu();
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(account.phone);
+        showToast('📋 Đã copy số điện thoại!', 'success');
+    } catch (error) {
+        // Fallback method
+        const textArea = document.createElement('textarea');
+        textArea.value = account.phone;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('📋 Đã copy số điện thoại!', 'success');
+    }
+    
+    hideTelegramContextMenu();
+}
+
 // Modal Button Handlers with instant updates
 document.getElementById('mxh-save-account-btn').addEventListener('click', async () => {
     const username = document.getElementById('mxh-username').value;
@@ -1387,7 +1952,7 @@ document.getElementById('mxh-save-account-btn').addEventListener('click', async 
     
     try {
         const groupId = await ensurePlatformGroup(platform);
-        const cardNumber = await getNextCardNumber();
+        const cardNumber = await getNextCardNumber(groupId);
         
         const response = await fetch('/mxh/api/accounts', {
             method: 'POST',
@@ -1439,7 +2004,7 @@ document.getElementById('wechat-apply-btn').addEventListener('click', async () =
         wechat_created_day: parseInt(document.getElementById('wechat-day').value),
         wechat_created_month: parseInt(document.getElementById('wechat-month').value),
         wechat_created_year: parseInt(document.getElementById('wechat-year').value),
-        status: selectedStatus === 'muted' ? 'active' : selectedStatus,
+        status: selectedStatus,
         is_secondary: currentEditingIsSecondary
     };
     
@@ -1476,29 +2041,6 @@ document.getElementById('wechat-apply-btn').addEventListener('click', async () =
         });
         
         if (response.ok) {
-            // Handle mute status
-            if (selectedStatus === 'muted') {
-                await fetch(`/mxh/api/accounts/${currentContextAccountId}/mute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_secondary: currentEditingIsSecondary })
-                });
-            } else if (selectedStatus === 'available') {
-                // Check if currently muted and unmute
-                const currentAccount = mxhAccounts.find(acc => acc.id === currentContextAccountId);
-                const isCurrentlyMuted = currentEditingIsSecondary ? 
-                    (currentAccount.secondary_muted_until && new Date(currentAccount.secondary_muted_until) > new Date()) :
-                    (currentAccount.muted_until && new Date(currentAccount.muted_until) > new Date());
-                
-                if (isCurrentlyMuted) {
-                    await fetch(`/mxh/api/accounts/${currentContextAccountId}/unmute`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ is_secondary: currentEditingIsSecondary })
-                    });
-                }
-            }
-            
             showToast('✅ Đã cập nhật!', 'success');
         } else {
             const error = await response.json();
@@ -1684,8 +2226,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'mark-scanned':
                 markAccountAsScanned(e);
                 break;
-            case 'toggle-mute':
-                toggleMuteAccount(e);
+            case 'set-notice':
+                openNoticeModal(e);
+                break;
+            case 'clear-notice':
+                clearNotice(e);
                 break;
             case 'copy-phone':
                 copyPhoneNumber(e);
@@ -1723,13 +2268,111 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!action) return;
         
         switch(action) {
+            case 'set-notice':
+                openNoticeModal(e);
+                break;
+            case 'clear-notice':
+                clearNotice(e);
+                break;
             case 'edit-generic':
-                editGenericAccount(e);
+                openGenericModal(e);
                 break;
             case 'delete-generic':
-                showGenericDeleteConfirm(e);
+                showDeleteConfirm(e);
                 break;
         }
+    });
+    
+    // Event delegation for Telegram context menu
+    document.getElementById('telegram-context-menu').addEventListener('click', (e) => {
+        const menuItem = e.target.closest('.menu-item');
+        if (!menuItem) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const action = menuItem.dataset.action;
+        if (!action) return;
+        
+        switch(action) {
+            case 'set-notice':
+                openNoticeModal(e);
+                break;
+            case 'clear-notice':
+                clearNotice(e);
+                break;
+            case 'copy-phone-telegram':
+                copyTelegramPhone(e);
+                break;
+            case 'edit-generic':
+                openGenericModal(e);
+                break;
+            case 'delete-generic':
+                showDeleteConfirm(e);
+                break;
+        }
+    });
+    
+    // ===== UNIFIED CONTEXT MENU EVENT LISTENER =====
+    document.getElementById('unified-context-menu').addEventListener('click', async (e) => {
+        const menuItem = e.target.closest('.menu-item');
+        if (!menuItem) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const action = menuItem.dataset.action;
+        if (!action) return;
+        
+        console.log('Unified menu action:', action);
+        
+        switch(action) {
+            case 'edit':
+                editCurrentContextAccount(e);
+                break;
+            case 'status-available':
+                await updateAccountStatus('active');
+                break;
+            case 'status-die':
+                await updateAccountStatus('die');
+                break;
+            case 'status-disabled':
+                await updateAccountStatus('disabled');
+                break;
+            case 'rescue-success':
+                await rescueAccountUnified('success');
+                break;
+            case 'rescue-failed':
+                await rescueAccountUnified('failed');
+                break;
+            case 'mark-scanned':
+                markAccountAsScanned(e);
+                break;
+            case 'set-notice':
+                openNoticeModal(e);
+                break;
+            case 'clear-notice':
+                clearNotice(e);
+                break;
+            case 'copy-phone':
+                copyPhoneNumber(e);
+                break;
+            case 'copy-email':
+                copyEmail(e);
+                break;
+            case 'reset-scan':
+                resetScanCount(e);
+                break;
+            case 'change-number':
+                changeCardNumber(e);
+                break;
+            case 'delete':
+                showDeleteConfirm(e);
+                break;
+        }
+        
+        // Hide menu after action
+        hideUnifiedContextMenu();
     });
 });
 
@@ -1742,6 +2385,28 @@ window.flipCard = function(element, event) {
     const cardContainer = element.closest('.mxh-card-container');
     if (cardContainer) {
         cardContainer.classList.toggle('flipped');
+    }
+};
+
+// Test function for Telegram context menu
+window.testTelegramMenu = function(event) {
+    event.preventDefault();
+    console.log('=== TESTING TELEGRAM MENU ===');
+    
+    // Check if menu element exists
+    const menu = document.getElementById('telegram-context-menu');
+    console.log('Menu element found:', !!menu);
+    
+    // Check if function exists
+    console.log('showTelegramContextMenu function:', typeof window.showTelegramContextMenu);
+    console.log('handleCardContextMenu function:', typeof window.handleCardContextMenu);
+    
+    // Try to show menu at mouse position
+    if (menu && typeof window.showTelegramContextMenu === 'function') {
+        window.showTelegramContextMenu(event, 121); // Test with known Telegram ID
+        console.log('✅ Menu should be visible now!');
+    } else {
+        console.error('❌ Menu or function not available!');
     }
 };
 
@@ -1764,15 +2429,10 @@ window.openWeChatModal = function(accountId, isSecondary = false) {
         document.getElementById('wechat-month').value = account.secondary_wechat_created_month || new Date().getMonth() + 1;
         document.getElementById('wechat-year').value = account.secondary_wechat_created_year || new Date().getFullYear();
         
-        let secondaryStatus = 'available';
-        if (account.secondary_status === 'disabled') {
-            secondaryStatus = 'disabled';
-        } else if (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) {
-            secondaryStatus = 'muted';
-        }
+        let secondaryStatus = account.secondary_status || 'available';
         document.getElementById('wechat-status').value = secondaryStatus;
         
-        if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Chỉnh sửa Tài Khoản Phụ';
+        if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Phụ';
     } else {
         document.getElementById('wechat-card-name').value = account.card_name || '';
         document.getElementById('wechat-username').value = account.username || '';
@@ -1789,7 +2449,7 @@ window.openWeChatModal = function(accountId, isSecondary = false) {
         }
         document.getElementById('wechat-status').value = primaryStatus;
         
-        if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Chỉnh sửa Tài Khoản Chính';
+        if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Chính';
     }
     
     const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));
@@ -1976,3 +2636,4 @@ window.toggleAccountStatus = async function(event, accountId, isSecondary) {
 
 </script>
 {% endblock %}
+

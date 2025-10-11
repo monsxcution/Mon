@@ -1,10 +1,11 @@
 import sqlite3
-from datetime import datetime, timedelta
+import json
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, render_template
 from app.database import get_db_connection
 
 # --- BLUEPRINT DEFINITION ---
-mxh_bp = Blueprint("mxh_feature", __name__, url_prefix="/mxh")
+mxh_bp = Blueprint("mxh", __name__, url_prefix="/mxh")
 
 # ===== MXH PAGES =====
 @mxh_bp.route('')
@@ -99,7 +100,37 @@ def mxh_accounts():
                 FROM mxh_accounts a 
                 LEFT JOIN mxh_groups g ON a.group_id = g.id 
             ''').fetchall()
-            return jsonify([dict(account) for account in accounts])
+            
+            # Parse notice JSON field and ensure it has default structure
+            result = []
+            for account in accounts:
+                acc_dict = dict(account)
+                # Parse notice field if exists
+                if acc_dict.get('notice'):
+                    try:
+                        parsed = json.loads(acc_dict['notice'])
+                        
+                        # Normalize start_at to JavaScript-compatible ISO format (3 digits milliseconds + Z)
+                        sa = parsed.get('start_at')
+                        if sa:
+                            try:
+                                # Accept old format (6 digits microseconds, no Z) and convert to new format
+                                dt = datetime.fromisoformat(sa.replace('Z', '+00:00'))
+                                sa_norm = dt.astimezone(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+                                parsed['start_at'] = sa_norm
+                            except Exception:
+                                parsed['start_at'] = None
+                        
+                        acc_dict['notice'] = parsed
+                        print(f"✅ Parsed notice for account {acc_dict.get('id')}: {acc_dict['notice']}")
+                    except Exception as e:
+                        print(f"❌ Error parsing notice for account {acc_dict.get('id')}: {e}")
+                        acc_dict['notice'] = {'enabled': False, 'title': '', 'days': 0, 'note': '', 'start_at': None}
+                else:
+                    acc_dict['notice'] = {'enabled': False, 'title': '', 'days': 0, 'note': '', 'start_at': None}
+                result.append(acc_dict)
+            
+            return jsonify(result)
         
         elif request.method == 'POST':
             data = request.get_json()
@@ -146,10 +177,24 @@ def mxh_accounts():
 @mxh_bp.route('/api/accounts/<int:account_id>', methods=['PUT', 'DELETE'])
 def update_delete_mxh_account(account_id):
     """Update or delete an account."""
+    print(f"\n{'='*60}", flush=True)
+    print(f"🔔 ENDPOINT CALLED: {request.method} /api/accounts/{account_id}", flush=True)
     conn = get_db_connection()
     try:
         if request.method == 'PUT':
+            print(f"📝 Entering PUT block...", flush=True)
+            print(f"   Content-Type: {request.content_type}", flush=True)
+            print(f"   Content-Type: {request.content_type}")
+            print(f"   RAW request.data: {request.data}")
+            
             data = request.get_json()
+            print(f"   Parsed JSON data: {data}")
+            print(f"   Data type: {type(data)}")
+            
+            if data is None:
+                print("   ❌ ERROR: request.get_json() returned None!")
+                return jsonify({'error': 'Invalid JSON or empty body'}), 400
+            
             is_secondary = data.get('is_secondary', False)
 
             fields_to_update = {
@@ -166,6 +211,10 @@ def update_delete_mxh_account(account_id):
                 'status': data.get('status')
             }
             
+            # Handle email_reset_date separately (only for primary accounts, not secondary)
+            if not is_secondary and 'email_reset_date' in data:
+                fields_to_update['email_reset_date'] = data.get('email_reset_date')
+            
             # Use appropriate prefixes for secondary account
             if is_secondary:
                 update_cols = {f"secondary_{key}": value for key, value in fields_to_update.items()}
@@ -175,14 +224,22 @@ def update_delete_mxh_account(account_id):
             # Filter out any keys with None values to avoid overwriting with null
             update_cols = {k: v for k, v in update_cols.items() if v is not None}
             
+            print(f"   Received data: {data}")
+            print(f"   Fields to update: {update_cols}")
+            
             if not update_cols:
                 return jsonify({'message': 'No fields to update.'})
                 
             set_clause = ", ".join([f"{key} = ?" for key in update_cols.keys()])
             params = list(update_cols.values()) + [account_id]
+            
+            sql = f'UPDATE mxh_accounts SET {set_clause} WHERE id = ?'
+            print(f"   SQL: {sql}")
+            print(f"   Params: {params}")
 
-            conn.execute(f'UPDATE mxh_accounts SET {set_clause} WHERE id = ?', params)
+            conn.execute(sql, params)
             conn.commit()
+            print(f"   ✅ Updated successfully!")
             return jsonify({'message': 'Account updated successfully'})
         
         elif request.method == 'DELETE':
@@ -231,58 +288,63 @@ def quick_update_account(account_id):
         conn.close()
 
 
-# ===== MUTE/UNMUTE API ROUTES =====
-@mxh_bp.route('/api/accounts/<int:account_id>/mute', methods=['POST'])
-def mute_mxh_account(account_id):
-    """Mute an account for 30 days."""
+# ===== NOTICE API ROUTES =====
+@mxh_bp.route('/api/accounts/<int:account_id>/notice', methods=['PUT'])
+def api_set_notice(account_id):
+    """Set or update notice for an account."""
     conn = get_db_connection()
     try:
-        data = request.get_json()
-        is_secondary = data.get('is_secondary', False)
+        data = request.get_json(force=True) or {}
+        title = str(data.get('title', '')).strip()
+        days = int(data.get('days', 0))
+        note = str(data.get('note', '')).strip()
         
-        # Calculate mute until date (30 days from now)
-        mute_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
+        if not title or days <= 0:
+            return jsonify({'error': 'invalid'}), 400
         
-        if is_secondary:
-            conn.execute(
-                'UPDATE mxh_accounts SET secondary_muted_until = ? WHERE id = ?',
-                (mute_until, account_id)
-            )
-        else:
-            conn.execute(
-                'UPDATE mxh_accounts SET muted_until = ? WHERE id = ?',
-                (mute_until, account_id)
-            )
+        # Format time as ISO 8601 with milliseconds and Z (UTC) for JavaScript compatibility
+        now_iso = datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+        notice_json = {
+            'enabled': True,
+            'title': title,
+            'days': days,
+            'note': note,
+            'start_at': now_iso
+        }
+        
+        conn.execute(
+            'UPDATE mxh_accounts SET notice = ? WHERE id = ?',
+            (json.dumps(notice_json), account_id)
+        )
         conn.commit()
         
-        return jsonify({'message': 'Account muted successfully for 30 days', 'muted_until': mute_until})
+        return jsonify({'ok': True, 'notice': notice_json})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 
 
-@mxh_bp.route('/api/accounts/<int:account_id>/unmute', methods=['POST'])
-def unmute_mxh_account(account_id):
-    """Unmute an account."""
+@mxh_bp.route('/api/accounts/<int:account_id>/notice', methods=['DELETE'])
+def api_clear_notice(account_id):
+    """Clear notice for an account."""
     conn = get_db_connection()
     try:
-        data = request.get_json()
-        is_secondary = data.get('is_secondary', False)
+        notice_json = {
+            'enabled': False,
+            'title': '',
+            'days': 0,
+            'note': '',
+            'start_at': None
+        }
         
-        if is_secondary:
-            conn.execute(
-                'UPDATE mxh_accounts SET secondary_muted_until = NULL WHERE id = ?',
-                (account_id,)
-            )
-        else:
-            conn.execute(
-                'UPDATE mxh_accounts SET muted_until = NULL WHERE id = ?',
-                (account_id,)
-            )
+        conn.execute(
+            'UPDATE mxh_accounts SET notice = ? WHERE id = ?',
+            (json.dumps(notice_json), account_id)
+        )
         conn.commit()
         
-        return jsonify({'message': 'Account unmuted successfully'})
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:

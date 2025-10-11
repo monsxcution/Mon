@@ -115,8 +115,8 @@
                                         <label class="form-label mb-0" style="color: #adb5bd; font-size: 0.85rem;">Brush Size</label>
                                         <small class="text-muted"><span id="blemishBrushValue">15</span>px</small>
                                     </div>
-                                    <input type="range" class="form-range" id="blemishBrushSlider" min="5" max="40" value="15" 
-                                           onchange="updateBlemishBrushSize(this.value)" style="width: 100%;">
+                                    <input type="range" class="form-range" id="blemishBrushSlider" min="1" max="50" value="15" 
+                                           oninput="updateBlemishBrushSize(this.value)" style="width: 100%;">
                                 </div>
                                 
                                 <!-- Inpaint Radius -->
@@ -125,11 +125,21 @@
                                         <label class="form-label mb-0" style="color: #adb5bd; font-size: 0.85rem;">Heal Radius</label>
                                         <small class="text-muted"><span id="blemishRadiusValue">5</span>px</small>
                                     </div>
-                                    <input type="range" class="form-range" id="blemishRadiusSlider" min="3" max="10" value="5" 
-                                           onchange="updateBlemishRadius(this.value)" style="width: 100%;">
+                                    <input type="range" class="form-range" id="blemishRadiusSlider" min="1" max="15" value="5" 
+                                           oninput="updateBlemishRadius(this.value)" style="width: 100%;">
                                     <small class="text-muted" style="font-size: 0.75rem;">Larger = smoother but slower</small>
                                 </div>
                                 
+                                
+                                <!-- Mask Opacity -->
+                                <div style="margin-bottom: 12px;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label mb-0" style="color: #adb5bd; font-size: 0.85rem;">Mask Opacity</label>
+                                        <small class="text-muted"><span id="blemishOpacityValue">30</span>%</small>
+                                    </div>
+                                    <input type="range" class="form-range" id="blemishOpacitySlider" min="10" max="80" value="30" 
+                                           oninput="updateBlemishOpacity(this.value)" style="width: 100%;">
+                                </div>
                                 <!-- Algorithm Selection -->
                                 <div style="margin-bottom: 8px; padding-top: 8px; border-top: 1px solid #495057;">
                                     <label class="form-label mb-2" style="color: #adb5bd; font-size: 0.85rem;">Algorithm</label>
@@ -981,6 +991,9 @@ function processUploadedFiles(files) {
                         showSingleImageViewer(collageImages[0]);
                         showToast('1 photo added - Single viewer mode', 'success');
                     } else {
+                        // Hide single image viewer when switching to collage
+                        document.getElementById('singleImageViewer').style.display = 'none';
+                        
                         previewContainer.style.display = 'flex';
                         showToast(`${files.length} photos added`, 'success');
                         renderLayoutTemplates();
@@ -1009,6 +1022,9 @@ function clearAllHistory() {
 let blemishToolActive = false;
 let blemishBrushSize = 15; // Optimal size for drawing mask
 let blemishInpaintRadius = 5; // Inpainting radius (3-10)
+let blemishMaskOpacity = 0.3; // Mask opacity (10-80%)
+let isProcessingHeal = false; // Prevent double API calls  
+let hasDrawnMask = false; // Track if user drew anything
 let blemishMethod = 'ns'; // 'ns' or 'telea'
 let isHealing = false;
 let blemishMaskCanvas = null; // Separate canvas for drawing mask
@@ -1038,14 +1054,59 @@ function updateBlemishRadius(value) {
     document.getElementById('blemishRadiusValue').textContent = value;
 }
 
+function updateBlemishOpacity(value) {
+    blemishMaskOpacity = parseInt(value) / 100;
+    document.getElementById('blemishOpacityValue').textContent = value;
+}
+
 // Get selected method
 function getBlemishMethod() {
     const nsRadio = document.getElementById('methodNS');
     const teleaRadio = document.getElementById('methodTelea');
     return nsRadio.checked ? 'ns' : 'telea';
 }
+// ===== DEACTIVATE ALL TOOLS (Helper function) =====
+function deactivateAllTools() {
+    // Deactivate Blemish Tool
+    if (blemishToolActive) {
+        blemishToolActive = false;
+        const blemishBtn = document.getElementById('blemishToolBtn');
+        if (blemishBtn) {
+            blemishBtn.classList.remove('active');
+            blemishBtn.style.backgroundColor = '';
+            blemishBtn.style.color = '';
+        }
+        if (singleImageCanvas) singleImageCanvas.style.cursor = 'default';
+        if (originalImageForBlemish && singleImageCtx) {
+            singleImageCtx.putImageData(originalImageForBlemish, 0, 0);
+        }
+        if (blemishMaskCanvas && blemishMaskCtx) {
+            blemishMaskCtx.fillStyle = 'black';
+            blemishMaskCtx.fillRect(0, 0, blemishMaskCanvas.width, blemishMaskCanvas.height);
+        }
+        hasDrawnMask = false;
+    }
+    
+    // Deactivate Crop Tool
+    if (cropToolActive) {
+        cropToolActive = false;
+        const cropBtn = document.getElementById('cropToolBtn');
+        if (cropBtn) {
+            cropBtn.classList.remove('active');
+            cropBtn.style.backgroundColor = '';
+            cropBtn.style.color = '';
+        }
+        hideCropOverlay();
+    }
+}
+
 
 function toggleBlemishTool() {
+    // Deactivate other tools first
+    if (!blemishToolActive) {
+        deactivateAllTools();
+    }
+    
     if (collageImages.length === 0) {
         showToast('Upload a photo first!', 'warning');
         return;
@@ -1064,7 +1125,7 @@ function toggleBlemishTool() {
         btn.classList.add('active');
         btn.style.backgroundColor = '#198754';
         btn.style.color = 'white';
-        singleImageCanvas.style.cursor = 'crosshair';
+        singleImageCanvas.style.cursor = 'url(data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="12" fill="none" stroke="lime" stroke-width="2"/></svg>) 15 15, crosshair'
         
         // Create mask canvas
         if (!blemishMaskCanvas) {
@@ -1080,7 +1141,7 @@ function toggleBlemishTool() {
         originalImageForBlemish = singleImageCtx.getImageData(0, 0, singleImageCanvas.width, singleImageCanvas.height);
         
         setupBlemishListeners();
-        showToast('🩹 Paint over blemishes, then press Enter to heal', 'success');
+        showToast('🩹 Paint & release to heal (auto)', 'success');
     } else {
         btn.classList.remove('active');
         btn.style.backgroundColor = '';
@@ -1112,6 +1173,7 @@ function removeBlemishListeners() {
 function startDrawingMask(e) {
     if (!blemishToolActive) return;
     isHealing = true;
+    hasDrawnMask = true;
     drawMaskPoint(e);
 }
 
@@ -1120,9 +1182,14 @@ function continueDrawingMask(e) {
     drawMaskPoint(e);
 }
 
-function endDrawingMask() {
+async function endDrawingMask() {
     isHealing = false;
+    if (hasDrawnMask && !isProcessingHeal) {
+        await processBlemishHealingAuto();
+    }
 }
+
+
 
 function drawMaskPoint(e) {
     const rect = singleImageCanvas.getBoundingClientRect();
@@ -1200,16 +1267,115 @@ async function processBlemishHealing(e) {
     }
 }
 
+// Keyboard handler for blemish tool (adjust brush/radius with keyboard shortcuts)
+function handleBlemishKeys(e) {
+    if (!window.blemishToolActive) return;
+    
+    // [ and ] to change brush size
+    if (e.key === '[') {
+        const newSize = Math.max(1, (window.blemishBrushSize || 15) - 1);
+        updateBlemishBrushSize(newSize);
+        document.getElementById('blemishBrush').value = newSize;
+    }
+    if (e.key === ']') {
+        const newSize = Math.min(50, (window.blemishBrushSize || 15) + 1);
+        updateBlemishBrushSize(newSize);
+        document.getElementById('blemishBrush').value = newSize;
+    }
+    
+    // - and + to change heal radius
+    if (e.key === '-') {
+        const newRadius = Math.max(1, (window.blemishInpaintRadius || 5) - 1);
+        updateBlemishRadius(newRadius);
+        document.getElementById('blemishRadius').value = newRadius;
+    }
+    if (e.key === '=' || e.key === '+') {
+        const newRadius = Math.min(15, (window.blemishInpaintRadius || 5) + 1);
+        updateBlemishRadius(newRadius);
+        document.getElementById('blemishRadius').value = newRadius;
+    }
+    
+    // ESC to deactivate tool
+    if (e.key === 'Escape') {
+        deactivateAllTools();
+    }
+    
+    // Enter to manually trigger healing if needed
+    if (e.key === 'Enter') {
+        if (typeof processBlemishHealing === 'function') {
+            processBlemishHealing(e);
+        }
+    }
+}
+
+// Auto-healing function (triggered on mouse release)
+async function processBlemishHealingAuto() {
+    if (!window.blemishToolActive || window.isProcessingHeal || !window.hasDrawnMask) return;
+    
+    try {
+        window.isProcessingHeal = true;
+        saveCanvasState(); // Save for Undo
+        
+        const method = getBlemishMethod();
+        const radius = window.blemishInpaintRadius;
+        const methodName = method === 'ns' ? 'Navier-Stokes' : 'Telea';
+        showToast(`⏳ Healing (${methodName}, r=${radius})...`, 'info');
+        
+        const imageBlob = await new Promise(r => singleImageCanvas.toBlob(r, 'image/png'));
+        const maskBlob = await new Promise(r => blemishMaskCanvas.toBlob(r, 'image/png'));
+        
+        const formData = new FormData();
+        formData.append('image', imageBlob, 'image.png');
+        formData.append('mask', maskBlob, 'mask.png');
+        formData.append('method', method);
+        formData.append('radius', String(radius));
+        
+        const resp = await fetch('/image/api/remove_blemish', { method: 'POST', body: formData });
+        if (!resp.ok) throw new Error('Healing failed');
+        
+        const healedBlob = await resp.blob();
+        const healedUrl = URL.createObjectURL(healedBlob);
+        await new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                singleImageCtx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(healedUrl);
+                resolve();
+            };
+            img.src = healedUrl;
+        });
+        
+        // Reset mask
+        blemishMaskCtx.fillStyle = 'black';
+        blemishMaskCtx.fillRect(0, 0, blemishMaskCanvas.width, blemishMaskCanvas.height);
+        window.hasDrawnMask = false;
+        
+        showToast('✨ Healed!', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('❌ Healing failed', 'danger');
+    } finally {
+        window.isProcessingHeal = false;
+    }
+}
+
 // ===== CROP TOOL =====
 let cropToolActive = false;
 let cropOverlay = null;
 let cropRect = { x: 50, y: 50, width: 400, height: 400 }; // Default crop area
+
+
 let isDraggingCrop = false;
 let cropDragStartX = 0;
 let cropDragStartY = 0;
 let dragType = ''; // 'move', 'nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w'
 
 function toggleCropTool() {
+    // Deactivate other tools first
+    if (!cropToolActive) {
+        deactivateAllTools();
+    }
+    
     if (collageImages.length === 0) {
         showToast('Upload a photo first!', 'warning');
         return;
@@ -1288,6 +1454,8 @@ function showCropOverlay() {
                 </mask>
             </defs>
             <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#cropMask)"/>
+
+
             
             <!-- Crop frame -->
             <rect id="cropFrame" x="${cropRect.x}" y="${cropRect.y}" 
@@ -2058,6 +2226,9 @@ document.getElementById('collageUpload').addEventListener('change', function(e) 
                         showToast('1 photo uploaded - Single viewer mode', 'success');
                     } else {
                         // Collage mode (2+ images)
+                        // Hide single image viewer when switching to collage
+                        document.getElementById('singleImageViewer').style.display = 'none';
+                        
                         previewContainer.style.display = 'flex';
                         showToast(`${files.length} photos uploaded`, 'success');
                         
@@ -2348,6 +2519,9 @@ let textLayerCounter = 0;
 let selectedTextRange = null;
 
 function toggleTextLayer() {
+    // Deactivate other tools first
+    deactivateAllTools();
+    
     if (collageImages.length === 0) {
         showToast('Upload photos first!', 'warning');
         return;
@@ -2878,6 +3052,9 @@ function makeDraggableText(element, layer) {
 
 // Collage Settings Dropdown Toggle
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup keyboard shortcuts for blemish tool
+    document.addEventListener('keydown', handleBlemishKeys);
+
     // Setup drag & drop and paste
     setupDragDropPaste();
     
@@ -2980,6 +3157,8 @@ function restoreCachedImages() {
                         }
                         
                         // Multiple images - show collage mode
+                        // Hide single image viewer when in collage mode
+                        document.getElementById('singleImageViewer').style.display = 'none';
                         document.getElementById('uploadedPhotosPreview').style.display = 'flex';
                         
                         // Hide canvas/tiles if they were showing
@@ -3535,3 +3714,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+

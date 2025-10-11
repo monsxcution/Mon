@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 from PIL import Image
 import io
-from io import BytesIO
 
 image_bp = Blueprint('image', __name__, url_prefix='/image')
 
@@ -295,53 +294,4 @@ def remove_blemish():
         return (buf.tobytes(), 200, {'Content-Type': 'image/png'})
         
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@image_bp.route('/api/remove_blemish_v2', methods=['POST'])
-def remove_blemish_v2():
-    """
-    Remove blemishes using LaMa Deep Learning (AI-powered)
-    - State-of-the-art inpainting quality
-    - Slower than OpenCV but much better results
-    - Great for large areas and complex textures
-    """
-    try:
-        # Get image and mask
-        if 'image' not in request.files or 'mask' not in request.files:
-            return jsonify({'success': False, 'error': 'Image and mask required'}), 400
-        
-        image_file = request.files['image']
-        mask_file = request.files['mask']
-        
-        # Load image
-        img = Image.open(image_file.stream).convert('RGB')
-        
-        # Load mask (white = area to heal, black = keep)
-        mask_img = Image.open(mask_file.stream).convert('L')
-        
-        # Import LaMa module
-        try:
-            from app.lama_inpainting import lama_inpaint
-        except ImportError as e:
-            return jsonify({
-                'success': False, 
-                'error': 'LaMa not available. Please install dependencies.'
-            }), 500
-        
-        # Run LaMa inpainting
-        print("[API] Starting LaMa inpainting...")
-        result_img = lama_inpaint(img, mask_img)
-        print("[API] LaMa inpainting completed!")
-        
-        # Convert to bytes
-        buf = BytesIO()
-        result_img.save(buf, format='PNG')
-        buf.seek(0)
-        
-        return (buf.getvalue(), 200, {'Content-Type': 'image/png'})
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
