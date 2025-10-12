@@ -63,39 +63,46 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2">
-                    <label for="mxh-username" class="form-label mb-1">Tên người dùng</label>
-                    <input type="text" class="form-control form-control-sm" id="mxh-username" placeholder="Nhập tên người dùng..." required>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-username" class="form-label mb-1">Tên Người Dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-username" placeholder="Nhập tên người dùng...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mxh-platform" class="form-label mb-1">Nền Tảng</label>
+                        <select class="form-select form-select-sm" id="mxh-platform" required>
+                            <option value="">Chọn nền tảng...</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="zalo">Zalo</option>
+                            <option value="wechat">WeChat</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label for="mxh-platform" class="form-label mb-1">Nền tảng</label>
-                    <select class="form-select form-select-sm" id="mxh-platform" required>
-                        <option value="">Chọn nền tảng...</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="twitter">Twitter</option>
-                        <option value="zalo">Zalo</option>
-                        <option value="wechat">WeChat</option>
-                        <option value="telegram">Telegram</option>
-                        <option value="whatsapp">WhatsApp</option>
-                    </select>
-                    <div class="form-text small">Card sẽ tự động được đưa vào nhóm theo nền tảng đã chọn</div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-password" class="form-label mb-1">Mật Khẩu</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-password" placeholder="Nhập mật khẩu...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mxh-phone" class="form-label mb-1">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-phone" placeholder="Nhập số điện thoại...">
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
-                    <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label mb-1">Ngày Tạo</label>
-                    <div class="row g-1">
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="mxh-day" placeholder="Ngày" min="1" max="31" required>
-                        </div>
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="mxh-month" placeholder="Tháng" min="1" max="12" required>
-                        </div>
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="mxh-year" placeholder="Năm" min="2000" max="2030" required>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
+                        <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <div class="row g-0">
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="mxh-day" placeholder="Ngày" min="1" max="31" style="width:56px" required></div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="mxh-month" placeholder="Tháng" min="1" max="12" style="width:56px" required></div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="mxh-year" placeholder="Năm" min="2020" max="2030" style="width:76px" required></div>
                         </div>
                     </div>
                 </div>
@@ -140,19 +147,14 @@
         </div>
     </div>
     
-    <!-- Thông báo -->
-    <div class="menu-item" id="unified-notice-toggle" data-action="set-notice">
-        <i class="bi bi-bell-fill me-2"></i> Thông báo
-    </div>
-    
-    <!-- WeChat specific: Đã Quét -->
-    <div class="menu-item wechat-only" data-action="mark-scanned" style="display: none;">
-        <i class="bi bi-check-circle-fill me-2"></i> Đã Quét
-    </div>
-    
     <!-- Copy SĐT -->
     <div class="menu-item" data-action="copy-phone" id="copy-phone-item" style="display: none;">
         <i class="bi bi-copy me-2"></i> Copy SĐT
+    </div>
+    
+    <!-- Thông báo -->
+    <div class="menu-item" id="unified-notice-toggle" data-action="set-notice">
+        <i class="bi bi-bell-fill me-2"></i> Thông báo
     </div>
     
     <!-- Copy Email -->
@@ -160,9 +162,18 @@
         <i class="bi bi-envelope me-2"></i> Copy Email
     </div>
     
-    <!-- WeChat specific: Reset lượt quét -->
-    <div class="menu-item wechat-only" data-action="reset-scan" style="display: none;">
-        <i class="bi bi-arrow-clockwise me-2"></i> Reset lượt quét
+    <!-- WeChat specific: Quét submenu -->
+    <div class="menu-item has-submenu wechat-only" id="scan-options-item" style="display: none;">
+        <i class="bi bi-qr-code me-2"></i> Quét
+        <i class="bi bi-chevron-right ms-auto"></i>
+        <div class="submenu" id="scan-submenu">
+            <div class="menu-item" data-action="mark-scanned">
+                <i class="bi bi-check-circle-fill me-2"></i> Đã Quét
+            </div>
+            <div class="menu-item" data-action="reset-scan">
+                <i class="bi bi-arrow-clockwise me-2"></i> Reset lượt quét
+            </div>
+        </div>
     </div>
     
     <!-- Đổi số hiệu -->
@@ -245,6 +256,16 @@
     </div>
 </div>
 
+<!-- MXH Background Context Menu -->
+<div id="mxh-background-context-menu" class="custom-context-menu" style="display: none;">
+    <div class="menu-item" data-action="view-mode">
+        <i class="bi bi-grid-3x3-gap me-2"></i> Chế Độ Xem
+    </div>
+    <div class="menu-item" data-action="add-account">
+        <i class="bi bi-plus-lg me-2"></i> + Thêm Tài Khoản MXH
+    </div>
+</div>
+
 <!-- WeChat Account Modal -->
 <div class="modal fade" id="wechat-account-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -279,7 +300,7 @@
                 </div>
                 <div class="mb-2">
                     <label class="form-label mb-1">Ngày Tạo</label>
-                    <div class="row g-1">
+                    <div class="row g-0">
                         <div class="col-4">
                             <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="Ngày" min="1" max="31" required>
                         </div>
@@ -372,16 +393,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="noticeTitle" class="form-label">Chữ tùy chọn</label>
-                    <input type="text" class="form-control" id="noticeTitle" placeholder="Reg" value="Reg">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-8">
+                        <label for="noticeTitle" class="form-label">Tiêu Đề</label>
+                        <input type="text" class="form-control" id="noticeTitle" placeholder="Reg" value="Reg">
+                    </div>
+                    <div class="col-4">
+                        <label for="noticeDays" class="form-label">Số ngày</label>
+                        <input type="number" class="form-control" id="noticeDays" min="1" step="1" value="7">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="noticeDays" class="form-label">Số ngày</label>
-                    <input type="number" class="form-control" id="noticeDays" min="1" step="1" value="7">
-                </div>
-                <div class="mb-3">
-                    <label for="noticeNote" class="form-label">Nội dung</label>
                     <textarea class="form-control" id="noticeNote" rows="3" placeholder="Ghi chú..."></textarea>
                 </div>
             </div>
@@ -456,17 +478,6 @@ function throttle(func, interval) {
     };
 }
 
-// Flip card function
-function flipCard(element, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    const card = element.closest('.mxh-card');
-    if (card) {
-        card.classList.toggle('flipped');
-    }
-}
 
 // ===== REAL-TIME DATA LOADING WITH SMART UPDATES =====
 // Load MXH data from API with optimized rendering
@@ -591,6 +602,26 @@ function getPlatformColor(platform) {
     return colors[platform] || '#6c757d';
 }
 
+function getPlatformIconClass(platform){
+  const p = String(platform||'').toLowerCase();
+  return ({
+    wechat:   'bi-wechat',
+    telegram: 'bi-telegram',
+    facebook: 'bi-facebook',
+    instagram:'bi-instagram',
+    zalo:     'bi-chat-dots-fill',   // không có icon Zalo -> dùng chat
+    twitter:  'bi-twitter',
+    whatsapp: 'bi-whatsapp'
+  }[p]) || 'bi-person-badge';
+}
+
+// Global flip card function
+window.flipCard = function (el, event) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  const wrap = el.closest('.mxh-card-container');
+  if (wrap) wrap.classList.toggle('flipped');
+};
+
 // Get next card number (per platform/group)
 async function getNextCardNumber(groupId) {
     // Get all accounts in the same group
@@ -681,9 +712,9 @@ function calculateGroupBadge(groupId) {
                 // Check if Hong Kong number
                 const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                 const isHongKongNumber = primaryPhone.startsWith('852');
-                if (!isHongKongNumber) {
-                    count++; // 1 year old + NOT HK number = blink
-                }
+                    if (!isHongKongNumber) {
+                        count++; // 1 year old + NOT HK number = blink
+                    }
             }
         }
         
@@ -701,6 +732,7 @@ function calculateGroupBadge(groupId) {
             }
         }
     });
+    
     
     return count;
 }
@@ -977,10 +1009,14 @@ function renderMXHAccounts() {
                     const remainMs = end - now;
                     const remainDays = Math.ceil(remainMs / 86400000);
                     
-                    if (remainDays > 0) {
-                        // Format display: days (d) or months (m)
+                    if (remainMs > 0) {
+                        // Format display: hours (h) if less than 1 day, days (d), or months (m)
                         let timeDisplay;
-                        if (remainDays >= 30) {
+                        if (remainMs < 86400000) {
+                            // Less than 24 hours remaining, show hours
+                            const remainHours = Math.ceil(remainMs / (1000 * 60 * 60));
+                            timeDisplay = `${remainHours}h`;
+                        } else if (remainDays >= 30) {
                             const remainMonths = Math.floor(remainDays / 30);
                             timeDisplay = `${remainMonths}m`;
                         } else {
@@ -1016,23 +1052,32 @@ function renderMXHAccounts() {
                     statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
                 }
                 
-                // Border styling based on status
-                let borderStyle = '';
-                if (isDisabled) {
-                    borderStyle = 'border-left: 4px solid #dc3545;';
-                } else if (isAnniversary) {
-                    // Check if primary account has Hong Kong number (+852)
-                    // Only blink if: 1 year old AND NOT Hong Kong number
-                    const primaryPhone = (account.phone || '').replace(/[\s+]/g, ''); // Remove spaces and +
-                    const isHongKongNumber = primaryPhone.startsWith('852');
-                    
-                    if (!isHongKongNumber) {
-                        // Not Hong Kong number - blink to remind to change
-                        borderStyle = 'border-left: 4px solid #ffc107; animation: blink 1s infinite;';
-                    } else {
-                        // Hong Kong number - green border, no blink
-                        borderStyle = 'border-left: 4px solid #07c160;';
-                    }
+                
+                // ==== State flags (áp dụng cho mọi MXH) ====
+                const isDie = ['disabled','die','banned','blocked']
+                  .includes(String(account.status||'').toLowerCase()) || !!account.die_date;
+
+                const noticeObj = ensureNoticeParsed(account.notice);
+                const hasNotice = !!(noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
+
+                // ==== Logic viền mới cho WeChat ====
+                const isWechat = String(account.platform||'').toLowerCase() === 'wechat';
+                const isHK = /^\+?852/.test(account.phone || '');
+                const y = +account.wechat_created_year || 0;
+                const m = (+account.wechat_created_month || 1) - 1;
+                const d = +account.wechat_created_day || 1;
+                const ageDays = isFinite(new Date(y, m, d)) ? Math.floor((Date.now() - new Date(y, m, d).getTime()) / 86400000) : 0;
+
+                // ==== Gán class viền theo ưu tiên: Đỏ > Cam > Xanh > Trắng ====
+                let borderClass = '';
+                if (isDie) {
+                    borderClass = 'mxh-border-red';
+                } else if (hasNotice) {
+                    borderClass = 'mxh-border-orange';
+                } else if (isWechat && ageDays >= 365 && isHK) {
+                    borderClass = 'mxh-border-green';
+                } else if (isWechat && ageDays >= 365 && !isHK) {
+                    borderClass = 'mxh-border-white';
                 }
                 
                 const hasSecondaryAccount = account.secondary_username && account.secondary_username.trim() !== '';
@@ -1042,13 +1087,16 @@ function renderMXHAccounts() {
                         <div class="mxh-card-container ${extraClass}">
                             <div class="mxh-card-inner">
                                 <div class="mxh-card-front" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
-                                    <div class="card tool-card mxh-card" style="${borderStyle}">
+                                    <div class="card tool-card mxh-card ${borderClass}">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center justify-content-between mb-1">
-                                                <h6 class="card-title mb-0" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
                                                 <div class="d-flex align-items-center gap-1">
+                                                    <h6 class="card-title mb-0 card-number" onclick="flipCard(this, event); event.stopPropagation();" style="font-size: 1.26rem; font-weight: 600; cursor: pointer;">${account.card_name}</h6>
+                                                    <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
                                                     ${hasSecondaryAccount ? `<i class="bi bi-people-fill text-info" title="Có tài khoản phụ" style="font-size: 0.8rem;"></i>` : ''}
-                                                    ${accountAgeDisplay ? `<small onclick="flipCard(this, event)" style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500; cursor: pointer;">${accountAgeDisplay}</small>` : ''}
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    ${accountAgeDisplay ? `<small onclick="flipCard(this, event); event.stopPropagation();" style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500; cursor: pointer;">${accountAgeDisplay}</small>` : ''}
                                                 </div>
                                             </div>
                                             
@@ -1104,7 +1152,7 @@ function renderMXHAccounts() {
                                             ${hasSecondaryAccount ? `
                                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                                     <h6 class="card-title mb-0" style="font-size: 1.26rem; font-weight: 600;">${account.secondary_card_name || account.card_name} <small style="font-size: 0.7rem;">Phụ</small></h6>
-                                                    ${secondaryAccountAgeDisplay ? `<small style="color: ${secondaryAgeColor}; font-size: 0.7rem; font-weight: 500;">${secondaryAccountAgeDisplay}</small>` : ''}
+                                                    ${secondaryAccountAgeDisplay ? `<small onclick="flipCard(this, event); event.stopPropagation();" style="color: ${secondaryAgeColor}; font-size: 0.7rem; font-weight: 500; cursor: pointer;">${secondaryAccountAgeDisplay}</small>` : ''}
                                                 </div>
                                                 
                                                 <div class="text-center mb-1">
@@ -1147,7 +1195,7 @@ function renderMXHAccounts() {
                                                     </div>
                                                 ` : ''}
                                             ` : `
-                                                <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                <div class="d-flex flex-column align-items-center justify-content-center h-100" onclick="flipCard(this, event); event.stopPropagation();" style="cursor: pointer;">
                                                     <h6 class="text-muted mb-3">Tài Khoản Phụ</h6>
                                                     <button class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); openWeChatModal(${account.id}, true);">
                                                         <i class="bi bi-plus-lg me-1"></i> Thêm
@@ -1180,22 +1228,27 @@ function renderMXHAccounts() {
             const tip = card.querySelector('.notice-tooltip');
             if (tip) {
                 card.addEventListener('mouseenter', () => {
-                    // Smart positioning: check if card is near left or right edge
+                    // Smart positioning based on card center
                     const rect = card.getBoundingClientRect();
                     const viewportWidth = window.innerWidth;
+                    const cardCenter = rect.left + rect.width / 2;
+                    
+                    // Debug log
+                    console.log('Tooltip positioning debug:', {
+                        cardLeft: rect.left,
+                        cardRight: rect.right,
+                        viewportWidth: viewportWidth,
+                        leftThird: viewportWidth / 3,
+                        rightThird: (viewportWidth * 2) / 3,
+                        cardCenter: cardCenter
+                    });
                     
                     // Remove previous positioning classes
-                    tip.classList.remove('tooltip-left', 'tooltip-right');
+                    tip.classList.remove('tooltip-left', 'tooltip-right', 'tooltip-center');
                     
-                    // If card is on the left third of screen, show tooltip on right
-                    if (rect.left < viewportWidth / 3) {
-                        tip.classList.add('tooltip-right');
-                    }
-                    // If card is on the right third of screen, show tooltip on left
-                    else if (rect.right > (viewportWidth * 2) / 3) {
-                        tip.classList.add('tooltip-left');
-                    }
-                    // Default: show on right (original behavior)
+                    // TEST: Always center tooltip to verify CSS works
+                    tip.classList.add('tooltip-center');
+                    console.log('Applied: tooltip-center (TEST MODE)');
                     
                     tip.classList.add('show');
                 });
@@ -1557,7 +1610,7 @@ function openNoticeModal(event) {
     
     noticeTargetId = currentContextAccountId;
     document.getElementById('noticeTitle').value = 'Reg';
-    document.getElementById('noticeDays').value = 5;
+    document.getElementById('noticeDays').value = 7;
     document.getElementById('noticeNote').value = '';
     
     const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
@@ -2057,59 +2110,54 @@ async function copyTelegramPhone(event) {
 
 // Modal Button Handlers with instant updates
 document.getElementById('mxh-save-account-btn').addEventListener('click', async () => {
-    const username = document.getElementById('mxh-username').value;
-    const platform = document.getElementById('mxh-platform').value;
-    const url = document.getElementById('mxh-url').value;
-    const day = document.getElementById('mxh-day').value;
-    const month = document.getElementById('mxh-month').value;
-    const year = document.getElementById('mxh-year').value;
-    
-    if (!username || !platform || !day || !month || !year) {
-        showToast('Vui lòng điền đầy đủ!', 'error');
-        return;
+  const platform = document.getElementById('mxh-platform').value;
+  const username = (document.getElementById('mxh-username').value || '.').trim() || '.';
+  const password = (document.getElementById('mxh-password')?.value || '.').trim() || '.';
+  const phone    = (document.getElementById('mxh-phone').value    || '.').trim() || '.';
+  const url      = (document.getElementById('mxh-url').value      || '.').trim() || '.';
+  const day   = parseInt(document.getElementById('mxh-day').value, 10);
+  const month = parseInt(document.getElementById('mxh-month').value, 10);
+  const year  = parseInt(document.getElementById('mxh-year').value, 10);
+
+  // Chỉ bắt buộc: NỀN TẢNG + NGÀY/THÁNG/NĂM (đã auto-fill)
+  if (!platform || !day || !month || !year) {
+    showToast('Chọn Nền tảng và Ngày tạo!', 'error');
+    return;
+  }
+
+  try {
+    const groupId = await ensurePlatformGroup(platform);
+    const autoCardNumber = (await getNextCardNumber(groupId)).toString();
+
+    const res = await fetch('/mxh/api/accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        card_name: autoCardNumber,
+        group_id: groupId,
+        platform,
+        username,             // nếu trống đã là "."
+        phone,
+        url,
+        login_username: ".",  // lưu cặp thông tin đăng nhập để hiện sau này
+        login_password: password,
+        wechat_created_day: day,
+        wechat_created_month: month,
+        wechat_created_year: year
+      })
+    });
+
+    if (res.ok) {
+      showToast('✅ Đã tạo card!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('mxh-addAccountModal')).hide();
+      await loadMXHData(false);
+    } else {
+      const err = await res.json();
+      showToast(err.error || 'Lỗi khi tạo tài khoản!', 'error');
     }
-    
-    try {
-        const groupId = await ensurePlatformGroup(platform);
-        const cardNumber = await getNextCardNumber(groupId);
-        
-        const response = await fetch('/mxh/api/accounts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                card_name: cardNumber.toString(),
-                group_id: groupId,
-                platform: platform,
-                username: username,
-                url: url,
-                wechat_created_day: day,
-                wechat_created_month: month,
-                wechat_created_year: year
-            })
-        });
-        
-        if (response.ok) {
-            showToast('✅ Đã tạo card!', 'success');
-            
-            // Clear and close
-            document.getElementById('mxh-username').value = '';
-            document.getElementById('mxh-platform').value = '';
-            document.getElementById('mxh-url').value = '';
-            document.getElementById('mxh-day').value = '';
-            document.getElementById('mxh-month').value = '';
-            document.getElementById('mxh-year').value = '';
-            
-            bootstrap.Modal.getInstance(document.getElementById('mxh-addAccountModal')).hide();
-            
-            // Reload to get new account
-            await loadMXHData(false);
-        } else {
-            const error = await response.json();
-            showToast(error.error || 'Lỗi!', 'error');
-        }
-    } catch (error) {
-        showToast('Lỗi kết nối!', 'error');
-    }
+  } catch {
+    showToast('Lỗi kết nối!', 'error');
+  }
 });
 
 document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
@@ -2496,16 +2544,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Flip Card Function - Click on account age to flip
-window.flipCard = function(element, event) {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    // Find the card container (traverse up the DOM)
-    const cardContainer = element.closest('.mxh-card-container');
-    if (cardContainer) {
-        cardContainer.classList.toggle('flipped');
-    }
-};
 
 // Open WeChat Modal Function
 let currentEditingIsSecondary = false;
@@ -2730,6 +2768,106 @@ window.toggleAccountStatus = async function(event, accountId, isSecondary) {
         await loadMXHData(false); // Reload to get correct data
     }
 };
+
+// ===== MXH BACKGROUND CONTEXT MENU =====
+document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function(event) {
+    // Only show if clicked on the container itself, not on cards
+    if (event.target.id === 'mxh-accounts-container' || event.target.closest('.row')) {
+        event.preventDefault();
+        
+        // Hide all other context menus
+        document.querySelectorAll('.custom-context-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+        
+        // Show background context menu
+        const contextMenu = document.getElementById('mxh-background-context-menu');
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+    }
+});
+
+// Handle background context menu actions
+document.getElementById('mxh-background-context-menu').addEventListener('click', function(event) {
+    const action = event.target.closest('.menu-item')?.dataset.action;
+    
+    if (action === 'view-mode') {
+        // Open view mode modal
+        const modal = new bootstrap.Modal(document.getElementById('view-mode-modal'));
+        modal.show();
+    } else if (action === 'add-account') {
+        // Open add account modal
+        const modal = new bootstrap.Modal(document.getElementById('mxh-addAccountModal'));
+        modal.show();
+    }
+    
+    // Hide menu
+    this.style.display = 'none';
+});
+
+// Hide all context menus on regular click
+document.addEventListener('click', function(event) {
+    // Don't hide if clicking inside a context menu
+    if (!event.target.closest('.custom-context-menu')) {
+        document.querySelectorAll('.custom-context-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+// ===== AUTO-FILL DATE WHEN OPENING ADD ACCOUNT MODAL =====
+const mxhAddAccountModal = document.getElementById('mxh-addAccountModal');
+if (mxhAddAccountModal) {
+    mxhAddAccountModal.addEventListener('shown.bs.modal', function() {
+        // Get current date
+        const today = new Date();
+        const day = today.getDate();
+        const month = today.getMonth() + 1; // JavaScript months are 0-indexed
+        const year = today.getFullYear();
+        
+        // Auto-fill date inputs
+        document.getElementById('mxh-day').value = day;
+        document.getElementById('mxh-month').value = month;
+        document.getElementById('mxh-year').value = year;
+        
+        // Clear other fields
+        document.getElementById('mxh-username').value = '';
+        document.getElementById('mxh-platform').value = '';
+        document.getElementById('mxh-password').value = '';
+        document.getElementById('mxh-phone').value = '';
+        document.getElementById('mxh-url').value = '';
+    });
+}
+
+// ===== AUTO-FILL DATE WHEN OPENING WECHAT MODAL (for adding new) =====
+const wechatAccountModal = document.getElementById('wechat-account-modal');
+if (wechatAccountModal) {
+    wechatAccountModal.addEventListener('shown.bs.modal', function() {
+        // Only auto-fill if it's a new account (all fields empty)
+        const cardName = document.getElementById('wechat-card-name').value;
+        const username = document.getElementById('wechat-username').value;
+        
+        // If both are empty, it's likely a new account
+        if (!cardName && !username) {
+            const today = new Date();
+            const day = today.getDate();
+            const month = today.getMonth() + 1;
+            const year = today.getFullYear();
+            
+            // Auto-fill date inputs only if they're empty
+            if (!document.getElementById('wechat-day').value) {
+                document.getElementById('wechat-day').value = day;
+            }
+            if (!document.getElementById('wechat-month').value) {
+                document.getElementById('wechat-month').value = month;
+            }
+            if (!document.getElementById('wechat-year').value) {
+                document.getElementById('wechat-year').value = year;
+            }
+        }
+    });
+}
 
 </script>
 {% endblock %}

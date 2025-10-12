@@ -51,3 +51,44 @@ function showToast(message, type = 'success', title = 'Thông báo') {
 // Bạn có thể thêm các helper functions khác vào đây
 // Ví dụ: formatDate, formatNumber, debounce, throttle, etc.
 
+// ===== MODAL KEYBOARD SHORTCUTS =====
+/**
+ * Xử lý phím Enter và Esc cho tất cả modal
+ * - Enter: Kích hoạt nút primary/danger trong modal
+ * - Esc: Đóng modal (Bootstrap tự xử lý, nhưng có thể custom)
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Lắng nghe sự kiện khi modal được hiển thị
+    document.addEventListener('shown.bs.modal', function(event) {
+        const modal = event.target;
+        
+        // Tìm nút primary hoặc danger trong modal (ưu tiên danger cho modal xóa)
+        const dangerBtn = modal.querySelector('.modal-footer .btn-danger');
+        const primaryBtn = modal.querySelector('.modal-footer .btn-primary');
+        const actionBtn = dangerBtn || primaryBtn;
+        
+        // Handler cho phím Enter
+        const enterHandler = function(e) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+                // Không áp dụng nếu đang focus vào textarea
+                if (document.activeElement.tagName === 'TEXTAREA') {
+                    return;
+                }
+                
+                e.preventDefault();
+                if (actionBtn && !actionBtn.disabled) {
+                    actionBtn.click();
+                }
+            }
+        };
+        
+        // Thêm event listener
+        modal.addEventListener('keydown', enterHandler);
+        
+        // Cleanup khi modal bị đóng
+        modal.addEventListener('hidden.bs.modal', function() {
+            modal.removeEventListener('keydown', enterHandler);
+        }, { once: true });
+    });
+});
+

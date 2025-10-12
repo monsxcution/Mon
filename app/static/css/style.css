@@ -936,16 +936,26 @@ body {
     top: -8px;
     right: 8px;
     transform: translateY(-100%);
-    background: #111;
+    background: #1b1b1b;
     color: #fff;
     border: 1px solid #333;
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 8px 8px;
     width: 220px;
     z-index: 5;
     display: none;
     pointer-events: none;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+
+/* Center text inside notice preview */
+    .notice-tooltip {
+        text-align: center !important;
+    }
+
+    .notice-tooltip-title,
+    .notice-tooltip-note {
+        text-align: center !important;
+    }
 }
 
 /* Smart positioning for tooltip */
@@ -957,6 +967,12 @@ body {
 .notice-tooltip.tooltip-right {
     right: 8px;
     left: auto;
+}
+
+.notice-tooltip.tooltip-center {
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(-100%) !important;
 }
 
 .notice-tooltip.show {
@@ -995,8 +1011,12 @@ body {
     font-size: 0.8rem;
 }
 
-/* === Date Input Width Constraints === */
-/* Limit date/month inputs to 2 digits width, year to 4 digits */
+/* === Compact date inputs & remove spinners (áp dụng cho mọi modal) === */
+.row.g-0 > [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 input[id$="-day"],
 input[id$="-month"] {
     max-width: 50px !important;
@@ -1004,6 +1024,32 @@ input[id$="-month"] {
 
 input[id$="-year"] {
     max-width: 70px !important;
+}
+
+/* Bỏ nút + - (Chrome/Edge) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Bỏ nút + - (Firefox & chuẩn chung) */
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Bo góc liền mạch 3 ô */
+.row.g-0 input[id$="-day"] {
+    border-radius: 0.25rem 0 0 0.25rem !important;
+}
+
+.row.g-0 input[id$="-month"] {
+    border-radius: 0 !important;
+}
+
+.row.g-0 input[id$="-year"] {
+    border-radius: 0 0.25rem 0.25rem 0 !important;
 }
 
 /* === Badge Styles for Group Tabs === */
@@ -1047,4 +1093,53 @@ input[id$="-year"] {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+/* === OVERRIDE: Flush 3 ô Ngày-Tháng-Năm trong mọi modal MXH === */
+.row.g-0 .col-4 > input.form-control[id$="-day"],
+.row.g-0 .col-4 > input.form-control[id$="-month"],
+.row.g-0 .col-4 > input.form-control[id$="-year"] {
+  width: 100% !important;     /* lấp đầy cột */
+  max-width: none !important; /* hủy 50px/70px cũ */
+}
+
+/* Giữ bo góc liền mạch 3 ô */
+.row.g-0 input[id$="-day"]   { border-radius: .25rem 0 0 .25rem !important; }
+.row.g-0 input[id$="-month"] { border-radius: 0 !important; }
+.row.g-0 input[id$="-year"]  { border-radius: 0 .25rem .25rem 0 !important; }
+
+/* Ẩn nút +/- của input number (đã có thì giữ nguyên) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+/* Card number icon styling */
+.card-number i {
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+/* === MXH state borders (match selected style, keep color on hover) === */
+.mxh-card.mxh-border-green{border:2px solid #2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 14px rgba(47,229,106,.45),0 0 28px rgba(47,229,106,.25)!important}
+.mxh-card.mxh-border-green:hover{border-color:#2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 18px rgba(47,229,106,.55),0 0 34px rgba(47,229,106,.35)!important}
+.mxh-card.mxh-border-green::before{background:radial-gradient(circle,rgba(47,229,106,.18) 0%,rgba(47,229,106,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-red{border:2px solid #ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 14px rgba(255,77,79,.5),0 0 28px rgba(255,77,79,.3)!important}
+.mxh-card.mxh-border-red:hover{border-color:#ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 18px rgba(255,77,79,.6),0 0 34px rgba(255,77,79,.35)!important}
+.mxh-card.mxh-border-red::before{background:radial-gradient(circle,rgba(255,77,79,.18) 0%,rgba(255,77,79,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-orange{border:2px solid #ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 14px rgba(255,165,0,.5),0 0 28px rgba(255,165,0,.3)!important}
+.mxh-card.mxh-border-orange:hover{border-color:#ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 18px rgba(255,165,0,.6),0 0 34px rgba(255,165,0,.35)!important}
+.mxh-card.mxh-border-orange::before{background:radial-gradient(circle,rgba(255,165,0,.18) 0%,rgba(255,165,0,0) 80%);opacity:1}
+
+/* Trắng sáng (không animation) */
+.mxh-card.mxh-border-white{border:2px solid #fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 0 14px rgba(255,255,255,.35),0 0 28px rgba(255,255,255,.2)!important}
+.mxh-card.mxh-border-white:hover{border-color:#fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.3),0 0 18px rgba(255,255,255,.45),0 0 34px rgba(255,255,255,.28)!important}
+.mxh-card.mxh-border-white::before{background:radial-gradient(circle,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 80%);opacity:1}
+
+/* Ưu tiên màu: đỏ > cam > xanh > trắng */
+.mxh-card.mxh-border-red{z-index:1}
+.mxh-card.mxh-border-orange:not(.mxh-border-red){z-index:1}
+.mxh-card.mxh-border-green:not(.mxh-border-red):not(.mxh-border-orange){z-index:1}
+.mxh-card.mxh-border-red.mxh-border-orange{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-red.mxh-border-green{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-orange.mxh-border-green{border-color:#ffa500!important}
 
