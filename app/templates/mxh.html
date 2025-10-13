@@ -2896,17 +2896,25 @@
                 if (fieldName === 'phone') {
                     newValue = newValue.replace(/^📞\s*/, '').trim();
                 }
-
-                // Skip if no change or placeholder text
-                if (newValue === field.dataset.originalValue ||
-                    newValue === 'Click để nhập' ||
-                    newValue === '') {
+                
+                // Check if value is the same or if it's just the placeholder being edited (and not real data)
+                const isNoChange = newValue === field.dataset.originalValue || 
+                                    (newValue === '' && field.dataset.originalValue === '.') || 
+                                    (newValue === 'Click để nhập' && field.dataset.originalValue === ''); // NEW CHECK
+                                    
+                if (isNoChange) {
+                    // Restore the visual placeholder if needed
                     if (fieldName === 'phone') {
                         e.target.textContent = field.dataset.originalValue ? `📞 ${field.dataset.originalValue}` : '📞 Click để nhập';
                     } else {
                         e.target.textContent = field.dataset.originalValue || 'Click để nhập';
                     }
                     return;
+                }
+                
+                // If the value is a placeholder 'Click để nhập', treat as empty string '.'
+                if (newValue === 'Click để nhập') {
+                    newValue = '.'; // Use '.' as the internal empty value marker, as seen in POST requests
                 }
 
                 // Save to backend

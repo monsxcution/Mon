@@ -118,9 +118,31 @@
                     </div>
                 </div>
 
+                <!-- Real-Time Settings -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Cài Đặt Real-Time MXH</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label for="mxh-refresh-interval-ms" class="form-label">Tần suất làm mới (ms)</label>
+                                    <input type="number" class="form-control" id="mxh-refresh-interval-ms"
+                                        placeholder="Nhập mili giây (>= 3000ms)" min="3000" step="1000">
+                                    <div class="form-text">Mỗi 1000ms = 1 giây. Giá trị đề xuất: 15000 (15 giây).</div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <button type="button" class="btn btn-sm btn-primary mt-3 mt-md-0" id="apply-mxh-refresh-btn">Áp Dụng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- About & Info -->
-                <div class="col-md-12">
-                    <div class="card">
+                <div class="col-md-6">
+                    <div class="card h-100">
                         <div class="card-header bg-info">
                             <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông Tin</h5>
                         </div>
@@ -502,6 +524,52 @@ function checkTimers() {
     }
 }
 
+// ===== MXH REAL-TIME SETTINGS LOGIC =====
+
+// Function to load the MXH refresh interval
+async function loadMxhRefreshInterval() {
+    try {
+        const response = await fetch('/settings/api/settings');
+        if (response.ok) {
+            const settings = await response.json();
+            const interval = settings.mxh_refresh_interval || 15000;
+            document.getElementById('mxh-refresh-interval-ms').value = interval;
+        }
+    } catch (error) {
+        console.error('Error loading MXH settings:', error);
+    }
+}
+
+// Function to apply the MXH refresh interval
+async function applyMxhRefreshInterval() {
+    const intervalInput = document.getElementById('mxh-refresh-interval-ms');
+    const interval = parseInt(intervalInput.value, 10);
+
+    if (isNaN(interval) || interval < 3000) {
+        showToast('Tần suất phải là số nguyên >= 3000ms!', 'error');
+        intervalInput.focus();
+        return;
+    }
+
+    try {
+        const response = await fetch('/settings/api/settings/mxh-refresh-interval', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interval_ms: interval })
+        });
+
+        if (response.ok) {
+            showToast(`✅ Đã lưu tần suất làm mới: ${interval / 1000} giây.`, 'success');
+            // NOTE: The main MXH page must re-read this setting on load/resume
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Lỗi khi lưu tần suất!', 'error');
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối API!', 'error');
+    }
+}
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Settings page loaded');
@@ -513,6 +581,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Load initial settings
     await loadSettings(true);
+    
+    // NEW: Load MXH refresh interval on DOM ready
+    loadMxhRefreshInterval();
+
+    // NEW: Event listener for apply button
+    const applyMxhRefreshBtn = document.getElementById('apply-mxh-refresh-btn');
+    if (applyMxhRefreshBtn) {
+        applyMxhRefreshBtn.addEventListener('click', applyMxhRefreshInterval);
+    }
     
     // Start auto-refresh
     startAutoRefresh();
