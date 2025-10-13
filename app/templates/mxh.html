@@ -935,7 +935,7 @@
                         // Calculate scan countdown with QR icon
                         const currentScanCount = account.wechat_scan_count || 0;
                         const maxScans = 3;
-                        
+
                         if (currentScanCount >= maxScans) {
                             // Đã hết lượt - QR đỏ
                             scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
@@ -944,12 +944,12 @@
                             const lastScanDate = new Date(account.wechat_last_scan_date);
                             const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
                             const remainingDays = 30 - daysSinceScan;
-                            
+
                             if (remainingDays > 0) {
                                 // Còn thời gian chờ - hiển thị countdown
                                 const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
                                 const remainingHours = (30 * 24) - hoursSinceScan;
-                                
+
                                 if (remainingHours < 24) {
                                     scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
                                 } else {
@@ -990,7 +990,7 @@
                             // Calculate secondary scan countdown with QR icon
                             const secondaryCurrentScanCount = account.secondary_wechat_scan_count || 0;
                             const secondaryMaxScans = 3;
-                            
+
                             if (secondaryCurrentScanCount >= secondaryMaxScans) {
                                 // Đã hết lượt - QR đỏ
                                 secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${secondaryMaxScans}/${secondaryMaxScans}`;
@@ -999,12 +999,12 @@
                                 const lastScanDate = new Date(account.secondary_wechat_last_scan_date);
                                 const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
                                 const remainingDays = 30 - daysSinceScan;
-                                
+
                                 if (remainingDays > 0) {
                                     // Còn thời gian chờ - hiển thị countdown
                                     const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
                                     const remainingHours = (30 * 24) - hoursSinceScan;
-                                    
+
                                     if (remainingHours < 24) {
                                         secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${secondaryCurrentScanCount}/${secondaryMaxScans} <small class="text-warning">(${remainingHours}h)</small>`;
                                     } else {
