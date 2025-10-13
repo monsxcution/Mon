@@ -292,6 +292,7 @@ body {
 .custom-context-menu {
     display: none;
     position: fixed;
+    position: fixed;
     z-index: 10000;
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -300,9 +301,6 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     min-width: 220px;
     font-size: 0.9rem;
-    max-width: 300px;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
 .custom-context-menu .menu-item {
@@ -370,11 +368,68 @@ body {
     padding: 8px;
     border: 1px solid #444a59;
     animation: fadeInMenu 0.1s;
+    z-index: 10001; /* Đảm bảo submenu hiển thị trên menu chính */
 }
 
-.custom-context-menu .menu-item.has-submenu:hover > .submenu {
+/* Submenu hiển thị bên trái khi menu ở rìa phải */
+.custom-context-menu .submenu.submenu-left {
+    left: auto;
+    right: 100%;
+}
+
+/* Bridge element để tránh flickering */
+.submenu-bridge {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+/* Bridge cho submenu bên trái */
+.submenu.submenu-left .submenu-bridge {
+    left: -5px;
+    right: auto;
+}
+
+/* Submenu hiển thị qua JavaScript, không dùng CSS hover */
+.custom-context-menu .submenu.show {
     display: block;
 }
+
+/* WeChat modal tidy */
+#wechat-account-modal .modal-body .form-label { 
+    margin-bottom: .25rem; 
+}
+#wechat-account-modal .form-control, 
+#wechat-account-modal .form-select { 
+    height: 38px; 
+}
+
+/* Remove focus outline for all modals */
+.form-control:focus,
+.form-select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #ced4da !important;
+}
+
+/* Reduce padding for card number input */
+#wechat-card-name {
+    padding: 0.25rem !important;
+    text-align: center;
+}
+
+/* Reduce padding for date inputs in all modals */
+#wechat-day, #wechat-month, #wechat-year,
+#mxh-day, #mxh-month, #mxh-year {
+    padding: 0.25rem !important;
+    text-align: center;
+}
+
 
 .custom-context-menu .submenu .menu-item {
     padding: 8px 12px;
@@ -469,6 +524,11 @@ body {
 .mxh-card-container.flipped .mxh-card-inner {
     transform: rotateY(180deg);
 }
+
+/* Chặn click vào mặt đang ẩn để ngừa auto-focus/auto-click */
+.mxh-card-front, .mxh-card-back { pointer-events: none; }
+.mxh-card-container:not(.flipped) .mxh-card-front { pointer-events: auto; }
+.mxh-card-container.flipped .mxh-card-back { pointer-events: auto; }
 
 .mxh-card-front,
 .mxh-card-back {

@@ -108,11 +108,27 @@ def mxh_accounts():
     conn = get_db_connection()
     try:
         if request.method == 'GET':
-            accounts = conn.execute('''
+            # Check for a timestamp query parameter to implement delta updates
+            last_updated_at = request.args.get('last_updated_at')
+            
+            query = '''
                 SELECT a.*, g.name as group_name, g.color as group_color, g.icon as group_icon 
                 FROM mxh_accounts a 
                 LEFT JOIN mxh_groups g ON a.group_id = g.id 
-            ''').fetchall()
+            '''
+            params = []
+            
+            if last_updated_at:
+                # IMPORTANT: Only fetch records that have been modified (updated_at > timestamp)
+                # The 'updated_at' column is crucial for this optimization.
+                query += ' WHERE a.updated_at > ?'
+                params.append(last_updated_at)
+                
+            query += ' ORDER BY a.group_id, a.card_name'
+            
+            accounts = conn.execute(query, tuple(params)).fetchall()
+            
+            # The client (JS in mxh.html) will need to handle merging these changes (delta update)
             return jsonify([dict(account) for account in accounts])
         
         elif request.method == 'POST':
@@ -133,18 +149,19 @@ def mxh_accounts():
             wechat_created_year = data.get('wechat_created_year', now.year)
             wechat_scan_create = data.get('wechat_scan_create', 0)
             wechat_scan_rescue = data.get('wechat_scan_rescue', 0)
-            wechat_status = data.get('wechat_status', 'available')
+            wechat_status = data.get('wechat_status', 'active')
             
             if not all([card_name, group_id, platform, username]):
                 return jsonify({'error': 'Card name, group, platform and username are required'}), 400
             
+            current_timestamp = datetime.now().isoformat()  # Use ISO format for consistency
             conn.execute(
                 '''INSERT INTO mxh_accounts 
-                   (card_name, group_id, platform, username, phone, url, login_username, login_password, created_at, 
+                   (card_name, group_id, platform, username, phone, url, login_username, login_password, created_at, updated_at,
                     wechat_created_day, wechat_created_month, wechat_created_year,
                     wechat_scan_create, wechat_scan_rescue, wechat_status) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (card_name, group_id, platform, username, phone, url, login_username, login_password, datetime.now().isoformat(),
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (card_name, group_id, platform, username, phone, url, login_username, login_password, current_timestamp, current_timestamp,
                  wechat_created_day, wechat_created_month, wechat_created_year,
                  wechat_scan_create, wechat_scan_rescue, wechat_status)
             )
@@ -165,6 +182,14 @@ def update_delete_mxh_account(account_id):
         if request.method == 'PUT':
             data = request.get_json()
             is_secondary = data.get('is_secondary', False)
+
+            # Map "available/empty" => "active" for consistency
+            raw_status = (data.get("status") or "").strip().lower()
+            if raw_status in ("", "available"):  # mọi 'available' => active
+                data["status"] = "active"
+            # luôn mirror cho wechat_status để về một mối
+            if data.get("status") and not data.get("wechat_status"):
+                data["wechat_status"] = data["status"]
 
             fields_to_update = {
                 'card_name': data.get('card_name'),
@@ -193,9 +218,9 @@ def update_delete_mxh_account(account_id):
                 return jsonify({'message': 'No fields to update.'})
                 
             set_clause = ", ".join([f"{key} = ?" for key in update_cols.keys()])
-            params = list(update_cols.values()) + [account_id]
+            params = list(update_cols.values()) + [datetime.now().isoformat(), account_id]
 
-            conn.execute(f'UPDATE mxh_accounts SET {set_clause} WHERE id = ?', params)
+            conn.execute(f'UPDATE mxh_accounts SET {set_clause}, updated_at = ? WHERE id = ?', params)
             conn.commit()
             return jsonify({'message': 'Account updated successfully'})
         
@@ -221,15 +246,16 @@ def mute_mxh_account(account_id):
         # Calculate mute until date (30 days from now)
         mute_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
         
+        current_timestamp = datetime.now().isoformat()
         if is_secondary:
             conn.execute(
-                'UPDATE mxh_accounts SET secondary_muted_until = ? WHERE id = ?',
-                (mute_until, account_id)
+                'UPDATE mxh_accounts SET secondary_muted_until = ?, updated_at = ? WHERE id = ?',
+                (mute_until, current_timestamp, account_id)
             )
         else:
             conn.execute(
-                'UPDATE mxh_accounts SET muted_until = ? WHERE id = ?',
-                (mute_until, account_id)
+                'UPDATE mxh_accounts SET muted_until = ?, updated_at = ? WHERE id = ?',
+                (mute_until, current_timestamp, account_id)
             )
         conn.commit()
         
@@ -248,15 +274,16 @@ def unmute_mxh_account(account_id):
         data = request.get_json()
         is_secondary = data.get('is_secondary', False)
         
+        current_timestamp = datetime.now().isoformat()
         if is_secondary:
             conn.execute(
-                'UPDATE mxh_accounts SET secondary_muted_until = NULL WHERE id = ?',
-                (account_id,)
+                'UPDATE mxh_accounts SET secondary_muted_until = NULL, updated_at = ? WHERE id = ?',
+                (current_timestamp, account_id)
             )
         else:
             conn.execute(
-                'UPDATE mxh_accounts SET muted_until = NULL WHERE id = ?',
-                (account_id,)
+                'UPDATE mxh_accounts SET muted_until = NULL, updated_at = ? WHERE id = ?',
+                (current_timestamp, account_id)
             )
         conn.commit()
         
@@ -275,22 +302,25 @@ def mark_account_scanned(account_id):
         data = request.get_json() or {}
         is_secondary = data.get('is_secondary', False)
         
+        current_timestamp = datetime.now().isoformat()
         if data.get('reset'):
             # Reset scan count and last scan date
             if is_secondary:
                 conn.execute('''
                     UPDATE mxh_accounts SET 
                     secondary_wechat_scan_count = 0,
-                    secondary_wechat_last_scan_date = NULL
+                    secondary_wechat_last_scan_date = NULL,
+                    updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             else:
                 conn.execute('''
                     UPDATE mxh_accounts SET 
                     wechat_scan_count = 0,
-                    wechat_last_scan_date = NULL
+                    wechat_last_scan_date = NULL,
+                    updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             conn.commit()
             return jsonify({'message': 'Scan count reset successfully'})
         else:
@@ -300,16 +330,18 @@ def mark_account_scanned(account_id):
                 conn.execute('''
                     UPDATE mxh_accounts SET 
                     secondary_wechat_scan_count = secondary_wechat_scan_count + 1,
-                    secondary_wechat_last_scan_date = ?
+                    secondary_wechat_last_scan_date = ?,
+                    updated_at = ?
                     WHERE id = ?
-                ''', (current_date, account_id))
+                ''', (current_date, current_timestamp, account_id))
             else:
                 conn.execute('''
                     UPDATE mxh_accounts SET 
                     wechat_scan_count = wechat_scan_count + 1,
-                    wechat_last_scan_date = ?
+                    wechat_last_scan_date = ?,
+                    updated_at = ?
                     WHERE id = ?
-                ''', (current_date, account_id))
+                ''', (current_date, current_timestamp, account_id))
             conn.commit()
             return jsonify({'message': 'Account marked as scanned successfully'})
     except Exception as e:
@@ -326,6 +358,7 @@ def toggle_account_status(account_id):
         data = request.get_json() or {}
         is_secondary = data.get('is_secondary', False)
         
+        current_timestamp = datetime.now().isoformat()
         if is_secondary:
             # Toggle secondary status
             conn.execute('''
@@ -337,9 +370,10 @@ def toggle_account_status(account_id):
                 secondary_die_date = CASE 
                     WHEN secondary_status = 'active' THEN ?
                     ELSE NULL
-                END
+                END,
+                updated_at = ?
                 WHERE id = ?
-            ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), account_id))
+            ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_timestamp, account_id))
         else:
             # Toggle primary status
             conn.execute('''
@@ -351,9 +385,10 @@ def toggle_account_status(account_id):
                 die_date = CASE 
                     WHEN status = 'disabled' THEN ?
                     ELSE NULL
-                END
+                END,
+                updated_at = ?
                 WHERE id = ?
-            ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), account_id))
+            ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_timestamp, account_id))
         
         conn.commit()
         return jsonify({'message': 'Account status toggled successfully'})
@@ -372,39 +407,49 @@ def rescue_account(account_id):
         is_secondary = data.get('is_secondary', False)
         rescue_result = data.get('result')  # 'success' or 'failed'
         
+        current_timestamp = datetime.now().isoformat()
+        
         if rescue_result == 'success':
             # Cứu thành công - chuyển về available và tăng success count
             if is_secondary:
                 conn.execute('''
                     UPDATE mxh_accounts 
                     SET secondary_status = 'active',
+                        secondary_wechat_status = 'available',
                         secondary_die_date = NULL,
-                        secondary_rescue_success_count = secondary_rescue_success_count + 1
+                        secondary_rescue_count = 0,
+                        secondary_rescue_success_count = secondary_rescue_success_count + 1,
+                        updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             else:
                 conn.execute('''
                     UPDATE mxh_accounts 
                     SET status = 'active',
+                        wechat_status = 'available',
                         die_date = NULL,
-                        rescue_success_count = rescue_success_count + 1
+                        rescue_count = 0,
+                        rescue_success_count = rescue_success_count + 1,
+                        updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             message = 'Account rescued successfully!'
         elif rescue_result == 'failed':
             # Cứu thất bại - tăng rescue count
             if is_secondary:
                 conn.execute('''
                     UPDATE mxh_accounts 
-                    SET secondary_rescue_count = secondary_rescue_count + 1
+                    SET secondary_rescue_count = secondary_rescue_count + 1,
+                        updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             else:
                 conn.execute('''
                     UPDATE mxh_accounts 
-                    SET rescue_count = rescue_count + 1
+                    SET rescue_count = rescue_count + 1,
+                        updated_at = ?
                     WHERE id = ?
-                ''', (account_id,))
+                ''', (current_timestamp, account_id))
             message = 'Rescue attempt failed. Rescue count increased.'
         else:
             return jsonify({'error': 'Invalid rescue result'}), 400
@@ -425,23 +470,28 @@ def mark_account_die(account_id):
         data = request.get_json() or {}
         is_secondary = data.get('is_secondary', False)
         die_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        current_timestamp = datetime.now().isoformat()  # New variable
         
         if is_secondary:
             conn.execute('''
                 UPDATE mxh_accounts 
                 SET secondary_status = 'disabled',
+                    secondary_wechat_status = 'die',
                     secondary_die_date = ?,
-                    secondary_rescue_count = 0
+                    secondary_rescue_count = 0,
+                    updated_at = ?
                 WHERE id = ?
-            ''', (die_date, account_id))
+            ''', (die_date, current_timestamp, account_id))
         else:
             conn.execute('''
                 UPDATE mxh_accounts 
                 SET status = 'disabled',
+                    wechat_status = 'die',
                     die_date = ?,
-                    rescue_count = 0
+                    rescue_count = 0,
+                    updated_at = ?
                 WHERE id = ?
-            ''', (die_date, account_id))
+            ''', (die_date, current_timestamp, account_id))
         
         conn.commit()
         return jsonify({'message': 'Account marked as died', 'die_date': die_date})

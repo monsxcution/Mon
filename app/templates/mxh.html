@@ -105,12 +105,12 @@
                         <label class="form-label mb-1">Ngày Tạo</label>
                         <div class="row g-0">
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-day" placeholder="Ngày" min="1" max="31" style="width:56px" required></div>
+                                    id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px" required></div>
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-month" placeholder="Tháng" min="1" max="12" style="width:56px" required>
+                                    id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px" required>
                             </div>
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" style="width:76px" required>
+                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4" style="width:76px" required>
                             </div>
                         </div>
                     </div>
@@ -285,44 +285,35 @@
             </div>
             <div class="modal-body">
                 <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label for="wechat-card-name" class="form-label mb-1">Số Card</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" required>
+                    <div class="col-auto">
+                        <label class="form-label mb-1">Số Card</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" style="width: 60px;" required>
                     </div>
-                    <div class="col-md-6">
-                        <label for="wechat-status" class="form-label mb-1">Trạng Thái</label>
-                        <select class="form-select form-select-sm" id="wechat-status" required>
-                            <option value="available">Available</option>
-                            <option value="disabled">Die</option>
+                    <div class="col-auto">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <div class="row g-0">
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="wechat-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px" required></div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="wechat-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px" required></div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto" id="wechat-year" placeholder="Năm" min="2020" max="2030" maxlength="4" style="width:76px" required></div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label mb-1">Trạng Thái</label>
+                        <select class="form-select form-select-sm" id="wechat-status" style="width: 120px;" required>
+                            <option value="active">Available</option>
+                            <option value="disabled">Vô hiệu hóa</option>
+                            <option value="die">Die</option>
                         </select>
                     </div>
                 </div>
                 <div class="row mb-2">
                     <div class="col-md-6">
-                        <label for="wechat-username" class="form-label mb-1">Tên Người Dùng</label>
+                        <label class="form-label mb-1">Tên Người Dùng</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-username" required>
                     </div>
-                    <div class="col-md-6">
-                        <label for="wechat-phone" class="form-label mb-1">Số Điện Thoại</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-phone"
-                            placeholder="Nhập số điện thoại...">
-                    </div>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label mb-1">Ngày Tạo</label>
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="Ngày"
-                                min="1" max="31" required>
-                        </div>
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="wechat-month"
-                                placeholder="Tháng" min="1" max="12" required>
-                        </div>
-                        <div class="col-4">
-                            <input type="number" class="form-control form-control-sm" id="wechat-year" placeholder="Năm"
-                                min="2020" max="2030" required>
-                        </div>
+                    <div class="col-auto">
+                        <label class="form-label mb-1">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13" style="width: 150px;">
                     </div>
                 </div>
             </div>
@@ -461,10 +452,10 @@
 <script>
     // ===== MXH REAL-TIME CONFIGURATION =====
     const MXH_CONFIG = {
-        AUTO_REFRESH_INTERVAL: 3000, // 3 seconds - fast real-time updates
+        AUTO_REFRESH_INTERVAL: 15000, // Changed from 3000 to 15000ms (15 seconds)
         DEBOUNCE_DELAY: 500, // Debounce for inline editing
         RENDER_BATCH_SIZE: 50, // Cards to render per batch (for smooth rendering)
-        ENABLE_AUTO_REFRESH: false
+        ENABLE_AUTO_REFRESH: true // Changed from false to true
     };
 
     // MXH Global State
@@ -474,7 +465,8 @@
     let autoRefreshTimer = null;
     let isRendering = false;
     let pendingUpdates = false;
-    let activeGroupId = null; // null = show all groups, otherwise show specific group only
+    let activeGroupId = null;
+    let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
     // Debounce function - prevents excessive API calls
@@ -503,10 +495,15 @@
     // Load MXH data from API with optimized rendering
     async function loadMXHData(forceRender = true) {
         try {
+            // Check lastUpdateTime for delta polling
+            const accountsUrl = lastUpdateTime 
+                ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}` 
+                : '/mxh/api/accounts';
+                
             // Parallel loading for speed
             const [groupsResponse, accountsResponse] = await Promise.all([
                 fetch('/mxh/api/groups'),
-                fetch('/mxh/api/accounts')
+                fetch(accountsUrl) // Use the dynamic URL
             ]);
 
             if (groupsResponse.ok) {
@@ -514,19 +511,37 @@
             }
 
             if (accountsResponse.ok) {
-                const newAccounts = await accountsResponse.json();
+                const newAccountsDelta = await accountsResponse.json();
+                
+                let dataChanged = false;
 
-                // Debug: log first account with notice
-                const accWithNotice = newAccounts.find(a => a.notice && a.notice.enabled);
-                if (accWithNotice) {
-                    console.log('🔔 Account with notice found:', accWithNotice.id, accWithNotice.notice);
+                if (newAccountsDelta.length > 0) {
+                    dataChanged = true;
+                    // MERGE LOGIC: Replace/Update existing accounts with delta
+                    const accountMap = new Map(mxhAccounts.map(acc => [acc.id, acc]));
+                    
+                    newAccountsDelta.forEach(deltaAcc => {
+                        accountMap.set(deltaAcc.id, deltaAcc);
+                    });
+                    
+                    mxhAccounts = Array.from(accountMap.values());
+                    
+                    // Update lastUpdateTime with the latest timestamp from the delta
+                    // Use the *current* time if the delta is empty or the updated_at field is missing
+                    const latestTimestamp = newAccountsDelta.reduce((latest, acc) => {
+                        return (acc.updated_at && acc.updated_at > latest) ? acc.updated_at : latest;
+                    }, lastUpdateTime || new Date(0).toISOString());
+                    
+                    lastUpdateTime = latestTimestamp;
                 }
 
-                // Smart update: only render if data actually changed
-                const dataChanged = JSON.stringify(newAccounts) !== JSON.stringify(mxhAccounts);
-                mxhAccounts = newAccounts;
+                // Debug: log first account with notice
+                const accWithNotice = mxhAccounts.find(a => a.notice && a.notice.enabled);
+                if (accWithNotice) {
+                    // Debug disabled
+                }
 
-                console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: newAccounts.length });
+                // console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: mxhAccounts.length });
 
                 if (forceRender || dataChanged) {
                     renderGroupsNav(); // Render groups navigation first
@@ -558,7 +573,7 @@
             await loadMXHData(false); // Don't force render, only if data changed
         }, MXH_CONFIG.AUTO_REFRESH_INTERVAL);
 
-        console.log('✅ MXH Auto-refresh enabled (every', MXH_CONFIG.AUTO_REFRESH_INTERVAL / 1000, 'seconds)');
+        // console.log('✅ MXH Auto-refresh enabled (every', MXH_CONFIG.AUTO_REFRESH_INTERVAL / 1000, 'seconds)');
     }
 
     function stopAutoRefresh() {
@@ -1050,7 +1065,7 @@
 
                     // Debug log
                     if (account.id === noticeTargetId) {
-                        console.log('Notice debug for account', account.id, ':', n);
+                        // console.log('Notice debug for account', account.id, ':', n);
                     }
 
                     if (n.enabled && n.start_at && n.days > 0) {
@@ -1141,7 +1156,7 @@
                                         <div class="card-body">
                                             <div class="d-flex align-items-center justify-content-between mb-1">
                                                 <div class="d-flex align-items-center gap-1">
-                                                    <h6 class="card-title mb-0 card-number" onclick="flipCard(this, event); event.stopPropagation();" style="font-size: 1.26rem; font-weight: 600; cursor: pointer;">${account.card_name}</h6>
+                                                    <h6 class="card-title mb-0 card-number" onclick="console.log('🔄 DEBUG: Clicking CARD CHÍNH', ${account.id}, '${account.card_name}'); flipCard(this, event); event.stopPropagation();" style="font-size: 1.26rem; font-weight: 600; cursor: pointer;">${account.card_name}</h6>
                                                     <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
                                                     ${hasSecondaryAccount ? `<i class="bi bi-people-fill text-info" title="Có tài khoản phụ" style="font-size: 0.8rem;"></i>` : ''}
                                                 </div>
@@ -1195,7 +1210,7 @@
                                     </div>
                                 </div>
                                 
-                                <div class="mxh-card-back" oncontextmenu="showWeChatContextMenu(event, ${account.id}, true); return false;">
+                                <div class="mxh-card-back" oncontextmenu="console.log('🔄 DEBUG: Context menu CARD PHỤ', ${account.id}); showWeChatContextMenu(event, ${account.id}, true); return false;">
                                     <div class="card tool-card mxh-card" style="${secondaryBorderStyle}">
                                         <div class="card-body">
                                             ${hasSecondaryAccount ? `
@@ -1246,9 +1261,9 @@
                                                 ${noticeHtml}
                                                 ${tipHtml}
                                             ` : `
-                                                <div class="d-flex flex-column align-items-center justify-content-center h-100" onclick="flipCard(this, event); event.stopPropagation();" style="cursor: pointer;">
+                                                <div class="d-flex flex-column align-items-center justify-content-center h-100" style="cursor: pointer;" onclick="event.stopPropagation();">
                                                     <h6 class="text-muted mb-3">Tài Khoản Phụ</h6>
-                                                    <button class="btn btn-sm btn-outline-primary" onclick="event.preventDefault(); event.stopPropagation(); openWeChatModal(${account.id}, true);">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="console.log('🔄 DEBUG: Button Thêm CARD PHỤ clicked', ${account.id}); event.preventDefault(); event.stopPropagation(); openWeChatModal(${account.id}, true);">
                                                         <i class="bi bi-plus-lg me-1"></i> Thêm
                                                     </button>
                                                 </div>
@@ -1285,21 +1300,21 @@
                         const cardCenter = rect.left + rect.width / 2;
 
                         // Debug log
-                        console.log('Tooltip positioning debug:', {
-                            cardLeft: rect.left,
-                            cardRight: rect.right,
-                            viewportWidth: viewportWidth,
-                            leftThird: viewportWidth / 3,
-                            rightThird: (viewportWidth * 2) / 3,
-                            cardCenter: cardCenter
-                        });
+                        // console.log('Tooltip positioning debug:', {
+                        //     cardLeft: rect.left,
+                        //     cardRight: rect.right,
+                        //     viewportWidth: viewportWidth,
+                        //     leftThird: viewportWidth / 3,
+                        //     rightThird: (viewportWidth * 2) / 3,
+                        //     cardCenter: cardCenter
+                        // });
 
                         // Remove previous positioning classes
                         tip.classList.remove('tooltip-left', 'tooltip-right', 'tooltip-center');
 
                         // TEST: Always center tooltip to verify CSS works
                         tip.classList.add('tooltip-center');
-                        console.log('Applied: tooltip-center (TEST MODE)');
+                        // console.log('Applied: tooltip-center (TEST MODE)');
 
                         tip.classList.add('show');
                     });
@@ -1363,12 +1378,51 @@
 
         const contextMenu = document.getElementById('wechat-context-menu');
         contextMenu.dataset.isSecondary = isSecondary;
-        
-        // Use smart positioning
-        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = position.left + 'px';
-        contextMenu.style.top = position.top + 'px';
+        
+        // Smart positioning to avoid overflow
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+        
+        // Calculate menu size and viewport
+        let menuRect = contextMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const margin = 8;
+        
+        let left = event.pageX;
+        let top = event.pageY;
+        
+        // Horizontal positioning: Smart left/right positioning
+        if (menuRect.right > viewportWidth - margin) {
+            // Menu will overflow right side of screen
+            // Show menu to the left of mouse
+            left = event.pageX - menuRect.width;
+            // console.log('Context menu positioned LEFT - would overflow right');
+            
+            // If still overflows left, clamp to left margin
+            if (left < margin) {
+                left = margin;
+                // console.log('Context menu clamped to left margin');
+            }
+        } else {
+            // console.log('Context menu positioned RIGHT - fits in viewport');
+        }
+        
+        // Vertical positioning
+        if (menuRect.bottom > viewportHeight) {
+            // Nếu đủ chỗ phía trên chuột thì show lên trên
+            if (event.pageY - menuRect.height > margin) {
+                top = event.pageY - menuRect.height;
+            } else {
+                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                top = viewportHeight - menuRect.height - margin + window.scrollY;
+                if (top < margin + window.scrollY) top = margin + window.scrollY;
+            }
+        }
+        
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -1422,12 +1476,51 @@
         pauseAutoRefresh();
 
         const contextMenu = document.getElementById('generic-context-menu');
-        
-        // Use smart positioning
-        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = position.left + 'px';
-        contextMenu.style.top = position.top + 'px';
+        
+        // Smart positioning to avoid overflow
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+        
+        // Calculate menu size and viewport
+        let menuRect = contextMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const margin = 8;
+        
+        let left = event.pageX;
+        let top = event.pageY;
+        
+        // Horizontal positioning: Smart left/right positioning
+        if (menuRect.right > viewportWidth - margin) {
+            // Menu will overflow right side of screen
+            // Show menu to the left of mouse
+            left = event.pageX - menuRect.width;
+            // console.log('Context menu positioned LEFT - would overflow right');
+            
+            // If still overflows left, clamp to left margin
+            if (left < margin) {
+                left = margin;
+                // console.log('Context menu clamped to left margin');
+            }
+        } else {
+            // console.log('Context menu positioned RIGHT - fits in viewport');
+        }
+        
+        // Vertical positioning
+        if (menuRect.bottom > viewportHeight) {
+            // Nếu đủ chỗ phía trên chuột thì show lên trên
+            if (event.pageY - menuRect.height > margin) {
+                top = event.pageY - menuRect.height;
+            } else {
+                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                top = viewportHeight - menuRect.height - margin + window.scrollY;
+                if (top < margin + window.scrollY) top = margin + window.scrollY;
+            }
+        }
+        
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -1443,72 +1536,6 @@
     function hideGenericContextMenu() {
         document.getElementById('generic-context-menu').style.display = 'none';
         resumeAutoRefresh();
-    }
-
-    // ===== SMART CONTEXT MENU POSITIONING =====
-    function calculateSmartMenuPosition(event, menuElement) {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const scrollX = window.scrollX || window.pageXOffset;
-        const scrollY = window.scrollY || window.pageYOffset;
-        
-        // Menu dimensions (estimated if not yet visible)
-        const menuWidth = 220; // Default width from CSS
-        const menuHeight = 350; // Estimated height for most menus
-        const margin = 10;
-        
-        let left = event.pageX;
-        let top = event.pageY;
-        
-        // Smart horizontal positioning based on click position
-        const clickX = event.pageX;
-        const rightSpace = viewportWidth - clickX;
-        const leftSpace = clickX;
-        
-        if (rightSpace < menuWidth + margin && leftSpace > menuWidth + margin) {
-            // Not enough space on right, enough on left - show to the left
-            left = clickX - menuWidth - margin;
-        } else if (rightSpace >= menuWidth + margin) {
-            // Enough space on right - show to the right (default)
-            left = clickX + margin;
-        } else {
-            // Not enough space on either side - center relative to click
-            left = Math.max(margin, clickX - menuWidth / 2);
-        }
-        
-        // Ensure menu doesn't go off-screen horizontally
-        if (left < margin) left = margin;
-        if (left + menuWidth > viewportWidth - margin + scrollX) {
-            left = viewportWidth - menuWidth - margin + scrollX;
-        }
-        
-        // Smart vertical positioning based on click position
-        const clickY = event.pageY;
-        const bottomSpace = viewportHeight - (clickY - scrollY);
-        const topSpace = clickY - scrollY;
-        
-        if (bottomSpace < menuHeight + margin && topSpace > menuHeight + margin) {
-            // Not enough space below, enough above - show above
-            top = clickY - menuHeight - margin;
-        } else if (bottomSpace >= menuHeight + margin) {
-            // Enough space below - show below (default)
-            top = clickY + margin;
-        } else {
-            // Not enough space on either side - position optimally
-            if (topSpace > bottomSpace) {
-                top = Math.max(margin + scrollY, clickY - menuHeight - margin);
-            } else {
-                top = Math.min(viewportHeight - menuHeight - margin + scrollY, clickY + margin);
-            }
-        }
-        
-        // Final safety checks
-        if (top < margin + scrollY) top = margin + scrollY;
-        if (top + menuHeight > viewportHeight - margin + scrollY) {
-            top = viewportHeight - menuHeight - margin + scrollY;
-        }
-        
-        return { left, top };
     }
 
     // ===== UNIFIED CONTEXT MENU (New) =====
@@ -1570,11 +1597,51 @@
             statusRescueItems.forEach(item => item.style.display = 'none');
         }
 
-        // Use smart positioning
-        const position = calculateSmartMenuPosition(event, contextMenu);
+        // Position and show menu (auto reposition if overflow)
         contextMenu.style.display = 'block';
-        contextMenu.style.left = position.left + 'px';
-        contextMenu.style.top = position.top + 'px';
+        // Temporarily set left/top for measurement
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+
+        // Calculate menu size and viewport
+        let menuRect = contextMenu.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const margin = 8;
+
+        let left = event.pageX;
+        let top = event.pageY;
+
+        // Horizontal positioning: Smart left/right positioning
+        if (menuRect.right > viewportWidth - margin) {
+            // Menu will overflow right side of screen
+            // Show menu to the left of mouse
+            left = event.pageX - menuRect.width;
+            // console.log('Context menu positioned LEFT - would overflow right');
+            
+            // If still overflows left, clamp to left margin
+            if (left < margin) {
+                left = margin;
+                // console.log('Context menu clamped to left margin');
+            }
+        } else {
+            // console.log('Context menu positioned RIGHT - fits in viewport');
+        }
+
+        // If menu overflows bottom, shift menu lên trên (hoặc sát đáy)
+        if (menuRect.bottom > viewportHeight) {
+            // Nếu đủ chỗ phía trên chuột thì show lên trên
+            if (event.pageY - menuRect.height > margin) {
+                top = event.pageY - menuRect.height;
+            } else {
+                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                top = viewportHeight - menuRect.height - margin + window.scrollY;
+                if (top < margin + window.scrollY) top = margin + window.scrollY;
+            }
+        }
+
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
 
         // Đo lại lần nữa nếu cần (menu có thể thay đổi kích thước sau khi set lại top/left)
         // (Không cần lặp lại nhiều lần, vì đã clamp sát đáy)
@@ -1593,7 +1660,7 @@
     window.handleCardContextMenu = function (event, accountId, platform) {
         event.preventDefault();
         event.stopPropagation();
-        console.log('Context menu for platform:', platform, 'account:', accountId);
+        // console.log('Context menu for platform:', platform, 'account:', accountId);
 
         // Use unified context menu for all platforms
         showUnifiedContextMenu(event, accountId, platform, false);
@@ -1605,7 +1672,7 @@
         currentContextAccountId = accountId;
         pauseAutoRefresh();
 
-        console.log('Telegram context menu opened for account:', accountId);
+        // console.log('Telegram context menu opened for account:', accountId);
 
         // Hide all other context menus first
         document.getElementById('wechat-context-menu').style.display = 'none';
@@ -1617,11 +1684,51 @@
             return;
         }
 
-        // Use smart positioning
-        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = position.left + 'px';
-        contextMenu.style.top = position.top + 'px';
+        
+        // Smart positioning to avoid overflow
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+        
+        // Calculate menu size and viewport
+        let menuRect = contextMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const margin = 8;
+        
+        let left = event.pageX;
+        let top = event.pageY;
+        
+        // Horizontal positioning: Smart left/right positioning
+        if (menuRect.right > viewportWidth - margin) {
+            // Menu will overflow right side of screen
+            // Show menu to the left of mouse
+            left = event.pageX - menuRect.width;
+            // console.log('Context menu positioned LEFT - would overflow right');
+            
+            // If still overflows left, clamp to left margin
+            if (left < margin) {
+                left = margin;
+                // console.log('Context menu clamped to left margin');
+            }
+        } else {
+            // console.log('Context menu positioned RIGHT - fits in viewport');
+        }
+        
+        // Vertical positioning
+        if (menuRect.bottom > viewportHeight) {
+            // Nếu đủ chỗ phía trên chuột thì show lên trên
+            if (event.pageY - menuRect.height > margin) {
+                top = event.pageY - menuRect.height;
+            } else {
+                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                top = viewportHeight - menuRect.height - margin + window.scrollY;
+                if (top < margin + window.scrollY) top = margin + window.scrollY;
+            }
+        }
+        
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -1649,10 +1756,11 @@
             event.stopPropagation();
         }
         if (!currentContextAccountId) return;
-        const contextMenu = document.getElementById('wechat-context-menu');
-        const isSecondary = contextMenu.dataset.isSecondary === 'true';
+        // Use unified context menu to get correct isSecondary value
+        const contextMenu = document.getElementById('unified-context-menu');
+        const isSecondary = currentEditingIsSecondary || false;
         openWeChatModal(currentContextAccountId, isSecondary);
-        hideWeChatContextMenu();
+        hideUnifiedContextMenu();
     }
 
     async function markAccountAsScanned(event) {
@@ -1752,7 +1860,7 @@
                         note: note,
                         start_at: new Date().toISOString()
                     };
-                    console.log('✅ Updated local notice for account', noticeTargetId, account.notice);
+                    // console.log('✅ Updated local notice for account', noticeTargetId, account.notice);
                 }
 
                 // Force re-render with updated data
@@ -1799,7 +1907,7 @@
                         note: '',
                         start_at: null
                     };
-                    console.log('✅ Cleared local notice for account', currentContextAccountId);
+                    // console.log('✅ Cleared local notice for account', currentContextAccountId);
                 }
 
                 // Force re-render with updated data
@@ -2259,15 +2367,24 @@
     document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
         if (!currentContextAccountId) return;
 
-        const selectedStatus = document.getElementById('wechat-status').value;
+        // Map "available/empty" => "active" for consistency
+        const raw = String(document.getElementById('wechat-status').value || 'active').toLowerCase();
+        const norm = (raw === 'available' || raw === '') ? 'active' : raw;
+        
+        // Get date values from separate inputs
+        const day = parseInt(document.getElementById('wechat-day').value) || 1;
+        const month = parseInt(document.getElementById('wechat-month').value) || 1;
+        const year = parseInt(document.getElementById('wechat-year').value) || 2024;
+        
         const data = {
             card_name: document.getElementById('wechat-card-name').value,
             username: document.getElementById('wechat-username').value,
             phone: document.getElementById('wechat-phone').value,
-            wechat_created_day: parseInt(document.getElementById('wechat-day').value),
-            wechat_created_month: parseInt(document.getElementById('wechat-month').value),
-            wechat_created_year: parseInt(document.getElementById('wechat-year').value),
-            status: selectedStatus,
+            wechat_created_day: day,
+            wechat_created_month: month,
+            wechat_created_year: year,
+            status: norm,
+            wechat_status: norm,
             is_secondary: currentEditingIsSecondary
         };
 
@@ -2281,7 +2398,7 @@
                 mxhAccounts[accountIndex].secondary_wechat_created_day = data.wechat_created_day;
                 mxhAccounts[accountIndex].secondary_wechat_created_month = data.wechat_created_month;
                 mxhAccounts[accountIndex].secondary_wechat_created_year = data.wechat_created_year;
-                mxhAccounts[accountIndex].secondary_status = data.status;
+                mxhAccounts[accountIndex].secondary_status = norm;
             } else {
                 mxhAccounts[accountIndex].card_name = data.card_name;
                 mxhAccounts[accountIndex].username = data.username;
@@ -2289,7 +2406,7 @@
                 mxhAccounts[accountIndex].wechat_created_day = data.wechat_created_day;
                 mxhAccounts[accountIndex].wechat_created_month = data.wechat_created_month;
                 mxhAccounts[accountIndex].wechat_created_year = data.wechat_created_year;
-                mxhAccounts[accountIndex].status = data.status;
+                mxhAccounts[accountIndex].status = norm;
             }
         }
 
@@ -2439,7 +2556,7 @@
 
     // Initialize - Load data and start auto-refresh
     document.addEventListener('DOMContentLoaded', async () => {
-        console.log('🚀 MXH Tab Initializing...');
+        // console.log('🚀 MXH Tab Initializing...');
 
         // Initial load
         await loadMXHData(true);
@@ -2461,15 +2578,15 @@
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 stopAutoRefresh();
-                console.log('⏸️ MXH Auto-refresh paused (tab hidden)');
+                // console.log('⏸️ MXH Auto-refresh paused (tab hidden)');
             } else {
                 startAutoRefresh();
                 loadMXHData(true); // Immediate refresh when tab becomes visible
-                console.log('▶️ MXH Auto-refresh resumed (tab visible)');
+                // console.log('▶️ MXH Auto-refresh resumed (tab visible)');
             }
         });
 
-        console.log('✅ MXH Tab Ready - Real-time mode enabled!');
+        // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
 
         // Event delegation for WeChat context menu
         document.getElementById('wechat-context-menu').addEventListener('click', (e) => {
@@ -2587,7 +2704,7 @@
             const action = menuItem.dataset.action;
             if (!action) return;
 
-            console.log('Unified menu action:', action);
+            // console.log('Unified menu action:', action);
 
             switch (action) {
                 case 'edit':
@@ -2643,48 +2760,66 @@
 
     // Open WeChat Modal Function
     let currentEditingIsSecondary = false;
+    let _openWeChatModalLock = false;
     window.openWeChatModal = function (accountId, isSecondary = false) {
+        if (_openWeChatModalLock) return;
+        _openWeChatModalLock = true;
+        console.log('🔄 DEBUG: openWeChatModal called', { accountId, isSecondary });
         const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (!account) return;
+        if (!account) {
+            console.log('❌ DEBUG: Account not found', accountId);
+            _openWeChatModalLock = false;
+            return;
+        }
 
+        console.log('✅ DEBUG: Account found', { id: account.id, card_name: account.card_name, status: account.status });
         currentContextAccountId = accountId;
         currentEditingIsSecondary = isSecondary;
 
         const modalTitle = document.querySelector('#wechat-account-modal .modal-title');
 
         if (isSecondary) {
+            console.log('🔄 DEBUG: Loading SECONDARY account data');
             document.getElementById('wechat-card-name').value = account.secondary_card_name || account.card_name;
             document.getElementById('wechat-username').value = account.secondary_username || '';
             document.getElementById('wechat-phone').value = account.secondary_phone || '';
+            // Set date values in separate inputs
             document.getElementById('wechat-day').value = account.secondary_wechat_created_day || new Date().getDate();
             document.getElementById('wechat-month').value = account.secondary_wechat_created_month || new Date().getMonth() + 1;
             document.getElementById('wechat-year').value = account.secondary_wechat_created_year || new Date().getFullYear();
 
-            let secondaryStatus = account.secondary_status || 'available';
+            // FIX: Use secondary_wechat_status/secondary_status and map to modal options (active, disabled, die)
+            let secondaryStatus = account.secondary_wechat_status || account.secondary_status || 'active';
+            if (secondaryStatus === 'available') secondaryStatus = 'active'; // Map old 'available' to 'active'
             document.getElementById('wechat-status').value = secondaryStatus;
+            console.log('✅ DEBUG: Secondary status set to', secondaryStatus);
 
             if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Phụ';
         } else {
+            console.log('🔄 DEBUG: Loading PRIMARY account data');
             document.getElementById('wechat-card-name').value = account.card_name || '';
             document.getElementById('wechat-username').value = account.username || '';
             document.getElementById('wechat-phone').value = account.phone || '';
+            // Set date values in separate inputs
             document.getElementById('wechat-day').value = account.wechat_created_day || 1;
             document.getElementById('wechat-month').value = account.wechat_created_month || 1;
             document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
 
-            let primaryStatus = 'available';
-            if (account.status === 'disabled') {
-                primaryStatus = 'disabled';
-            } else if (account.muted_until && new Date(account.muted_until) > new Date()) {
-                primaryStatus = 'muted';
-            }
+            // FIX: Use wechat_status/status and map to modal options (active, disabled, die)
+            let primaryStatus = account.wechat_status || account.status || 'active';
+            if (primaryStatus === 'available') primaryStatus = 'active'; // Map old 'available' to 'active'
+            
+            // The modal only uses: active, disabled, die. Muted status is ignored for dropdown.
             document.getElementById('wechat-status').value = primaryStatus;
+            console.log('✅ DEBUG: Primary status set to', primaryStatus);
 
             if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Chính';
         }
 
         const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));
         modal.show();
+        
+        setTimeout(() => { _openWeChatModalLock = false; }, 300);
     };
 
     // ===== INLINE EDITING FUNCTIONS WITH INSTANT UPDATES =====
@@ -2878,12 +3013,47 @@
 
             // Show background context menu
             const contextMenu = document.getElementById('mxh-background-context-menu');
-            
-            // Use smart positioning
-            const position = calculateSmartMenuPosition(event, contextMenu);
             contextMenu.style.display = 'block';
-            contextMenu.style.left = position.left + 'px';
-            contextMenu.style.top = position.top + 'px';
+            
+            // Smart positioning to avoid overflow
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+            
+            // Calculate menu size and viewport
+            let menuRect = contextMenu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const margin = 8;
+            
+            let left = event.pageX;
+            let top = event.pageY;
+            
+            // Horizontal positioning: Smart left/right positioning
+            if (menuRect.right > viewportWidth - margin) {
+                // Menu will overflow right side of screen
+                // Show menu to the left of mouse
+                left = event.pageX - menuRect.width;
+                
+                // If still overflows left, clamp to left margin
+                if (left < margin) {
+                    left = margin;
+                }
+            }
+            
+            // Vertical positioning
+            if (menuRect.bottom > viewportHeight) {
+                // Nếu đủ chỗ phía trên chuột thì show lên trên
+                if (event.pageY - menuRect.height > margin) {
+                    top = event.pageY - menuRect.height;
+                } else {
+                    // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                    top = viewportHeight - menuRect.height - margin + window.scrollY;
+                    if (top < margin + window.scrollY) top = margin + window.scrollY;
+                }
+            }
+            
+            contextMenu.style.left = left + 'px';
+            contextMenu.style.top = top + 'px';
         }
     });
 
@@ -2912,7 +3082,192 @@
             document.querySelectorAll('.custom-context-menu').forEach(menu => {
                 menu.style.display = 'none';
             });
+            
+            // Hide all submenus and clear state
+            document.querySelectorAll('.submenu').forEach(submenu => {
+                submenu.classList.remove('show');
+            });
+            currentSubmenu = null;
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+            }
         }
+    });
+
+    // ===== SMART SUBMENU POSITIONING =====
+    // Function to position submenu smartly
+    function positionSubmenu(menuItem) {
+        const submenu = menuItem.querySelector('.submenu');
+        if (!submenu) return;
+        
+        // Temporarily show submenu to measure it
+        submenu.style.display = 'block';
+        submenu.style.visibility = 'hidden';
+        
+        const submenuRect = submenu.getBoundingClientRect();
+        const parentMenu = menuItem.closest('.custom-context-menu');
+        const parentMenuRect = parentMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const margin = 8;
+        
+        // Calculate where submenu would appear if positioned normally (right side)
+        const normalSubmenuRight = parentMenuRect.right + submenuRect.width;
+        
+        // Check if submenu would overflow right side of viewport
+        if (normalSubmenuRight > viewportWidth - margin) {
+            // Show submenu on the left side
+            submenu.classList.add('submenu-left');
+            // console.log('Submenu positioned LEFT - would overflow right');
+        } else {
+            // Show submenu on the right side (default)
+            submenu.classList.remove('submenu-left');
+            // console.log('Submenu positioned RIGHT - fits in viewport');
+        }
+        
+        // Hide submenu again (CSS hover will show it)
+        submenu.style.display = '';
+        submenu.style.visibility = '';
+    }
+    
+    // Enhanced submenu hover handling with bridge support
+    let currentSubmenu = null;
+    let hideTimeout = null;
+    
+    // Function to create bridge element
+    function createSubmenuBridge(submenu, isLeft = false) {
+        // Remove existing bridge
+        const existingBridge = submenu.querySelector('.submenu-bridge');
+        if (existingBridge) {
+            existingBridge.remove();
+        }
+        
+        // Create new bridge
+        const bridge = document.createElement('div');
+        bridge.className = 'submenu-bridge';
+        if (isLeft) {
+            bridge.style.left = '-5px';
+            bridge.style.right = 'auto';
+        }
+        submenu.appendChild(bridge);
+        return bridge;
+    }
+    
+    // Function to show submenu
+    function showSubmenu(menuItem) {
+        // Hide previous submenu
+        if (currentSubmenu && currentSubmenu !== menuItem) {
+            const prevSubmenu = currentSubmenu.querySelector('.submenu');
+            if (prevSubmenu) {
+                prevSubmenu.classList.remove('show');
+            }
+        }
+        
+        // Show new submenu
+        const submenuEl = menuItem.querySelector('.submenu');
+        if (submenuEl) {
+            positionSubmenu(menuItem);
+            submenuEl.classList.add('show');
+            currentSubmenu = menuItem;
+            
+            // Create bridge based on position
+            const isLeft = submenuEl.classList.contains('submenu-left');
+            createSubmenuBridge(submenuEl, isLeft);
+        }
+        
+        // Clear any pending hide timeout
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            hideTimeout = null;
+        }
+    }
+    
+    // Function to hide submenu with delay
+    function hideSubmenu(delay = 100) {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+        }
+        hideTimeout = setTimeout(() => {
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.remove('show');
+                }
+                currentSubmenu = null;
+            }
+        }, delay);
+    }
+    
+    // Event listeners
+    document.addEventListener('mouseover', function(event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        const bridge = event.target.closest('.submenu-bridge');
+        
+        if (menuItem) {
+            showSubmenu(menuItem);
+        } else if (submenu || bridge) {
+            // Keep submenu open when hovering over submenu or bridge
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.add('show');
+                }
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            }
+        }
+    });
+    
+    document.addEventListener('mouseout', function(event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        const bridge = event.target.closest('.submenu-bridge');
+        
+        if (!menuItem && !submenu && !bridge) {
+            // Hide submenu when leaving all related elements
+            hideSubmenu();
+        }
+    });
+    
+    // Also position submenus when context menu is shown
+    function positionAllSubmenus(menuId) {
+        setTimeout(() => {
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                const submenuItems = menu.querySelectorAll('.menu-item.has-submenu');
+                submenuItems.forEach(positionSubmenu);
+            }
+        }, 10);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override all context menu functions to position submenus
+        const originalShowUnified = showUnifiedContextMenu;
+        showUnifiedContextMenu = function(event, accountId, platform, isSecondary = false) {
+            originalShowUnified(event, accountId, platform, isSecondary);
+            positionAllSubmenus('unified-context-menu');
+        };
+        
+        const originalShowWeChat = showWeChatContextMenu;
+        showWeChatContextMenu = function(event, accountId, isSecondary = false) {
+            originalShowWeChat(event, accountId, isSecondary);
+            positionAllSubmenus('wechat-context-menu');
+        };
+        
+        const originalShowGeneric = showGenericContextMenu;
+        showGenericContextMenu = function(event, accountId) {
+            originalShowGeneric(event, accountId);
+            positionAllSubmenus('generic-context-menu');
+        };
+        
+        const originalShowTelegram = showTelegramContextMenu;
+        showTelegramContextMenu = function(event, accountId) {
+            originalShowTelegram(event, accountId);
+            positionAllSubmenus('telegram-context-menu');
+        };
     });
 
     // ===== AUTO-FILL DATE WHEN OPENING ADD ACCOUNT MODAL =====
@@ -2967,6 +3322,51 @@
             }
         });
     }
+
+    // ===== AUTO-TAB FOR DATE INPUTS =====
+    // Auto-tab when reaching maxlength for date inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const dayInput = document.getElementById('wechat-day');
+        const monthInput = document.getElementById('wechat-month');
+        const yearInput = document.getElementById('wechat-year');
+
+        if (dayInput && monthInput && yearInput) {
+            // Auto-tab from day to month
+            dayInput.addEventListener('input', function() {
+                if (this.value.length >= 2) {
+                    monthInput.focus();
+                }
+            });
+
+            // Auto-tab from month to year
+            monthInput.addEventListener('input', function() {
+                if (this.value.length >= 2) {
+                    yearInput.focus();
+                }
+            });
+
+            // Prevent going back to previous field if current field has value
+            dayInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0) {
+                    e.preventDefault();
+                }
+            });
+
+            monthInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0) {
+                    dayInput.focus();
+                    e.preventDefault();
+                }
+            });
+
+            yearInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0) {
+                    monthInput.focus();
+                    e.preventDefault();
+                }
+            });
+        }
+    });
 
 </script>
 {% endblock %}

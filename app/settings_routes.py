@@ -15,12 +15,17 @@ def load_dashboard_settings():
     """Load dashboard settings from JSON file."""
     if os.path.exists(DASHBOARD_SETTINGS_FILE):
         with open(DASHBOARD_SETTINGS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            settings = json.load(f)
+            # Ensure the new setting exists in loaded data, default to 15 seconds (15000 ms)
+            if 'mxh_refresh_interval' not in settings:
+                settings['mxh_refresh_interval'] = 15000
+            return settings
     return {
         'auto_start': False, 
         'auto_open_dashboard': True,
         'shutdown_timer': {'enabled': False, 'hours': 0, 'minutes': 0},
-        'notification_timer': {'enabled': False, 'hours': 0, 'minutes': 0, 'message': ''}
+        'notification_timer': {'enabled': False, 'hours': 0, 'minutes': 0, 'message': ''},
+        'mxh_refresh_interval': 15000  # Default 15000 ms (15 seconds)
     }
 
 def save_dashboard_settings(settings):
@@ -111,6 +116,22 @@ def update_notification_timer():
         }
         save_dashboard_settings(settings)
         return jsonify({'success': True, 'notification_timer': settings['notification_timer']})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@settings_bp.route('/api/settings/mxh-refresh-interval', methods=['PUT'])
+def update_mxh_refresh_interval():
+    """Update MXH dashboard auto-refresh interval (in milliseconds)."""
+    try:
+        data = request.get_json()
+        interval = data.get('interval_ms')  # Expecting milliseconds, e.g., 15000
+        if not isinstance(interval, int) or interval < 3000:  # Enforce minimum 3 seconds (3000ms)
+            return jsonify({'error': 'Interval must be an integer >= 3000ms'}), 400
+            
+        settings = load_dashboard_settings()
+        settings['mxh_refresh_interval'] = interval
+        save_dashboard_settings(settings)
+        return jsonify({'success': True, 'mxh_refresh_interval': settings['mxh_refresh_interval']})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
