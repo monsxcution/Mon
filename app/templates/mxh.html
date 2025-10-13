@@ -300,9 +300,10 @@
                     <div class="col-auto">
                         <label class="form-label mb-1">Trạng Thái</label>
                         <select class="form-select form-select-sm" id="wechat-status" style="width: 120px;" required>
-                            <option value="active">Available</option>
+                            <option value="available">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
                             <option value="die">Die</option>
+                            <option value="muted">Muted</option>
                         </select>
                     </div>
                 </div>
@@ -2367,9 +2368,7 @@
     document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
         if (!currentContextAccountId) return;
 
-        // Map "available/empty" => "active" for consistency
-        const raw = String(document.getElementById('wechat-status').value || 'active').toLowerCase();
-        const norm = (raw === 'available' || raw === '') ? 'active' : raw;
+        const selectedStatus = document.getElementById('wechat-status').value;
         
         // Get date values from separate inputs
         const day = parseInt(document.getElementById('wechat-day').value) || 1;
@@ -2383,30 +2382,28 @@
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: norm,
-            wechat_status: norm,
+            status: selectedStatus === 'muted' ? (currentEditingIsSecondary ? mxhAccounts.find(a=>a.id === currentContextAccountId).secondary_status : mxhAccounts.find(a=>a.id === currentContextAccountId).status) : (selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus)), // Logic: 'available'->'active', 'die'->'disabled', 'muted' keeps previous status
+            wechat_status: selectedStatus === 'muted' ? (currentEditingIsSecondary ? mxhAccounts.find(a=>a.id === currentContextAccountId).secondary_wechat_status : mxhAccounts.find(a=>a.id === currentContextAccountId).wechat_status) : selectedStatus, // Logic: Sets 'wechat_status' to the exact selected value, unless muted (then keep previous wechat_status)
             is_secondary: currentEditingIsSecondary
         };
 
-        // Instant local update
-        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
-        if (accountIndex !== -1) {
-            if (currentEditingIsSecondary) {
-                mxhAccounts[accountIndex].secondary_card_name = data.card_name;
-                mxhAccounts[accountIndex].secondary_username = data.username;
-                mxhAccounts[accountIndex].secondary_phone = data.phone;
-                mxhAccounts[accountIndex].secondary_wechat_created_day = data.wechat_created_day;
-                mxhAccounts[accountIndex].secondary_wechat_created_month = data.wechat_created_month;
-                mxhAccounts[accountIndex].secondary_wechat_created_year = data.wechat_created_year;
-                mxhAccounts[accountIndex].secondary_status = norm;
-            } else {
-                mxhAccounts[accountIndex].card_name = data.card_name;
-                mxhAccounts[accountIndex].username = data.username;
-                mxhAccounts[accountIndex].phone = data.phone;
-                mxhAccounts[accountIndex].wechat_created_day = data.wechat_created_day;
-                mxhAccounts[accountIndex].wechat_created_month = data.wechat_created_month;
-                mxhAccounts[accountIndex].wechat_created_year = data.wechat_created_year;
-                mxhAccounts[accountIndex].status = norm;
+        // Add mute/unmute logic for the API call if status is 'muted'
+        if(selectedStatus === 'muted') {
+            await fetch(`/mxh/api/accounts/${currentContextAccountId}/mute`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_secondary: currentEditingIsSecondary }) 
+            });
+        } else {
+            // Unmute if previously muted and new status is not muted
+            const account = mxhAccounts.find(a=>a.id === currentContextAccountId);
+            const isMuted = currentEditingIsSecondary ? (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) : (account.muted_until && new Date(account.muted_until) > new Date());
+            if(isMuted) {
+                await fetch(`/mxh/api/accounts/${currentContextAccountId}/unmute`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_secondary: currentEditingIsSecondary }) 
+                });
             }
         }
 
@@ -2788,9 +2785,11 @@
             document.getElementById('wechat-month').value = account.secondary_wechat_created_month || new Date().getMonth() + 1;
             document.getElementById('wechat-year').value = account.secondary_wechat_created_year || new Date().getFullYear();
 
-            // FIX: Use secondary_wechat_status/secondary_status and map to modal options (active, disabled, die)
-            let secondaryStatus = account.secondary_wechat_status || account.secondary_status || 'active';
-            if (secondaryStatus === 'available') secondaryStatus = 'active'; // Map old 'available' to 'active'
+            // CRITICAL FIX: Determine status value based on priority
+            let secondaryStatus = account.secondary_wechat_status || account.secondary_status || 'available';
+            if (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) {
+                secondaryStatus = 'muted';
+            }
             document.getElementById('wechat-status').value = secondaryStatus;
             console.log('✅ DEBUG: Secondary status set to', secondaryStatus);
 
@@ -2805,11 +2804,11 @@
             document.getElementById('wechat-month').value = account.wechat_created_month || 1;
             document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
 
-            // FIX: Use wechat_status/status and map to modal options (active, disabled, die)
-            let primaryStatus = account.wechat_status || account.status || 'active';
-            if (primaryStatus === 'available') primaryStatus = 'active'; // Map old 'available' to 'active'
-            
-            // The modal only uses: active, disabled, die. Muted status is ignored for dropdown.
+            // CRITICAL FIX: Determine status value based on priority
+            let primaryStatus = account.wechat_status || account.status || 'available';
+            if (account.muted_until && new Date(account.muted_until) > new Date()) {
+                primaryStatus = 'muted';
+            }
             document.getElementById('wechat-status').value = primaryStatus;
             console.log('✅ DEBUG: Primary status set to', primaryStatus);
 

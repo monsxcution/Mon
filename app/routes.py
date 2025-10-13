@@ -183,13 +183,19 @@ def update_delete_mxh_account(account_id):
             data = request.get_json()
             is_secondary = data.get('is_secondary', False)
 
-            # Map "available/empty" => "active" for consistency
-            raw_status = (data.get("status") or "").strip().lower()
-            if raw_status in ("", "available"):  # mọi 'available' => active
-                data["status"] = "active"
-            # luôn mirror cho wechat_status để về một mối
-            if data.get("status") and not data.get("wechat_status"):
-                data["wechat_status"] = data["status"]
+            # NEW LOGIC: Status Harmonization (Primary Status)
+            primary_status = data.get('status')
+            primary_wechat_status = data.get('wechat_status')
+
+            if primary_status == 'available':  # Frontend still uses 'available' sometimes
+                primary_status = 'active'
+            if primary_status == 'die':  # Frontend modal bug fix
+                primary_status = 'disabled'
+                primary_wechat_status = 'die'
+            if primary_status:
+                data['status'] = primary_status
+            if primary_wechat_status:
+                data['wechat_status'] = primary_wechat_status
 
             fields_to_update = {
                 'card_name': data.get('card_name'),

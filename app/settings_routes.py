@@ -5,6 +5,14 @@ Quản lý cài đặt dashboard với real-time updates
 from flask import Blueprint, render_template, request, jsonify
 import os
 import json
+import platform  # New Import
+import subprocess  # New Import
+# Conditional import for Windows Registry
+try:
+    if platform.system() == 'Windows':
+        import winreg
+except ImportError:
+    pass  # winreg is not available on non-Windows systems
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
@@ -33,6 +41,42 @@ def save_dashboard_settings(settings):
     os.makedirs(os.path.dirname(DASHBOARD_SETTINGS_FILE), exist_ok=True)
     with open(DASHBOARD_SETTINGS_FILE, 'w', encoding='utf-8') as f:
         json.dump(settings, f, indent=2, ensure_ascii=False)
+
+# NEW FUNCTION: Handle OS-level auto-start configuration (Windows-centric)
+def handle_auto_start_os_config(enabled):
+    """Adds or removes the application from the Windows startup list (via Registry).
+    NOTE: Assumes the application is run via an executable (e.g., 'Mon.exe' or 'python run.py'). 
+    The full path must be known or retrieved by the main application process before calling this.
+    For this implementation, we assume the executable name is 'Mon.exe' in the application directory for simplification.
+    """
+    if platform.system() != 'Windows':
+        print("Auto-start feature is only implemented for Windows.")
+        return
+
+    try:
+        # Get the current working directory or application path
+        app_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))  # Adjust path as needed
+        run_command = f'"{os.path.join(app_path, "run.py")}"'  # Using run.py as placeholder command
+
+        # Windows Registry path for startup programs
+        key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        app_name = "MonDashboard"
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS) as key:
+            if enabled:
+                # Add to startup
+                winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, run_command)
+                print(f"✅ Added to Windows startup: {run_command}")
+            else:
+                # Remove from startup
+                try:
+                    winreg.DeleteValue(key, app_name)
+                    print("✅ Removed from Windows startup.")
+                except FileNotFoundError:
+                    pass  # Already removed
+    except Exception as e:
+        print(f"❌ Error configuring Windows startup: {e}")
+        # NOTE: The subordinate AI must ensure the main application path/command is correctly determined.
 
 # ===== PAGE ROUTES =====
 @settings_bp.route('/')
@@ -64,12 +108,19 @@ def update_settings():
 
 @settings_bp.route('/api/settings/auto-start', methods=['PUT'])
 def toggle_auto_start():
-    """Toggle auto-start setting."""
+    """Toggle auto-start setting and configure OS startup."""
     try:
         data = request.get_json()
+        enabled = data.get('enabled', False)  # Capture state here
         settings = load_dashboard_settings()
-        settings['auto_start'] = data.get('enabled', False)
+        
+        # 1. Update OS configuration (CRITICAL FIX)
+        handle_auto_start_os_config(enabled) 
+        
+        # 2. Save setting to JSON
+        settings['auto_start'] = enabled
         save_dashboard_settings(settings)
+        
         return jsonify({'success': True, 'auto_start': settings['auto_start']})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
