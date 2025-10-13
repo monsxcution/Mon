@@ -464,7 +464,7 @@
         AUTO_REFRESH_INTERVAL: 3000, // 3 seconds - fast real-time updates
         DEBOUNCE_DELAY: 500, // Debounce for inline editing
         RENDER_BATCH_SIZE: 50, // Cards to render per batch (for smooth rendering)
-        ENABLE_AUTO_REFRESH: true
+        ENABLE_AUTO_REFRESH: false
     };
 
     // MXH Global State
@@ -1363,9 +1363,12 @@
 
         const contextMenu = document.getElementById('wechat-context-menu');
         contextMenu.dataset.isSecondary = isSecondary;
+        
+        // Use smart positioning
+        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
+        contextMenu.style.left = position.left + 'px';
+        contextMenu.style.top = position.top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -1419,9 +1422,12 @@
         pauseAutoRefresh();
 
         const contextMenu = document.getElementById('generic-context-menu');
+        
+        // Use smart positioning
+        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
+        contextMenu.style.left = position.left + 'px';
+        contextMenu.style.top = position.top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -1437,6 +1443,72 @@
     function hideGenericContextMenu() {
         document.getElementById('generic-context-menu').style.display = 'none';
         resumeAutoRefresh();
+    }
+
+    // ===== SMART CONTEXT MENU POSITIONING =====
+    function calculateSmartMenuPosition(event, menuElement) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
+        
+        // Menu dimensions (estimated if not yet visible)
+        const menuWidth = 220; // Default width from CSS
+        const menuHeight = 350; // Estimated height for most menus
+        const margin = 10;
+        
+        let left = event.pageX;
+        let top = event.pageY;
+        
+        // Smart horizontal positioning based on click position
+        const clickX = event.pageX;
+        const rightSpace = viewportWidth - clickX;
+        const leftSpace = clickX;
+        
+        if (rightSpace < menuWidth + margin && leftSpace > menuWidth + margin) {
+            // Not enough space on right, enough on left - show to the left
+            left = clickX - menuWidth - margin;
+        } else if (rightSpace >= menuWidth + margin) {
+            // Enough space on right - show to the right (default)
+            left = clickX + margin;
+        } else {
+            // Not enough space on either side - center relative to click
+            left = Math.max(margin, clickX - menuWidth / 2);
+        }
+        
+        // Ensure menu doesn't go off-screen horizontally
+        if (left < margin) left = margin;
+        if (left + menuWidth > viewportWidth - margin + scrollX) {
+            left = viewportWidth - menuWidth - margin + scrollX;
+        }
+        
+        // Smart vertical positioning based on click position
+        const clickY = event.pageY;
+        const bottomSpace = viewportHeight - (clickY - scrollY);
+        const topSpace = clickY - scrollY;
+        
+        if (bottomSpace < menuHeight + margin && topSpace > menuHeight + margin) {
+            // Not enough space below, enough above - show above
+            top = clickY - menuHeight - margin;
+        } else if (bottomSpace >= menuHeight + margin) {
+            // Enough space below - show below (default)
+            top = clickY + margin;
+        } else {
+            // Not enough space on either side - position optimally
+            if (topSpace > bottomSpace) {
+                top = Math.max(margin + scrollY, clickY - menuHeight - margin);
+            } else {
+                top = Math.min(viewportHeight - menuHeight - margin + scrollY, clickY + margin);
+            }
+        }
+        
+        // Final safety checks
+        if (top < margin + scrollY) top = margin + scrollY;
+        if (top + menuHeight > viewportHeight - margin + scrollY) {
+            top = viewportHeight - menuHeight - margin + scrollY;
+        }
+        
+        return { left, top };
     }
 
     // ===== UNIFIED CONTEXT MENU (New) =====
@@ -1498,40 +1570,11 @@
             statusRescueItems.forEach(item => item.style.display = 'none');
         }
 
-        // Position and show menu (auto reposition if overflow)
+        // Use smart positioning
+        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        // Temporarily set left/top for measurement
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
-
-        // Calculate menu size and viewport
-        let menuRect = contextMenu.getBoundingClientRect();
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-        const margin = 8;
-
-        let left = event.pageX;
-        let top = event.pageY;
-
-        // If menu overflows right, shift left
-        if (menuRect.right > viewportWidth) {
-            left = Math.max(margin, viewportWidth - menuRect.width - margin + window.scrollX);
-        }
-
-        // If menu overflows bottom, shift menu lên trên (hoặc sát đáy)
-        if (menuRect.bottom > viewportHeight) {
-            // Nếu đủ chỗ phía trên chuột thì show lên trên
-            if (event.pageY - menuRect.height > margin) {
-                top = event.pageY - menuRect.height;
-            } else {
-                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
-                top = viewportHeight - menuRect.height - margin + window.scrollY;
-                if (top < margin + window.scrollY) top = margin + window.scrollY;
-            }
-        }
-
-        contextMenu.style.left = left + 'px';
-        contextMenu.style.top = top + 'px';
+        contextMenu.style.left = position.left + 'px';
+        contextMenu.style.top = position.top + 'px';
 
         // Đo lại lần nữa nếu cần (menu có thể thay đổi kích thước sau khi set lại top/left)
         // (Không cần lặp lại nhiều lần, vì đã clamp sát đáy)
@@ -1574,9 +1617,11 @@
             return;
         }
 
+        // Use smart positioning
+        const position = calculateSmartMenuPosition(event, contextMenu);
         contextMenu.style.display = 'block';
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
+        contextMenu.style.left = position.left + 'px';
+        contextMenu.style.top = position.top + 'px';
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (account) {
@@ -2833,9 +2878,12 @@
 
             // Show background context menu
             const contextMenu = document.getElementById('mxh-background-context-menu');
+            
+            // Use smart positioning
+            const position = calculateSmartMenuPosition(event, contextMenu);
             contextMenu.style.display = 'block';
-            contextMenu.style.left = event.pageX + 'px';
-            contextMenu.style.top = event.pageY + 'px';
+            contextMenu.style.left = position.left + 'px';
+            contextMenu.style.top = position.top + 'px';
         }
     });
 

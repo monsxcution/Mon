@@ -292,7 +292,6 @@ body {
 .custom-context-menu {
     display: none;
     position: fixed;
-    position: fixed;
     z-index: 10000;
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -301,6 +300,9 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     min-width: 220px;
     font-size: 0.9rem;
+    max-width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .custom-context-menu .menu-item {
@@ -931,32 +933,6 @@ body {
     }
 }
 
-.notice-tooltip {
-    position: absolute;
-    top: -8px;
-    right: 8px;
-    transform: translateY(-100%);
-    background: #1b1b1b;
-    color: #fff;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 8px 8px;
-    width: 220px;
-    z-index: 5;
-    display: none;
-    pointer-events: none;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-
-/* Center text inside notice preview */
-    .notice-tooltip {
-        text-align: center !important;
-    }
-
-    .notice-tooltip-title,
-    .notice-tooltip-note {
-        text-align: center !important;
-    }
-}
 
 /* Smart positioning for tooltip */
 .notice-tooltip.tooltip-left {
@@ -979,16 +955,7 @@ body {
     display: block;
 }
 
-.notice-tooltip-title {
-    font-weight: 700;
-    margin-bottom: 4px;
-}
 
-.notice-tooltip-note {
-    font-size: 12px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-}
 
 /* === Account Status Styling === */
 /* Available: White (default) */
@@ -1207,28 +1174,8 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     background-color: #dc3545;
 }
 
-.notice-tooltip {
-    position: absolute;
-    background-color: #2c3e50;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    z-index: 1000;
-    max-width: 200px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: none;
-}
 
-.notice-tooltip-title {
-    font-weight: bold;
-    margin-bottom: 4px;
-}
 
-.notice-tooltip-note {
-    color: #bdc3c7;
-    font-size: 0.75rem;
-}
 
 .notice-expired-blink {
     animation: notice-blink 1s infinite;
@@ -1327,13 +1274,6 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 /* MXH notice preview – ghim ở đáy card */
 .mxh-card .card-body{ position:relative }
-.notice-tooltip{
-  display:none; position:absolute;
-  left:8px; right:8px; bottom:8px;   /* thay vì top:... */
-  background:#0f0f0f; border:1px solid rgba(255,255,255,.12);
-  border-radius:8px; padding:.35rem .5rem; font-size:.78rem; z-index:4;
-  box-shadow:0 6px 18px rgba(0,0,0,.45)
-}
 .notice-line:hover + .notice-tooltip{ display:block }
 
 .notice-tooltip.tooltip-center{right:auto!important;left:50%!important;top:-8px!important;transform:translate(-50%,-100%)!important}
@@ -1352,17 +1292,39 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 .mxh-card .card-body { position: relative; }
 
-/* Tooltip gọn, theo nội dung */
+/* Tooltip gọn, theo nội dung - CSS duy nhất */
 .notice-tooltip{
   position:absolute; top:-8px; left:50%;
   transform:translate(-50%,-100%);
   background:#0f0f0f; border:1px solid rgba(255,255,255,.12);
-  border-radius:8px; padding:.3rem .45rem; font-size:.74rem;
+  border-radius:8px; padding:.25rem .4rem; font-size:.74rem;
   width:auto; max-width:70%; display:none; pointer-events:none;
   box-shadow:0 6px 18px rgba(0,0,0,.45); text-align:center;
+  min-height: auto; /* Cho phép tự động điều chỉnh chiều cao */
+  line-height: 1.2;
 }
-/* 1 dòng khi chỉ có title; tự cao thêm khi có note */
-.notice-tooltip-title{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.notice-tooltip-note:empty{ display:none; }
+/* Title: chỉ 1 dòng, không margin */
+.notice-tooltip-title{ 
+  white-space:nowrap; 
+  overflow:hidden; 
+  text-overflow:ellipsis;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+}
+/* Note: hiển thị khi có nội dung, ẩn khi rỗng */
+.notice-tooltip-note{ 
+  font-size: 0.7rem;
+  line-height: 1.3;
+  margin: 0.2rem 0 0 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ccc;
+}
+.notice-tooltip-note:empty{ 
+  display:none !important; 
+}
 .notice-line:hover + .notice-tooltip{ display:block; }
 
