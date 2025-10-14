@@ -7,6 +7,8 @@ import os
 import json
 import platform  # New Import
 import subprocess  # New Import
+import sys # New Import
+
 # Conditional import for Windows Registry
 try:
     if platform.system() == 'Windows':
@@ -44,38 +46,38 @@ def save_dashboard_settings(settings):
 
 # NEW FUNCTION: Handle OS-level auto-start configuration (Windows-centric)
 def handle_auto_start_os_config(enabled):
-    """Adds or removes the application from the Windows startup list (via Registry).
-    NOTE: Assumes the application is run via an executable (e.g., 'Mon.exe' or 'python run.py'). 
-    The full path must be known or retrieved by the main application process before calling this.
-    For this implementation, we assume the executable name is 'Mon.exe' in the application directory for simplification.
-    """
+    """Adds or removes the application from the Windows startup list (via Registry)."""
     if platform.system() != 'Windows':
         print("Auto-start feature is only implemented for Windows.")
         return
 
     try:
-        # Get the current working directory or application path
-        app_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))  # Adjust path as needed
-        run_command = f'"{os.path.join(app_path, "run.py")}"'  # Using run.py as placeholder command
+        # Get the absolute path to run.pyw (assuming run.py was renamed and is in the root directory)
+        app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        
+        # The command to execute the Python script using pythonw.exe (to suppress console window)
+        # We construct the path to run.pyw
+        run_command = f'"{os.path.join(app_root, "run.pyw")}"'
 
         # Windows Registry path for startup programs
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
         app_name = "MonDashboard"
 
+        # NOTE: winreg is imported conditionally in the global scope
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS) as key:
             if enabled:
                 # Add to startup
                 winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, run_command)
-                print(f"✅ Added to Windows startup: {run_command}")
+                print(f"[SUCCESS] Added to Windows startup: {run_command}")
             else:
                 # Remove from startup
                 try:
                     winreg.DeleteValue(key, app_name)
-                    print("✅ Removed from Windows startup.")
+                    print("[SUCCESS] Removed from Windows startup.")
                 except FileNotFoundError:
                     pass  # Already removed
     except Exception as e:
-        print(f"❌ Error configuring Windows startup: {e}")
+        print(f"[ERROR] Error configuring Windows startup: {e}")
         # NOTE: The subordinate AI must ensure the main application path/command is correctly determined.
 
 # ===== PAGE ROUTES =====
