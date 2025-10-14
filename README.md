@@ -1,5 +1,7 @@
 # MonS Dashboard - Bảng Điều Khiển Đa Chức Năng
 
+https://github.com/monsxcution/Mon/blob/main/app/templates/mxh.html
+
 MonS là một ứng dụng web được xây dựng bằng Python (Flask) và Bootstrap 5, cung cấp một bộ công cụ tiện ích bao gồm:
 - 📝 Ghi chú
 - 🔐 MXH ( Quản lý Mật khẩu & Tài khoản Mạng Xã Hội)
