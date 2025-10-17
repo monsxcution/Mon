@@ -16,6 +16,7 @@ def _migrate_mxh_schema(conn):
     """
     Handles the one-time migration from the old single-table mxh_accounts
     to the new two-table (mxh_accounts, mxh_sub_accounts) structure.
+    IMPORTANT: This migration preserves all existing data including notes.
     """
     cursor = conn.cursor()
     
@@ -23,17 +24,26 @@ def _migrate_mxh_schema(conn):
         cursor.execute("PRAGMA table_info(mxh_accounts)")
         columns = [column[1] for column in cursor.fetchall()]
         if 'secondary_username' not in columns and 'phone' not in columns:
-            print("✅ Database already uses new schema or is fresh. No migration needed.")
+            print("SUCCESS: Database already uses new schema or is fresh. No migration needed.")
             return
     except sqlite3.OperationalError:
-        print("✅ Fresh database. No migration needed.")
+        print("SUCCESS: Fresh database. No migration needed.")
         return
 
-    print("🔄 Old schema detected. Starting migration to new two-table structure...")
+    print("INFO: Old schema detected. Starting migration to new two-table structure...")
+    
+    # Backup notes data before migration
+    notes_backup = None
+    try:
+        cursor.execute("SELECT * FROM notes")
+        notes_backup = cursor.fetchall()
+        print(f"   - Step 0/6: Backed up {len(notes_backup)} notes records.")
+    except sqlite3.OperationalError:
+        print("   - Step 0/6: No notes table found, skipping notes backup.")
     
     try:
         cursor.execute("ALTER TABLE mxh_accounts RENAME TO mxh_accounts_old")
-        print("   - Step 1/5: Renamed old table to mxh_accounts_old.")
+        print("   - Step 1/6: Renamed old table to mxh_accounts_old.")
 
         cursor.execute(
             """CREATE TABLE mxh_accounts (
@@ -53,7 +63,7 @@ def _migrate_mxh_schema(conn):
                 FOREIGN KEY (card_id) REFERENCES mxh_accounts (id) ON DELETE CASCADE
             )"""
         )
-        print("   - Step 2/5: Created new mxh_accounts and mxh_sub_accounts tables.")
+        print("   - Step 2/6: Created new mxh_accounts and mxh_sub_accounts tables.")
 
         cursor.execute("SELECT * FROM mxh_accounts_old")
         old_accounts = cursor.fetchall()
@@ -80,16 +90,25 @@ def _migrate_mxh_schema(conn):
                     (card_id, old_dict.get('secondary_card_name', 'Tài khoản phụ 2'), old_dict['secondary_username'], old_dict.get('secondary_phone'), old_dict.get('secondary_url'), old_dict['created_at'], old_dict.get('updated_at'), old_dict.get('secondary_wechat_created_day'), old_dict.get('secondary_wechat_created_month'), old_dict.get('secondary_wechat_created_year'), old_dict.get('secondary_status', 'active'), old_dict.get('secondary_muted_until'), old_dict.get('secondary_die_date'), old_dict.get('secondary_wechat_scan_count'), old_dict.get('secondary_wechat_last_scan_date'), old_dict.get('secondary_rescue_count'), old_dict.get('secondary_rescue_success_count'))
                 )
 
-        print(f"   - Step 3/5: Migrated data for {len(old_accounts)} cards.")
+        print(f"   - Step 3/6: Migrated data for {len(old_accounts)} cards.")
 
         cursor.execute("DROP TABLE mxh_accounts_old")
-        print("   - Step 4/5: Dropped old table.")
+        print("   - Step 4/6: Dropped old table.")
+        
+        # Restore notes data if it was backed up
+        if notes_backup:
+            cursor.execute("DELETE FROM notes")  # Clear any existing notes
+            for note in notes_backup:
+                cursor.execute("INSERT INTO notes VALUES (?, ?, ?, ?, ?, ?, ?)", note)
+            print(f"   - Step 5/6: Restored {len(notes_backup)} notes records.")
+        else:
+            print("   - Step 5/6: No notes to restore.")
         
         conn.commit()
-        print("   - Step 5/5: Migration committed successfully!")
+        print("   - Step 6/6: Migration committed successfully!")
 
     except Exception as e:
-        print(f"❌ MIGRATION FAILED: {e}. Rolling back changes.")
+        print(f"ERROR: MIGRATION FAILED: {e}. Rolling back changes.")
         conn.rollback()
         try:
             cursor.execute("DROP TABLE IF EXISTS mxh_sub_accounts")
