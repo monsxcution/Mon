@@ -46,22 +46,36 @@ def init_database():
         )"""
     )
 
-    # Accounts table with full WeChat support
+    # Main cards table (simplified to only contain card identification)
     conn.execute(
         """CREATE TABLE IF NOT EXISTS mxh_accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             card_name TEXT NOT NULL,
             group_id INTEGER NOT NULL,
             platform TEXT NOT NULL,
-            username TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            
+            FOREIGN KEY (group_id) REFERENCES mxh_groups (id)
+        )"""
+    )
+
+    # Sub-accounts table (contains all account details)
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS mxh_sub_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            card_id INTEGER NOT NULL,
+            is_primary BOOLEAN DEFAULT 0,
+            account_name TEXT DEFAULT 'Tài khoản phụ',
+            username TEXT,
             phone TEXT,
             url TEXT,
             login_username TEXT,
             login_password TEXT,
             created_at TEXT NOT NULL,
-            updated_at TEXT, -- Ensure this exists for delta updates
+            updated_at TEXT,
             
-            -- WeChat Primary Account Fields
+            -- WeChat Account Fields
             wechat_created_day INTEGER DEFAULT 1,
             wechat_created_month INTEGER DEFAULT 1,
             wechat_created_year INTEGER DEFAULT 2024,
@@ -80,25 +94,123 @@ def init_database():
             email_reset_date TEXT,
             notice TEXT,
             
-            FOREIGN KEY (group_id) REFERENCES mxh_groups (id)
+            FOREIGN KEY (card_id) REFERENCES mxh_accounts (id) ON DELETE CASCADE
         )"""
     )
 
-    # Migration: Add email_reset_date column for Telegram accounts
+    # Migration: Handle schema changes from old structure to new structure
     try:
         cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(mxh_accounts)")
-        columns = [column[1] for column in cursor.fetchall()]
-
-        if "email_reset_date" not in columns:
-            conn.execute("ALTER TABLE mxh_accounts ADD COLUMN email_reset_date TEXT")
-            print("✅ Added email_reset_date column to mxh_accounts table")
-
-        if "notice" not in columns:
-            conn.execute("ALTER TABLE mxh_accounts ADD COLUMN notice TEXT")
-            print("✅ Added notice column to mxh_accounts table")
+        
+        # Check if mxh_sub_accounts table exists (indicates new schema)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mxh_sub_accounts'")
+        sub_accounts_exists = cursor.fetchone() is not None
+        
+        if not sub_accounts_exists:
+            print("🔄 Migrating from old schema to new schema...")
+            
+            # Create the new sub_accounts table
+            conn.execute(
+                """CREATE TABLE mxh_sub_accounts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    card_id INTEGER NOT NULL,
+                    is_primary BOOLEAN DEFAULT 0,
+                    account_name TEXT DEFAULT 'Tài khoản phụ',
+                    username TEXT,
+                    phone TEXT,
+                    url TEXT,
+                    login_username TEXT,
+                    login_password TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT,
+                    
+                    -- WeChat Account Fields
+                    wechat_created_day INTEGER DEFAULT 1,
+                    wechat_created_month INTEGER DEFAULT 1,
+                    wechat_created_year INTEGER DEFAULT 2024,
+                    wechat_scan_create INTEGER DEFAULT 0,
+                    wechat_scan_rescue INTEGER DEFAULT 0,
+                    wechat_status TEXT DEFAULT 'available',
+                    muted_until TEXT,
+                    status TEXT DEFAULT 'active',
+                    die_date TEXT,
+                    wechat_scan_count INTEGER DEFAULT 0,
+                    wechat_last_scan_date TEXT,
+                    rescue_count INTEGER DEFAULT 0,
+                    rescue_success_count INTEGER DEFAULT 0,
+                    
+                    -- Telegram specific fields
+                    email_reset_date TEXT,
+                    notice TEXT,
+                    
+                    FOREIGN KEY (card_id) REFERENCES mxh_accounts (id) ON DELETE CASCADE
+                )"""
+            )
+            
+            # Migrate existing data from old mxh_accounts to new structure
+            cursor.execute("SELECT * FROM mxh_accounts")
+            old_accounts = cursor.fetchall()
+            
+            for account in old_accounts:
+                # Create primary sub-account with all the old data
+                conn.execute(
+                    """INSERT INTO mxh_sub_accounts (
+                        card_id, is_primary, account_name, username, phone, url, 
+                        login_username, login_password, created_at, updated_at,
+                        wechat_created_day, wechat_created_month, wechat_created_year,
+                        wechat_scan_create, wechat_scan_rescue, wechat_status,
+                        muted_until, status, die_date, wechat_scan_count,
+                        wechat_last_scan_date, rescue_count, rescue_success_count,
+                        email_reset_date, notice
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        account['id'], 1, 'Tài khoản chính', account.get('username'), 
+                        account.get('phone'), account.get('url'), account.get('login_username'),
+                        account.get('login_password'), account.get('created_at'), account.get('updated_at'),
+                        account.get('wechat_created_day', 1), account.get('wechat_created_month', 1),
+                        account.get('wechat_created_year', 2024), account.get('wechat_scan_create', 0),
+                        account.get('wechat_scan_rescue', 0), account.get('wechat_status', 'available'),
+                        account.get('muted_until'), account.get('status', 'active'), account.get('die_date'),
+                        account.get('wechat_scan_count', 0), account.get('wechat_last_scan_date'),
+                        account.get('rescue_count', 0), account.get('rescue_success_count', 0),
+                        account.get('email_reset_date'), account.get('notice')
+                    )
+                )
+            
+            # Now we need to recreate the mxh_accounts table with the new simplified structure
+            # First, backup the old table
+            conn.execute("ALTER TABLE mxh_accounts RENAME TO mxh_accounts_old")
+            
+            # Create new simplified mxh_accounts table
+            conn.execute(
+                """CREATE TABLE mxh_accounts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    card_name TEXT NOT NULL,
+                    group_id INTEGER NOT NULL,
+                    platform TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT,
+                    
+                    FOREIGN KEY (group_id) REFERENCES mxh_groups (id)
+                )"""
+            )
+            
+            # Copy only the essential fields from old table to new table
+            conn.execute(
+                """INSERT INTO mxh_accounts (id, card_name, group_id, platform, created_at, updated_at)
+                   SELECT id, card_name, group_id, platform, created_at, updated_at 
+                   FROM mxh_accounts_old"""
+            )
+            
+            # Drop the old table
+            conn.execute("DROP TABLE mxh_accounts_old")
+            
+            print("✅ Successfully migrated to new schema")
+        else:
+            print("✅ Database already uses new schema")
+            
     except Exception as e:
-        print(f"Migration note: {e}")
+        print(f"Migration error: {e}")
 
     conn.commit()
     conn.close()

@@ -107,66 +107,81 @@ def delete_mxh_group(group_id):
 # ===== MXH ACCOUNT API ROUTES =====
 @mxh_bp.route("/api/accounts", methods=["GET", "POST"])
 def mxh_accounts():
-    """Get all accounts or create a new account."""
+    """Get all cards with their sub-accounts or create a new card."""
     conn = get_db_connection()
     try:
         if request.method == "GET":
-            accounts = conn.execute(
+            # Get all cards with their group information
+            cards = conn.execute(
                 """
-                SELECT a.*, g.name as group_name, g.color as group_color, g.icon as group_icon 
-                FROM mxh_accounts a 
-                LEFT JOIN mxh_groups g ON a.group_id = g.id 
+                SELECT c.*, g.name as group_name, g.color as group_color, g.icon as group_icon 
+                FROM mxh_accounts c 
+                LEFT JOIN mxh_groups g ON c.group_id = g.id 
+                ORDER BY c.created_at DESC
             """
             ).fetchall()
 
-            # Parse notice JSON field and ensure it has default structure
             result = []
-            for account in accounts:
-                acc_dict = dict(account)
-                # Parse notice field if exists
-                if acc_dict.get("notice"):
-                    try:
-                        parsed = json.loads(acc_dict["notice"])
-
-                        # Normalize start_at to JavaScript-compatible ISO format (3 digits milliseconds + Z)
-                        sa = parsed.get("start_at")
-                        if sa:
-                            try:
-                                # Accept old format (6 digits microseconds, no Z) and convert to new format
-                                dt = datetime.fromisoformat(sa.replace("Z", "+00:00"))
-                                sa_norm = (
-                                    dt.astimezone(timezone.utc)
-                                    .isoformat(timespec="milliseconds")
-                                    .replace("+00:00", "Z")
-                                )
-                                parsed["start_at"] = sa_norm
-                            except Exception:
-                                parsed["start_at"] = None
-
-                        acc_dict["notice"] = parsed
-                        print(
-                            f"✅ Parsed notice for account {acc_dict.get('id')}: {acc_dict['notice']}"
-                        )
-                    except Exception as e:
-                        print(
-                            f"❌ Error parsing notice for account {acc_dict.get('id')}: {e}"
-                        )
-                        acc_dict["notice"] = {
+            for card in cards:
+                card_dict = dict(card)
+                
+                # Get all sub-accounts for this card
+                sub_accounts = conn.execute(
+                    """
+                    SELECT * FROM mxh_sub_accounts 
+                    WHERE card_id = ? 
+                    ORDER BY is_primary DESC, created_at ASC
+                    """,
+                    (card['id'],)
+                ).fetchall()
+                
+                # Parse notice JSON field for each sub-account
+                parsed_sub_accounts = []
+                for sub_account in sub_accounts:
+                    sub_dict = dict(sub_account)
+                    
+                    # Parse notice field if exists
+                    if sub_dict.get("notice"):
+                        try:
+                            parsed = json.loads(sub_dict["notice"])
+                            
+                            # Normalize start_at to JavaScript-compatible ISO format
+                            sa = parsed.get("start_at")
+                            if sa:
+                                try:
+                                    dt = datetime.fromisoformat(sa.replace("Z", "+00:00"))
+                                    sa_norm = (
+                                        dt.astimezone(timezone.utc)
+                                        .isoformat(timespec="milliseconds")
+                                        .replace("+00:00", "Z")
+                                    )
+                                    parsed["start_at"] = sa_norm
+                                except Exception:
+                                    parsed["start_at"] = None
+                            
+                            sub_dict["notice"] = parsed
+                        except Exception as e:
+                            print(f"❌ Error parsing notice for sub-account {sub_dict.get('id')}: {e}")
+                            sub_dict["notice"] = {
+                                "enabled": False,
+                                "title": "",
+                                "days": 0,
+                                "note": "",
+                                "start_at": None,
+                            }
+                    else:
+                        sub_dict["notice"] = {
                             "enabled": False,
                             "title": "",
                             "days": 0,
                             "note": "",
                             "start_at": None,
                         }
-                else:
-                    acc_dict["notice"] = {
-                        "enabled": False,
-                        "title": "",
-                        "days": 0,
-                        "note": "",
-                        "start_at": None,
-                    }
-                result.append(acc_dict)
+                    
+                    parsed_sub_accounts.append(sub_dict)
+                
+                card_dict["sub_accounts"] = parsed_sub_accounts
+                result.append(card_dict)
 
             return jsonify(result)
 
@@ -200,32 +215,29 @@ def mxh_accounts():
                     400,
                 )
 
+            # Create the card first
+            cursor = conn.execute(
+                """INSERT INTO mxh_accounts (card_name, group_id, platform, created_at) 
+                   VALUES (?, ?, ?, ?)""",
+                (card_name, group_id, platform, datetime.now().isoformat())
+            )
+            card_id = cursor.lastrowid
+            
+            # Create the primary sub-account
             conn.execute(
-                """INSERT INTO mxh_accounts 
-                   (card_name, group_id, platform, username, phone, url, login_username, login_password, created_at, 
+                """INSERT INTO mxh_sub_accounts 
+                   (card_id, is_primary, account_name, username, phone, url, login_username, login_password, created_at,
                     wechat_created_day, wechat_created_month, wechat_created_year,
                     wechat_scan_create, wechat_scan_rescue, wechat_status) 
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    card_name,
-                    group_id,
-                    platform,
-                    username,
-                    phone,
-                    url,
-                    login_username,
-                    login_password,
-                    datetime.now().isoformat(),
-                    wechat_created_day,
-                    wechat_created_month,
-                    wechat_created_year,
-                    wechat_scan_create,
-                    wechat_scan_rescue,
-                    wechat_status,
-                ),
+                    card_id, 1, 'Tài khoản chính', username, phone, url, login_username, login_password, 
+                    datetime.now().isoformat(), wechat_created_day, wechat_created_month, wechat_created_year,
+                    wechat_scan_create, wechat_scan_rescue, wechat_status
+                )
             )
             conn.commit()
-            return jsonify({"message": "Account created successfully"}), 201
+            return jsonify({"message": "Card and primary account created successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -233,74 +245,80 @@ def mxh_accounts():
         conn.close()
 
 
-@mxh_bp.route("/api/accounts/<int:account_id>", methods=["PUT", "DELETE"])
-def update_delete_mxh_account(account_id):
-    """Update or delete an account."""
+@mxh_bp.route("/api/accounts/<int:card_id>", methods=["PUT", "DELETE"])
+def update_delete_mxh_card(card_id):
+    """Update card information or delete a card with all its sub-accounts."""
     print(f"\n{'='*60}", flush=True)
     print(
-        f"🔔 ENDPOINT CALLED: {request.method} /api/accounts/{account_id}", flush=True
+        f"🔔 ENDPOINT CALLED: {request.method} /api/accounts/{card_id}", flush=True
     )
     conn = get_db_connection()
     try:
         if request.method == "PUT":
             print(f"📝 Entering PUT block...", flush=True)
-            print(f"   Content-Type: {request.content_type}", flush=True)
-            print(f"   Content-Type: {request.content_type}")
-            print(f"   RAW request.data: {request.data}")
-
             data = request.get_json()
             print(f"   Parsed JSON data: {data}")
-            print(f"   Data type: {type(data)}")
 
             if data is None:
                 print("   ❌ ERROR: request.get_json() returned None!")
                 return jsonify({"error": "Invalid JSON or empty body"}), 400
 
-            fields_to_update = {
+            # Separate card fields from sub-account fields
+            card_fields = {
                 "card_name": data.get("card_name"),
-                "username": data.get("username"),
-                "phone": data.get("phone"),
-                "url": data.get("url"),
-                "login_username": data.get("login_username"),
-                "login_password": data.get("login_password"),
-                "wechat_created_day": data.get("wechat_created_day"),
-                "wechat_created_month": data.get("wechat_created_month"),
-                "wechat_created_year": data.get("wechat_created_year"),
-                "wechat_status": data.get("wechat_status"),
-                "status": data.get("status"),
+                "platform": data.get("platform")
             }
+            
+            # Filter out None values for card fields
+            card_fields = {k: v for k, v in card_fields.items() if v is not None}
+            
+            # Update card information if there are card fields to update
+            if card_fields:
+                card_fields["updated_at"] = datetime.now().isoformat()
+                set_clause = ", ".join([f"{key} = ?" for key in card_fields.keys()])
+                params = list(card_fields.values()) + [card_id]
+                sql = f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?"
+                print(f"   Card SQL: {sql}")
+                conn.execute(sql, params)
 
-            # Handle email_reset_date separately
-            if "email_reset_date" in data:
-                fields_to_update["email_reset_date"] = data.get("email_reset_date")
+            # Handle sub-account updates if specified
+            sub_account_id = data.get("sub_account_id")
+            if sub_account_id:
+                sub_account_fields = {
+                    "username": data.get("username"),
+                    "phone": data.get("phone"),
+                    "url": data.get("url"),
+                    "login_username": data.get("login_username"),
+                    "login_password": data.get("login_password"),
+                    "wechat_created_day": data.get("wechat_created_day"),
+                    "wechat_created_month": data.get("wechat_created_month"),
+                    "wechat_created_year": data.get("wechat_created_year"),
+                    "wechat_status": data.get("wechat_status"),
+                    "status": data.get("status"),
+                    "email_reset_date": data.get("email_reset_date"),
+                    "notice": data.get("notice")
+                }
+                
+                # Filter out None values
+                sub_account_fields = {k: v for k, v in sub_account_fields.items() if v is not None}
+                
+                if sub_account_fields:
+                    sub_account_fields["updated_at"] = datetime.now().isoformat()
+                    set_clause = ", ".join([f"{key} = ?" for key in sub_account_fields.keys()])
+                    params = list(sub_account_fields.values()) + [sub_account_id]
+                    sql = f"UPDATE mxh_sub_accounts SET {set_clause} WHERE id = ?"
+                    print(f"   Sub-account SQL: {sql}")
+                    conn.execute(sql, params)
 
-            update_cols = fields_to_update
-
-            # Filter out any keys with None values to avoid overwriting with null
-            update_cols = {k: v for k, v in update_cols.items() if v is not None}
-
-            print(f"   Received data: {data}")
-            print(f"   Fields to update: {update_cols}")
-
-            if not update_cols:
-                return jsonify({"message": "No fields to update."})
-
-            set_clause = ", ".join([f"{key} = ?" for key in update_cols.keys()])
-            params = list(update_cols.values()) + [account_id]
-
-            sql = f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?"
-            print(f"   SQL: {sql}")
-            print(f"   Params: {params}")
-
-            conn.execute(sql, params)
             conn.commit()
             print(f"   ✅ Updated successfully!")
-            return jsonify({"message": "Account updated successfully"})
+            return jsonify({"message": "Card updated successfully"})
 
         elif request.method == "DELETE":
-            conn.execute("DELETE FROM mxh_accounts WHERE id = ?", (account_id,))
+            # Delete card (this will cascade delete all sub-accounts due to FOREIGN KEY constraint)
+            conn.execute("DELETE FROM mxh_accounts WHERE id = ?", (card_id,))
             conn.commit()
-            return jsonify({"message": "Account deleted successfully"})
+            return jsonify({"message": "Card and all sub-accounts deleted successfully"})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -309,9 +327,9 @@ def update_delete_mxh_account(account_id):
 
 
 # ===== QUICK UPDATE API (FOR INLINE EDITING) =====
-@mxh_bp.route("/api/accounts/<int:account_id>/quick-update", methods=["POST"])
-def quick_update_account(account_id):
-    """Quick update for inline editing (username, phone, status)."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/quick-update", methods=["POST"])
+def quick_update_sub_account(sub_account_id):
+    """Quick update for inline editing (username, phone, status) of a sub-account."""
     conn = get_db_connection()
     try:
         data = request.get_json()
@@ -329,7 +347,8 @@ def quick_update_account(account_id):
             return jsonify({"error": "Invalid field"}), 400
 
         conn.execute(
-            f"UPDATE mxh_accounts SET {column} = ? WHERE id = ?", (value, account_id)
+            f"UPDATE mxh_sub_accounts SET {column} = ?, updated_at = ? WHERE id = ?", 
+            (value, datetime.now().isoformat(), sub_account_id)
         )
         conn.commit()
 
@@ -343,9 +362,9 @@ def quick_update_account(account_id):
 
 
 # ===== NOTICE API ROUTES =====
-@mxh_bp.route("/api/accounts/<int:account_id>/notice", methods=["PUT"])
-def api_set_notice(account_id):
-    """Set or update notice for an account."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/notice", methods=["PUT"])
+def api_set_notice(sub_account_id):
+    """Set or update notice for a sub-account."""
     conn = get_db_connection()
     try:
         data = request.get_json(force=True) or {}
@@ -371,8 +390,8 @@ def api_set_notice(account_id):
         }
 
         conn.execute(
-            "UPDATE mxh_accounts SET notice = ? WHERE id = ?",
-            (json.dumps(notice_json), account_id),
+            "UPDATE mxh_sub_accounts SET notice = ?, updated_at = ? WHERE id = ?",
+            (json.dumps(notice_json), datetime.now().isoformat(), sub_account_id),
         )
         conn.commit()
 
@@ -383,9 +402,9 @@ def api_set_notice(account_id):
         conn.close()
 
 
-@mxh_bp.route("/api/accounts/<int:account_id>/notice", methods=["DELETE"])
-def api_clear_notice(account_id):
-    """Clear notice for an account."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/notice", methods=["DELETE"])
+def api_clear_notice(sub_account_id):
+    """Clear notice for a sub-account."""
     conn = get_db_connection()
     try:
         notice_json = {
@@ -397,8 +416,8 @@ def api_clear_notice(account_id):
         }
 
         conn.execute(
-            "UPDATE mxh_accounts SET notice = ? WHERE id = ?",
-            (json.dumps(notice_json), account_id),
+            "UPDATE mxh_sub_accounts SET notice = ?, updated_at = ? WHERE id = ?",
+            (json.dumps(notice_json), datetime.now().isoformat(), sub_account_id),
         )
         conn.commit()
 
@@ -410,9 +429,9 @@ def api_clear_notice(account_id):
 
 
 # ===== SCAN API ROUTES =====
-@mxh_bp.route("/api/accounts/<int:account_id>/scan", methods=["POST"])
-def mark_account_scanned(account_id):
-    """Mark account as scanned or reset scan count."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/scan", methods=["POST"])
+def mark_account_scanned(sub_account_id):
+    """Mark sub-account as scanned or reset scan count."""
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
@@ -421,12 +440,13 @@ def mark_account_scanned(account_id):
             # Reset scan count and last scan date
             conn.execute(
                 """
-                UPDATE mxh_accounts SET 
+                UPDATE mxh_sub_accounts SET 
                 wechat_scan_count = 0,
-                wechat_last_scan_date = NULL
+                wechat_last_scan_date = NULL,
+                updated_at = ?
                 WHERE id = ?
             """,
-                (account_id,),
+                (datetime.now().isoformat(), sub_account_id),
             )
             conn.commit()
             return jsonify({"message": "Scan count reset successfully"})
@@ -435,12 +455,13 @@ def mark_account_scanned(account_id):
             current_date = datetime.now().isoformat()
             conn.execute(
                 """
-                UPDATE mxh_accounts SET 
+                UPDATE mxh_sub_accounts SET 
                 wechat_scan_count = wechat_scan_count + 1,
-                wechat_last_scan_date = ?
+                wechat_last_scan_date = ?,
+                updated_at = ?
                 WHERE id = ?
             """,
-                (current_date, account_id),
+                (current_date, datetime.now().isoformat(), sub_account_id),
             )
             conn.commit()
             return jsonify({"message": "Account marked as scanned successfully"})
@@ -451,17 +472,17 @@ def mark_account_scanned(account_id):
 
 
 # ===== STATUS TOGGLE API ROUTES =====
-@mxh_bp.route("/api/accounts/<int:account_id>/toggle-status", methods=["POST"])
-def toggle_account_status(account_id):
-    """Toggle account status between active and disabled."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/toggle-status", methods=["POST"])
+def toggle_account_status(sub_account_id):
+    """Toggle sub-account status between active and disabled."""
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
 
-        # Toggle primary status
+        # Toggle sub-account status
         conn.execute(
             """
-            UPDATE mxh_accounts 
+            UPDATE mxh_sub_accounts 
             SET status = CASE 
                 WHEN status = 'disabled' THEN 'active'
                 ELSE 'disabled'
@@ -469,10 +490,11 @@ def toggle_account_status(account_id):
             die_date = CASE 
                 WHEN status = 'disabled' THEN ?
                 ELSE NULL
-            END
+            END,
+            updated_at = ?
             WHERE id = ?
         """,
-            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), account_id),
+            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), datetime.now().isoformat(), sub_account_id),
         )
 
         conn.commit()
@@ -484,9 +506,9 @@ def toggle_account_status(account_id):
 
 
 # ===== RESCUE API ROUTES =====
-@mxh_bp.route("/api/accounts/<int:account_id>/rescue", methods=["POST"])
-def rescue_account(account_id):
-    """Rescue a died account."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/rescue", methods=["POST"])
+def rescue_account(sub_account_id):
+    """Rescue a died sub-account."""
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
@@ -496,24 +518,26 @@ def rescue_account(account_id):
             # Cứu thành công - chuyển về available và tăng success count
             conn.execute(
                 """
-                UPDATE mxh_accounts 
+                UPDATE mxh_sub_accounts 
                 SET status = 'active',
                     die_date = NULL,
-                    rescue_success_count = rescue_success_count + 1
+                    rescue_success_count = rescue_success_count + 1,
+                    updated_at = ?
                 WHERE id = ?
             """,
-                (account_id,),
+                (datetime.now().isoformat(), sub_account_id),
             )
             message = "Account rescued successfully!"
         elif rescue_result == "failed":
             # Cứu thất bại - tăng rescue count
             conn.execute(
                 """
-                UPDATE mxh_accounts 
-                SET rescue_count = rescue_count + 1
+                UPDATE mxh_sub_accounts 
+                SET rescue_count = rescue_count + 1,
+                    updated_at = ?
                 WHERE id = ?
             """,
-                (account_id,),
+                (datetime.now().isoformat(), sub_account_id),
             )
             message = "Rescue attempt failed. Rescue count increased."
         else:
@@ -527,9 +551,9 @@ def rescue_account(account_id):
         conn.close()
 
 
-@mxh_bp.route("/api/accounts/<int:account_id>/mark-die", methods=["POST"])
-def mark_account_die(account_id):
-    """Mark account as died."""
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/mark-die", methods=["POST"])
+def mark_account_die(sub_account_id):
+    """Mark sub-account as died."""
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
@@ -537,17 +561,138 @@ def mark_account_die(account_id):
 
         conn.execute(
             """
-            UPDATE mxh_accounts 
+            UPDATE mxh_sub_accounts 
             SET status = 'disabled',
                 die_date = ?,
-                rescue_count = 0
+                rescue_count = 0,
+                updated_at = ?
             WHERE id = ?
         """,
-            (die_date, account_id),
+            (die_date, datetime.now().isoformat(), sub_account_id),
         )
 
         conn.commit()
         return jsonify({"message": "Account marked as died", "die_date": die_date})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ===== SUB-ACCOUNT MANAGEMENT API ROUTES =====
+@mxh_bp.route("/api/cards/<int:card_id>/sub_accounts", methods=["POST"])
+def create_sub_account(card_id):
+    """Create a new sub-account for a card."""
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        username = data.get("username")
+        if not username:
+            return jsonify({"error": "Username is required"}), 400
+        
+        # Check if card exists
+        card = conn.execute("SELECT * FROM mxh_accounts WHERE id = ?", (card_id,)).fetchone()
+        if not card:
+            return jsonify({"error": "Card not found"}), 404
+        
+        # Create sub-account
+        cursor = conn.execute(
+            """INSERT INTO mxh_sub_accounts 
+               (card_id, is_primary, account_name, username, phone, url, login_username, login_password, created_at,
+                wechat_created_day, wechat_created_month, wechat_created_year,
+                wechat_scan_create, wechat_scan_rescue, wechat_status, status) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                card_id, 0, data.get("account_name", "Tài khoản phụ"), username,
+                data.get("phone", ""), data.get("url", ""), data.get("login_username", ""),
+                data.get("login_password", ""), datetime.now().isoformat(),
+                data.get("wechat_created_day", 1), data.get("wechat_created_month", 1),
+                data.get("wechat_created_year", 2024), data.get("wechat_scan_create", 0),
+                data.get("wechat_scan_rescue", 0), data.get("wechat_status", "available"),
+                data.get("status", "active")
+            )
+        )
+        
+        conn.commit()
+        sub_account_id = cursor.lastrowid
+        
+        return jsonify({
+            "message": "Sub-account created successfully",
+            "sub_account_id": sub_account_id
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>", methods=["PUT"])
+def update_sub_account(sub_account_id):
+    """Update a sub-account."""
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        
+        # Get allowed fields for update
+        allowed_fields = [
+            "account_name", "username", "phone", "url", "login_username", "login_password",
+            "wechat_created_day", "wechat_created_month", "wechat_created_year",
+            "wechat_scan_create", "wechat_scan_rescue", "wechat_status", "status",
+            "muted_until", "die_date", "wechat_scan_count", "wechat_last_scan_date",
+            "rescue_count", "rescue_success_count", "email_reset_date", "notice"
+        ]
+        
+        fields_to_update = {k: v for k, v in data.items() if k in allowed_fields and v is not None}
+        
+        if not fields_to_update:
+            return jsonify({"message": "No fields to update"})
+        
+        # Add updated_at timestamp
+        fields_to_update["updated_at"] = datetime.now().isoformat()
+        
+        set_clause = ", ".join([f"{key} = ?" for key in fields_to_update.keys()])
+        params = list(fields_to_update.values()) + [sub_account_id]
+        
+        conn.execute(
+            f"UPDATE mxh_sub_accounts SET {set_clause} WHERE id = ?",
+            params
+        )
+        conn.commit()
+        
+        return jsonify({"message": "Sub-account updated successfully"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>", methods=["DELETE"])
+def delete_sub_account(sub_account_id):
+    """Delete a sub-account."""
+    conn = get_db_connection()
+    try:
+        # Check if sub-account exists
+        sub_account = conn.execute(
+            "SELECT * FROM mxh_sub_accounts WHERE id = ?", (sub_account_id,)
+        ).fetchone()
+        
+        if not sub_account:
+            return jsonify({"error": "Sub-account not found"}), 404
+        
+        # Don't allow deletion of primary account
+        if sub_account['is_primary']:
+            return jsonify({"error": "Cannot delete primary account"}), 400
+        
+        # Delete the sub-account
+        conn.execute("DELETE FROM mxh_sub_accounts WHERE id = ?", (sub_account_id,))
+        conn.commit()
+        
+        return jsonify({"message": "Sub-account deleted successfully"})
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
