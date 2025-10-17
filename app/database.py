@@ -108,25 +108,8 @@ def _migrate_mxh_schema(conn):
         cursor.execute("ALTER TABLE mxh_accounts RENAME TO mxh_accounts_old")
         print("   - Step 1/5: Renamed old table to mxh_accounts_old.")
 
-        # 2. Create the new, correct tables from scratch
-        cursor.execute(
-            """CREATE TABLE mxh_accounts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, card_name TEXT NOT NULL, group_id INTEGER NOT NULL,
-                platform TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT,
-                FOREIGN KEY (group_id) REFERENCES mxh_groups (id) ON DELETE CASCADE
-            )"""
-        )
-        cursor.execute(
-            """CREATE TABLE mxh_sub_accounts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, card_id INTEGER NOT NULL, is_primary BOOLEAN DEFAULT 0,
-                account_name TEXT DEFAULT 'Tài khoản phụ', username TEXT, phone TEXT, url TEXT, login_username TEXT, login_password TEXT,
-                created_at TEXT NOT NULL, updated_at TEXT, wechat_created_day INTEGER, wechat_created_month INTEGER,
-                wechat_created_year INTEGER, wechat_status TEXT DEFAULT 'available', muted_until TEXT, status TEXT DEFAULT 'active', die_date TEXT,
-                wechat_scan_count INTEGER DEFAULT 0, wechat_last_scan_date TEXT, rescue_count INTEGER DEFAULT 0, rescue_success_count INTEGER DEFAULT 0,
-                email_reset_date TEXT, notice TEXT,
-                FOREIGN KEY (card_id) REFERENCES mxh_accounts (id) ON DELETE CASCADE
-            )"""
-        )
+        # Re-run the table creation logic from init_database to ensure clean tables
+        init_database()
         print("   - Step 2/5: Created new mxh_accounts and mxh_sub_accounts tables.")
 
         cursor.execute("SELECT * FROM mxh_accounts_old")
@@ -148,27 +131,25 @@ def _migrate_mxh_schema(conn):
                 (card_id, old_dict['username'], old_dict.get('phone'), old_dict.get('url'), old_dict.get('login_username'), old_dict.get('login_password'), old_dict['created_at'], old_dict.get('updated_at'), old_dict.get('wechat_created_day'), old_dict.get('wechat_created_month'), old_dict.get('wechat_created_year'), old_dict.get('wechat_status'), old_dict.get('muted_until'), old_dict.get('status'), old_dict.get('die_date'), old_dict.get('wechat_scan_count'), old_dict.get('wechat_last_scan_date'), old_dict.get('rescue_count'), old_dict.get('rescue_success_count'), old_dict.get('notice'))
             )
             
-            # Insert the SECONDARY sub-account ONLY if it has a username
-            if old_dict.get('secondary_username') and old_dict.get('secondary_username').strip() not in ('', '.'):
+            # Insert SECONDARY sub-account if it existed
+            if old_dict.get('secondary_username') and old_dict.get('secondary_username').strip() != '.':
                 cursor.execute(
-                    """INSERT INTO mxh_sub_accounts (card_id, is_primary, account_name, username, phone, url, created_at, updated_at, wechat_created_day, wechat_created_month, wechat_created_year, status, muted_until, die_date, wechat_scan_count, wechat_last_scan_date, rescue_count, rescue_success_count)
-                       VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (card_id, old_dict.get('secondary_card_name', 'Tài khoản phụ 2'), old_dict['secondary_username'], old_dict.get('secondary_phone'), old_dict.get('secondary_url'), old_dict['created_at'], old_dict.get('updated_at'), old_dict.get('secondary_wechat_created_day'), old_dict.get('secondary_wechat_created_month'), old_dict.get('secondary_wechat_created_year'), old_dict.get('secondary_status', 'active'), old_dict.get('secondary_muted_until'), old_dict.get('secondary_die_date'), old_dict.get('secondary_wechat_scan_count'), old_dict.get('secondary_wechat_last_scan_date'), old_dict.get('secondary_rescue_count'), old_dict.get('secondary_rescue_success_count'))
+                    """INSERT INTO mxh_sub_accounts (card_id, is_primary, account_name, username, phone, url, created_at, updated_at, wechat_created_day, wechat_created_month, wechat_created_year, wechat_status, muted_until, status, die_date, wechat_scan_count, wechat_last_scan_date, rescue_count, rescue_success_count)
+                       VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (card_id, old_dict.get('secondary_card_name', 'Tài khoản phụ'), old_dict['secondary_username'], old_dict.get('secondary_phone'), old_dict.get('secondary_url'), old_dict['created_at'], old_dict.get('updated_at'), old_dict.get('secondary_wechat_created_day'), old_dict.get('secondary_wechat_created_month'), old_dict.get('secondary_wechat_created_year'), old_dict.get('secondary_wechat_status'), old_dict.get('secondary_muted_until'), old_dict.get('secondary_status'), old_dict.get('secondary_die_date'), old_dict.get('secondary_wechat_scan_count'), old_dict.get('secondary_wechat_last_scan_date'), old_dict.get('secondary_rescue_count'), old_dict.get('secondary_rescue_success_count'))
                 )
 
-        print(f"   - Step 3/5: Migrated data for {len(old_accounts)} cards.")
+        print(f"   - Step 3/5: Migrated {len(old_accounts)} cards and their sub-accounts.")
 
         cursor.execute("DROP TABLE mxh_accounts_old")
         print("   - Step 4/5: Dropped old table.")
         
-        # 5. Commit all changes
         conn.commit()
         print("   - Step 5/5: Migration committed successfully!")
 
     except Exception as e:
         print(f"❌ MIGRATION FAILED: {e}. Rolling back changes.")
         conn.rollback()
-        # Attempt to restore the original table if migration fails midway
         try:
             cursor.execute("DROP TABLE IF EXISTS mxh_sub_accounts")
             cursor.execute("DROP TABLE IF EXISTS mxh_accounts")
