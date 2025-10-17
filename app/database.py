@@ -59,6 +59,7 @@ def init_database():
             login_username TEXT,
             login_password TEXT,
             created_at TEXT NOT NULL,
+            updated_at TEXT, -- Ensure this exists for delta updates
             
             -- WeChat Primary Account Fields
             wechat_created_day INTEGER DEFAULT 1,
@@ -75,24 +76,9 @@ def init_database():
             rescue_count INTEGER DEFAULT 0,
             rescue_success_count INTEGER DEFAULT 0,
             
-            -- WeChat Secondary Account Fields
-            secondary_card_name TEXT,
-            secondary_username TEXT,
-            secondary_phone TEXT,
-            secondary_url TEXT,
-            secondary_login_username TEXT,
-            secondary_login_password TEXT,
-            secondary_wechat_created_day INTEGER,
-            secondary_wechat_created_month INTEGER,
-            secondary_wechat_created_year INTEGER,
-            secondary_wechat_status TEXT,
-            secondary_muted_until TEXT,
-            secondary_status TEXT DEFAULT 'active',
-            secondary_die_date TEXT,
-            secondary_wechat_scan_count INTEGER DEFAULT 0,
-            secondary_wechat_last_scan_date TEXT,
-            secondary_rescue_count INTEGER DEFAULT 0,
-            secondary_rescue_success_count INTEGER DEFAULT 0,
+            -- Telegram specific fields
+            email_reset_date TEXT,
+            notice TEXT,
             
             FOREIGN KEY (group_id) REFERENCES mxh_groups (id)
         )"""

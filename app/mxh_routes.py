@@ -256,8 +256,6 @@ def update_delete_mxh_account(account_id):
                 print("   ❌ ERROR: request.get_json() returned None!")
                 return jsonify({"error": "Invalid JSON or empty body"}), 400
 
-            is_secondary = data.get("is_secondary", False)
-
             fields_to_update = {
                 "card_name": data.get("card_name"),
                 "username": data.get("username"),
@@ -272,17 +270,11 @@ def update_delete_mxh_account(account_id):
                 "status": data.get("status"),
             }
 
-            # Handle email_reset_date separately (only for primary accounts, not secondary)
-            if not is_secondary and "email_reset_date" in data:
+            # Handle email_reset_date separately
+            if "email_reset_date" in data:
                 fields_to_update["email_reset_date"] = data.get("email_reset_date")
 
-            # Use appropriate prefixes for secondary account
-            if is_secondary:
-                update_cols = {
-                    f"secondary_{key}": value for key, value in fields_to_update.items()
-                }
-            else:
-                update_cols = fields_to_update
+            update_cols = fields_to_update
 
             # Filter out any keys with None values to avoid overwriting with null
             update_cols = {k: v for k, v in update_cols.items() if v is not None}
@@ -323,28 +315,16 @@ def quick_update_account(account_id):
     conn = get_db_connection()
     try:
         data = request.get_json()
-        is_secondary = data.get("is_secondary", False)
         field = data.get("field")  # 'username', 'phone', or 'status'
         value = data.get("value")
 
         if not field:
             return jsonify({"error": "Field is required"}), 400
 
-        # Determine column name based on secondary flag
-        if is_secondary:
-            column = f"secondary_{field}"
-        else:
-            column = field
+        column = field
 
         # Validate field name to prevent SQL injection
-        allowed_fields = [
-            "username",
-            "phone",
-            "status",
-            "secondary_username",
-            "secondary_phone",
-            "secondary_status",
-        ]
+        allowed_fields = ["username", "phone", "status"]
         if column not in allowed_fields:
             return jsonify({"error": "Invalid field"}), 400
 
@@ -436,55 +416,32 @@ def mark_account_scanned(account_id):
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
-        is_secondary = data.get("is_secondary", False)
 
         if data.get("reset"):
             # Reset scan count and last scan date
-            if is_secondary:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts SET 
-                    secondary_wechat_scan_count = 0,
-                    secondary_wechat_last_scan_date = NULL
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
-            else:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts SET 
-                    wechat_scan_count = 0,
-                    wechat_last_scan_date = NULL
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
+            conn.execute(
+                """
+                UPDATE mxh_accounts SET 
+                wechat_scan_count = 0,
+                wechat_last_scan_date = NULL
+                WHERE id = ?
+            """,
+                (account_id,),
+            )
             conn.commit()
             return jsonify({"message": "Scan count reset successfully"})
         else:
             # Update scan count and last scan date
             current_date = datetime.now().isoformat()
-            if is_secondary:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts SET 
-                    secondary_wechat_scan_count = secondary_wechat_scan_count + 1,
-                    secondary_wechat_last_scan_date = ?
-                    WHERE id = ?
-                """,
-                    (current_date, account_id),
-                )
-            else:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts SET 
-                    wechat_scan_count = wechat_scan_count + 1,
-                    wechat_last_scan_date = ?
-                    WHERE id = ?
-                """,
-                    (current_date, account_id),
-                )
+            conn.execute(
+                """
+                UPDATE mxh_accounts SET 
+                wechat_scan_count = wechat_scan_count + 1,
+                wechat_last_scan_date = ?
+                WHERE id = ?
+            """,
+                (current_date, account_id),
+            )
             conn.commit()
             return jsonify({"message": "Account marked as scanned successfully"})
     except Exception as e:
@@ -500,42 +457,23 @@ def toggle_account_status(account_id):
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
-        is_secondary = data.get("is_secondary", False)
 
-        if is_secondary:
-            # Toggle secondary status
-            conn.execute(
-                """
-                UPDATE mxh_accounts 
-                SET secondary_status = CASE 
-                    WHEN secondary_status = 'active' THEN 'disabled'
-                    ELSE 'active'
-                END,
-                secondary_die_date = CASE 
-                    WHEN secondary_status = 'active' THEN ?
-                    ELSE NULL
-                END
-                WHERE id = ?
-            """,
-                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), account_id),
-            )
-        else:
-            # Toggle primary status
-            conn.execute(
-                """
-                UPDATE mxh_accounts 
-                SET status = CASE 
-                    WHEN status = 'disabled' THEN 'active'
-                    ELSE 'disabled'
-                END,
-                die_date = CASE 
-                    WHEN status = 'disabled' THEN ?
-                    ELSE NULL
-                END
-                WHERE id = ?
-            """,
-                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), account_id),
-            )
+        # Toggle primary status
+        conn.execute(
+            """
+            UPDATE mxh_accounts 
+            SET status = CASE 
+                WHEN status = 'disabled' THEN 'active'
+                ELSE 'disabled'
+            END,
+            die_date = CASE 
+                WHEN status = 'disabled' THEN ?
+                ELSE NULL
+            END
+            WHERE id = ?
+        """,
+            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), account_id),
+        )
 
         conn.commit()
         return jsonify({"message": "Account status toggled successfully"})
@@ -552,54 +490,31 @@ def rescue_account(account_id):
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
-        is_secondary = data.get("is_secondary", False)
         rescue_result = data.get("result")  # 'success' or 'failed'
 
         if rescue_result == "success":
             # Cứu thành công - chuyển về available và tăng success count
-            if is_secondary:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts 
-                    SET secondary_status = 'active',
-                        secondary_die_date = NULL,
-                        secondary_rescue_success_count = secondary_rescue_success_count + 1
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
-            else:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts 
-                    SET status = 'active',
-                        die_date = NULL,
-                        rescue_success_count = rescue_success_count + 1
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
+            conn.execute(
+                """
+                UPDATE mxh_accounts 
+                SET status = 'active',
+                    die_date = NULL,
+                    rescue_success_count = rescue_success_count + 1
+                WHERE id = ?
+            """,
+                (account_id,),
+            )
             message = "Account rescued successfully!"
         elif rescue_result == "failed":
             # Cứu thất bại - tăng rescue count
-            if is_secondary:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts 
-                    SET secondary_rescue_count = secondary_rescue_count + 1
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
-            else:
-                conn.execute(
-                    """
-                    UPDATE mxh_accounts 
-                    SET rescue_count = rescue_count + 1
-                    WHERE id = ?
-                """,
-                    (account_id,),
-                )
+            conn.execute(
+                """
+                UPDATE mxh_accounts 
+                SET rescue_count = rescue_count + 1
+                WHERE id = ?
+            """,
+                (account_id,),
+            )
             message = "Rescue attempt failed. Rescue count increased."
         else:
             return jsonify({"error": "Invalid rescue result"}), 400
@@ -618,31 +533,18 @@ def mark_account_die(account_id):
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
-        is_secondary = data.get("is_secondary", False)
         die_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        if is_secondary:
-            conn.execute(
-                """
-                UPDATE mxh_accounts 
-                SET secondary_status = 'disabled',
-                    secondary_die_date = ?,
-                    secondary_rescue_count = 0
-                WHERE id = ?
-            """,
-                (die_date, account_id),
-            )
-        else:
-            conn.execute(
-                """
-                UPDATE mxh_accounts 
-                SET status = 'disabled',
-                    die_date = ?,
-                    rescue_count = 0
-                WHERE id = ?
-            """,
-                (die_date, account_id),
-            )
+        conn.execute(
+            """
+            UPDATE mxh_accounts 
+            SET status = 'disabled',
+                die_date = ?,
+                rescue_count = 0
+            WHERE id = ?
+        """,
+            (die_date, account_id),
+        )
 
         conn.commit()
         return jsonify({"message": "Account marked as died", "die_date": die_date})

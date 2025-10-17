@@ -957,43 +957,7 @@
                     const isDisabled = account.status === 'disabled';
                     let isAnniversary = false;
 
-                    // Secondary account variables
-                    let isSecondaryAnniversary = false;
-                    let secondaryAccountAgeDisplay = '';
-                    let secondaryAgeColor = '#fff';
-                    let secondaryScanCountdown = '';
-                    let secondaryBorderStyle = '';
-                    
-                    // Calculate secondary account age and HK status (needed for template)
-                    let secondaryAgeDays = 0;
-                    let secondaryIsHK = false;
-                    if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
-                        const secondaryY = +account.secondary_wechat_created_year || 0;
-                        const secondaryM = (+account.secondary_wechat_created_month || 1) - 1;
-                        const secondaryD = +account.secondary_wechat_created_day || 1;
-                        secondaryAgeDays = isFinite(new Date(secondaryY, secondaryM, secondaryD)) ? Math.floor((Date.now() - new Date(secondaryY, secondaryM, secondaryD).getTime()) / 86400000) : 0;
-                        secondaryIsHK = /^\+?852/.test(account.secondary_phone || '');
-                    }
 
-                    // Calculate secondary border style - same logic as primary card
-                    const secondaryIsDie = ['disabled', 'die', 'banned', 'blocked']
-                        .includes(String(account.secondary_status || '').toLowerCase()) || !!account.secondary_die_date;
-                    
-                    const secondaryNoticeObj = ensureNoticeParsed(account.notice);
-                    const secondaryHasNotice = !!(secondaryNoticeObj && (secondaryNoticeObj.enabled === true || secondaryNoticeObj.enabled === 1 || Number(secondaryNoticeObj.days) > 0));
-                    
-                    // Apply same border logic as primary card
-                    if (secondaryIsDie) {
-                        secondaryBorderStyle = 'border-left: 4px solid #dc3545;'; // Red for die/disabled
-                    } else if (secondaryHasNotice) {
-                        secondaryBorderStyle = 'border-left: 4px solid #ff8c00;'; // Orange for notice
-                    } else if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
-                        if (secondaryAgeDays >= 365 && secondaryIsHK) {
-                            secondaryBorderStyle = 'border-left: 4px solid #07c160;'; // Green for HK number
-                        } else if (secondaryAgeDays >= 365 && !secondaryIsHK) {
-                            secondaryBorderStyle = 'border-left: 4px solid #ffffff;'; // White for non-HK number
-                        }
-                    }
 
                     // Calculate age for WeChat primary with color
                     let accountAgeDisplay = '';
@@ -1054,69 +1018,6 @@
                             }
                         }
 
-                        // Calculate secondary account age if exists
-                        if (account.secondary_wechat_created_year) {
-                            if (secondaryAgeDays >= 365) {
-                                const years = Math.floor(secondaryAgeDays / 365);
-                                const months = Math.floor((secondaryAgeDays % 365) / 30);
-                                secondaryAccountAgeDisplay = `${years}năm ${months}th`;
-                                secondaryAgeColor = '#07c160';
-                                isSecondaryAnniversary = true;
-                            } else if (secondaryAgeDays >= 30) {
-                                const months = Math.floor(secondaryAgeDays / 30);
-                                secondaryAccountAgeDisplay = `${months}th ${secondaryAgeDays % 30}d`;
-                            } else {
-                                secondaryAccountAgeDisplay = `${secondaryAgeDays}d`;
-                            }
-
-                            // Calculate secondary scan countdown with QR icon
-                            const secondaryCurrentScanCount = account.secondary_wechat_scan_count || 0;
-                            const secondaryMaxScans = 3;
-
-                            if (secondaryCurrentScanCount >= secondaryMaxScans) {
-                                // Đã hết lượt - QR đỏ
-                                secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545; font-size: 1.3em;"></i>${secondaryMaxScans}/${secondaryMaxScans}`;
-                            } else if (account.secondary_wechat_last_scan_date) {
-                                // Có lịch sử quét - kiểm tra thời gian
-                                const lastScanDate = new Date(account.secondary_wechat_last_scan_date);
-                                const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
-                                const remainingDays = 30 - daysSinceScan;
-
-                                if (remainingDays > 0) {
-                                    // Còn thời gian chờ - hiển thị countdown
-                                    const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
-                                    const remainingHours = (30 * 24) - hoursSinceScan;
-
-                                    if (remainingHours < 24) {
-                                        secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${secondaryCurrentScanCount}/${secondaryMaxScans} <small class="text-warning">(${remainingHours}h)</small>`;
-                                    } else {
-                                        secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${secondaryCurrentScanCount}/${secondaryMaxScans} <small class="text-warning">(${remainingDays}d)</small>`;
-                                    }
-                                } else {
-                                    // Đủ điều kiện quét tiếp - QR xanh
-                                    secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${secondaryCurrentScanCount}/${secondaryMaxScans}`;
-                                }
-                            } else {
-                                // Chưa quét lần nào
-                                if (secondaryAgeDays < 90) {
-                                    secondaryScanCountdown = `Còn ${90 - secondaryAgeDays} ngày`;
-                                } else {
-                                    // Đủ điều kiện quét lần đầu - QR xanh
-                                    secondaryScanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${secondaryCurrentScanCount}/${secondaryMaxScans}`;
-                                }
-                            }
-
-                            // Check if secondary account has Hong Kong number (+852)
-                            // Only blink if: 1 year old AND NOT Hong Kong number
-                            if (isSecondaryAnniversary) {
-                                // Only blink if NOT Hong Kong number
-                                if (!secondaryIsHK) {
-                                    secondaryBorderStyle = 'border-left: 4px solid #ffc107; animation: blink 1s infinite;';
-                                } else {
-                                    secondaryBorderStyle = 'border-left: 4px solid #07c160;'; // Green for HK number, no blink
-                                }
-                            }
-                        }
                     }
 
                     const contextMenuFunction = account.platform === 'wechat' ? 'showWeChatContextMenu' : 'showGenericContextMenu';
@@ -1209,137 +1110,62 @@
                         borderClass = 'mxh-border-white';
                     }
 
-                    const hasSecondaryAccount = account.secondary_username && account.secondary_username.trim() !== '';
 
                     html += `
-                    <div class="col" style="padding: 2px;">
-                        <div class="mxh-card-container ${extraClass}">
-                            <div class="mxh-card-inner">
-                                <div class="mxh-card-front" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
-                                    <div class="card tool-card mxh-card ${borderClass}">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                                <div class="d-flex align-items-center gap-1">
-                                                    <h6 class="card-title mb-0 card-number" onclick="console.log('🔄 DEBUG: Clicking CARD CHÍNH', ${account.id}, '${account.card_name}'); flipCard(this, event); event.stopPropagation();" style="font-size: 1.26rem; font-weight: 600; cursor: pointer;">${account.card_name}</h6>
-                                                    <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
-                                                    ${hasSecondaryAccount ? `<i class="bi bi-people-fill text-info" title="Có tài khoản phụ" style="font-size: 0.8rem;"></i>` : ''}
-                                                </div>
-                                                <div class="d-flex align-items-center gap-1">
-                                                    ${accountAgeDisplay ? `<small onclick="flipCard(this, event); event.stopPropagation();" style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500; cursor: pointer;">${accountAgeDisplay}</small>` : ''}
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="text-center mb-0">
-                                                <small 
-                                                    class="${statusClass} editable-field" 
-                                                    contenteditable="true" 
-                                                    data-account-id="${account.id}" 
-                                                    data-field="username" 
-                                                    data-is-secondary="false"
-                                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
-                                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                                    onmouseleave="this.style.backgroundColor='transparent'"
-                                                    onclick="event.stopPropagation()"
-                                                >${account.username || 'Click để nhập'}${statusIcon}</small>
-                                                <small 
-                                                    class="text-muted editable-field" 
-                                                    contenteditable="true" 
-                                                    data-account-id="${account.id}" 
-                                                    data-field="phone" 
-                                                    data-is-secondary="false"
-                                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                                    onmouseleave="this.style.backgroundColor='transparent'"
-                                                    onclick="event.stopPropagation()"
-                                                >📞 ${account.phone || 'Click để nhập'}</small>
-                                            </div>
-                                            
-                                            ${account.platform === 'wechat' ? `
-                                                <div class="mt-auto">
-                                                    ${isDisabled ?
-                                `<div class="d-flex align-items-center justify-content-between">
-                                                            <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((new Date() - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
-                                                            <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
-                                                        </div>` :
-                                `<div class="text-center mt-1">
-                                                            ${scanCountdown ? `<small style="font-size: 0.975rem;">${scanCountdown}</small>` : ''}
-                                                        </div>`
-                            }
-                                                </div>
-                                            ` : ''}
-                                            
-                                            ${noticeHtml}
-                                            ${tipHtml}
-                                        </div>
+                    <div class="col" style="padding: 2px;" data-account-id="${account.id}">
+                        <div class="card tool-card mxh-card ${borderClass} ${extraClass}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
+                                        <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
                                     </div>
                                 </div>
                                 
-                                <div class="mxh-card-back" oncontextmenu="console.log('🔄 DEBUG: Context menu CARD PHỤ', ${account.id}); showWeChatContextMenu(event, ${account.id}, true); return false;">
-                                    <div class="card tool-card mxh-card ${secondaryIsDie ? 'mxh-border-red' : secondaryHasNotice ? 'mxh-border-orange' : account.platform === 'wechat' && account.secondary_wechat_created_year ? (secondaryAgeDays >= 365 && secondaryIsHK ? 'mxh-border-green' : secondaryAgeDays >= 365 && !secondaryIsHK ? 'mxh-border-white' : '') : ''}" style="${secondaryBorderStyle}">
-                                        <div class="card-body">
-                                            ${hasSecondaryAccount ? `
-                                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                                    <div class="d-flex align-items-center gap-1">
-                                                        <h6 class="card-title mb-0" style="font-size: 1.26rem; font-weight: 600;">${account.secondary_card_name || account.card_name} <small style="font-size: 0.7rem;">Phụ</small></h6>
-                                                        <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
-                                                    </div>
-                                                    <div class="d-flex align-items-center gap-1">
-                                                        ${secondaryAccountAgeDisplay ? `<small onclick="flipCard(this, event); event.stopPropagation();" style="color: ${secondaryAgeColor}; font-size: 0.7rem; font-weight: 500; cursor: pointer;">${secondaryAccountAgeDisplay}</small>` : ''}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="text-center mb-0">
-                                                    <small 
-                                                        class="${account.secondary_status === 'die' ? 'account-status-die' : account.secondary_status === 'disabled' ? 'account-status-disabled' : 'account-status-available'} editable-field" 
-                                                        contenteditable="true" 
-                                                        data-account-id="${account.id}" 
-                                                        data-field="username" 
-                                                        data-is-secondary="true"
-                                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
-                                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                                        onclick="event.stopPropagation()"
-                                                    >${account.secondary_username || 'Click để nhập'}${account.secondary_status === 'die' ? '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>' : account.secondary_status === 'disabled' ? '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>' : ''}</small>
-                                                    <small 
-                                                        class="text-muted editable-field" 
-                                                        contenteditable="true" 
-                                                        data-account-id="${account.id}" 
-                                                        data-field="phone" 
-                                                        data-is-secondary="true"
-                                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                                        onclick="event.stopPropagation()"
-                                                    >📞 ${account.secondary_phone || 'Click để nhập'}</small>
-                                                </div>
-                                                
-                                                ${account.platform === 'wechat' ? `
-                                                    <div class="mt-auto">
-                                                        ${(account.secondary_status === 'disabled') ?
-                                    `<div class="d-flex align-items-center justify-content-between">
-                                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.secondary_die_date ? Math.ceil((new Date() - new Date(account.secondary_die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
-                                                                <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.secondary_rescue_count || 0}</span>-<span class="text-success">${account.secondary_rescue_success_count || 0}</span></small>
-                                                            </div>` :
-                                    `<div class="text-center mt-1">
-                                                                ${secondaryScanCountdown ? `<small style="font-size: 0.975rem;">${secondaryScanCountdown}</small>` : ''}
-                                                            </div>`
-                                }
-                                                    </div>
-                                                ` : ''}
-                                                
-                                                ${noticeHtml}
-                                                ${tipHtml}
-                                            ` : `
-                                                <div class="d-flex flex-column align-items-center justify-content-center h-100" style="cursor: pointer;" onclick="event.stopPropagation();">
-                                                    <h6 class="text-muted mb-3">Tài Khoản Phụ</h6>
-                                                    <button class="btn btn-sm btn-outline-primary" onclick="console.log('🔄 DEBUG: Button Thêm CARD PHỤ clicked', ${account.id}); event.preventDefault(); event.stopPropagation(); openWeChatModal(${account.id}, true);">
-                                                        <i class="bi bi-plus-lg me-1"></i> Thêm
-                                                    </button>
-                                                </div>
-                                            `}
-                                        </div>
-                                    </div>
+                                <div class="text-center mb-0">
+                                    <small 
+                                        class="${statusClass} editable-field" 
+                                        contenteditable="true" 
+                                        data-account-id="${account.id}" 
+                                        data-field="username" 
+                                        data-is-secondary="false"
+                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
+                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                        onmouseleave="this.style.backgroundColor='transparent'"
+                                        onclick="event.stopPropagation()"
+                                    >${account.username || 'Click để nhập'}${statusIcon}</small>
+                                    <small 
+                                        class="text-muted editable-field" 
+                                        contenteditable="true" 
+                                        data-account-id="${account.id}" 
+                                        data-field="phone" 
+                                        data-is-secondary="false"
+                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                        onmouseleave="this.style.backgroundColor='transparent'"
+                                        onclick="event.stopPropagation()"
+                                    >📞 ${account.phone || 'Click để nhập'}</small>
                                 </div>
+                                
+                                ${account.platform === 'wechat' ? `
+                                    <div class="mt-auto">
+                                        ${isDisabled ?
+                                            `<div class="d-flex align-items-center justify-content-between">
+                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((new Date() - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
+                                                <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                                            </div>` :
+                                            `<div class="text-center mt-1">
+                                                ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
+                                            </div>`
+                                        }
+                                    </div>
+                                ` : ''}
+                                
+                                ${noticeHtml}
+                                ${tipHtml}
                             </div>
                         </div>
                     </div>
@@ -1444,15 +1270,14 @@
     }
 
     // Context Menu Functions with auto-refresh pause
-    function showWeChatContextMenu(event, accountId, isSecondary = false) {
+    function showWeChatContextMenu(event, accountId) {
         event.preventDefault();
         event.stopPropagation();
         currentContextAccountId = accountId;
-        currentEditingIsSecondary = isSecondary; // CRITICAL FIX: Set the global variable
+        currentEditingIsSecondary = false; // Always false now
         pauseAutoRefresh();
 
         const contextMenu = document.getElementById('wechat-context-menu');
-        contextMenu.dataset.isSecondary = isSecondary;
         contextMenu.style.display = 'block';
         
         // Smart positioning to avoid overflow
@@ -1614,11 +1439,11 @@
     }
 
     // ===== UNIFIED CONTEXT MENU (New) =====
-    function showUnifiedContextMenu(event, accountId, platform, isSecondary = false) {
+    function showUnifiedContextMenu(event, accountId, platform) {
         event.preventDefault();
         event.stopPropagation();
         currentContextAccountId = accountId;
-        currentEditingIsSecondary = isSecondary;
+        currentEditingIsSecondary = false; // Always false now
         pauseAutoRefresh();
 
         const contextMenu = document.getElementById('unified-context-menu');
@@ -1634,7 +1459,7 @@
 
         // Show/hide phone item if phone exists
         const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
-        const phone = isSecondary ? account.secondary_phone : account.phone;
+        const phone = account.phone;
         if (copyPhoneItem) {
             copyPhoneItem.style.display = phone ? 'block' : 'none';
         }
@@ -1657,11 +1482,8 @@
                 : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
         }
 
-        // Generate dynamic accounts submenu
-        generateAccountsSubmenu(accountId);
-
         // Configure status submenu based on current status
-        const currentStatus = isSecondary ? account.secondary_status : account.status;
+        const currentStatus = account.status;
         const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
         const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
 
@@ -1741,7 +1563,7 @@
         // console.log('Context menu for platform:', platform, 'account:', accountId);
 
         // Use unified context menu for all platforms
-        showUnifiedContextMenu(event, accountId, platform, false);
+        showUnifiedContextMenu(event, accountId, platform);
     }
 
     window.showTelegramContextMenu = function (event, accountId) {
@@ -2023,16 +1845,11 @@
             event.stopPropagation();
         }
         if (!currentContextAccountId) return;
-        const contextMenu = document.getElementById('wechat-context-menu');
-        const isSecondary = contextMenu.dataset.isSecondary === 'true';
 
         const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
-        if (account) {
-            const phone = isSecondary ? account.secondary_phone : account.phone;
-            if (phone) {
-                navigator.clipboard.writeText(phone);
-                showToast('Đã copy SĐT!', 'success');
-            }
+        if (account && account.phone) {
+            navigator.clipboard.writeText(account.phone);
+            showToast('Đã copy SĐT!', 'success');
         }
         hideWeChatContextMenu();
     }
@@ -2059,16 +1876,11 @@
         }
         if (!currentContextAccountId) return;
 
-        const contextMenu = document.getElementById('wechat-context-menu');
-        const isSecondary = contextMenu.dataset.isSecondary === 'true';
-
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
         if (accountIndex !== -1) {
-            const scanCountKey = isSecondary ? 'secondary_wechat_scan_count' : 'wechat_scan_count';
-            const lastScanKey = isSecondary ? 'secondary_wechat_last_scan_date' : 'wechat_last_scan_date';
-            mxhAccounts[accountIndex][scanCountKey] = 0;
-            mxhAccounts[accountIndex][lastScanKey] = null;
+            mxhAccounts[accountIndex].wechat_scan_count = 0;
+            mxhAccounts[accountIndex].wechat_last_scan_date = null;
         }
         renderMXHAccounts();
 
@@ -2076,7 +1888,7 @@
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/scan`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reset: true, is_secondary: isSecondary })
+                body: JSON.stringify({ reset: true })
             });
 
             if (response.ok) {
@@ -2103,7 +1915,7 @@
         hideWeChatContextMenu();
     }
 
-    async function toggleAccountStatus(event, accountId = null, isSecondary = null) {
+    async function toggleAccountStatus(event, accountId = null) {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -2116,18 +1928,11 @@
 
         if (!currentContextAccountId) return;
 
-        // If isSecondary not provided, get from context menu
-        if (isSecondary === null) {
-            const contextMenu = document.getElementById('wechat-context-menu');
-            isSecondary = contextMenu.dataset.isSecondary === 'true';
-        }
-
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
         if (accountIndex !== -1) {
-            const statusKey = isSecondary ? 'secondary_status' : 'status';
-            const currentStatus = mxhAccounts[accountIndex][statusKey];
-            mxhAccounts[accountIndex][statusKey] = currentStatus === 'disabled' ? 'active' : 'disabled';
+            const currentStatus = mxhAccounts[accountIndex].status;
+            mxhAccounts[accountIndex].status = currentStatus === 'disabled' ? 'active' : 'disabled';
         }
         renderMXHAccounts();
 
@@ -2135,7 +1940,7 @@
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/toggle-status`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_secondary: isSecondary })
+                body: JSON.stringify({})
             });
 
             if (response.ok) {
@@ -2160,13 +1965,10 @@
     async function updateAccountStatus(newStatus) {
         if (!currentContextAccountId) return;
 
-        const isSecondary = currentEditingIsSecondary || false;
-
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
         if (accountIndex !== -1) {
-            const statusKey = isSecondary ? 'secondary_status' : 'status';
-            mxhAccounts[accountIndex][statusKey] = newStatus;
+            mxhAccounts[accountIndex].status = newStatus;
         }
         renderMXHAccounts();
 
@@ -2175,8 +1977,7 @@
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    status: newStatus,
-                    is_secondary: isSecondary
+                    status: newStatus
                 })
             });
 
@@ -2198,24 +1999,17 @@
     async function rescueAccountUnified(result) {
         if (!currentContextAccountId) return;
 
-        const isSecondary = currentEditingIsSecondary || false;
-
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
         if (accountIndex !== -1) {
             if (result === 'success') {
                 // Cứu thành công - chuyển về active
-                const statusKey = isSecondary ? 'secondary_status' : 'status';
-                const dieKey = isSecondary ? 'secondary_die_date' : 'die_date';
-                const rescueSuccessKey = isSecondary ? 'secondary_rescue_success_count' : 'rescue_success_count';
-
-                mxhAccounts[accountIndex][statusKey] = 'active';
-                mxhAccounts[accountIndex][dieKey] = null;
-                mxhAccounts[accountIndex][rescueSuccessKey] = (mxhAccounts[accountIndex][rescueSuccessKey] || 0) + 1;
+                mxhAccounts[accountIndex].status = 'active';
+                mxhAccounts[accountIndex].die_date = null;
+                mxhAccounts[accountIndex].rescue_success_count = (mxhAccounts[accountIndex].rescue_success_count || 0) + 1;
             } else {
                 // Cứu thất bại - giữ disabled, tăng rescue_count
-                const rescueKey = isSecondary ? 'secondary_rescue_count' : 'rescue_count';
-                mxhAccounts[accountIndex][rescueKey] = (mxhAccounts[accountIndex][rescueKey] || 0) + 1;
+                mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
             }
         }
         renderMXHAccounts();
@@ -2225,8 +2019,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    result: result,
-                    is_secondary: isSecondary
+                    result: result
                 })
             });
 
@@ -2250,22 +2043,15 @@
         }
         if (!currentContextAccountId) return;
 
-        const contextMenu = document.getElementById('wechat-context-menu');
-        const isSecondary = contextMenu.dataset.isSecondary === 'true';
-
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
         if (accountIndex !== -1) {
             if (result === 'success') {
-                const statusKey = isSecondary ? 'secondary_status' : 'status';
-                const dieDateKey = isSecondary ? 'secondary_die_date' : 'die_date';
-                const rescueSuccessKey = isSecondary ? 'secondary_rescue_success_count' : 'rescue_success_count';
-                mxhAccounts[accountIndex][statusKey] = 'active';
-                mxhAccounts[accountIndex][dieDateKey] = null;
-                mxhAccounts[accountIndex][rescueSuccessKey] = (mxhAccounts[accountIndex][rescueSuccessKey] || 0) + 1;
+                mxhAccounts[accountIndex].status = 'active';
+                mxhAccounts[accountIndex].die_date = null;
+                mxhAccounts[accountIndex].rescue_success_count = (mxhAccounts[accountIndex].rescue_success_count || 0) + 1;
             } else {
-                const rescueCountKey = isSecondary ? 'secondary_rescue_count' : 'rescue_count';
-                mxhAccounts[accountIndex][rescueCountKey] = (mxhAccounts[accountIndex][rescueCountKey] || 0) + 1;
+                mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
             }
         }
         renderMXHAccounts();
@@ -2274,7 +2060,7 @@
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/rescue`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ result: result, is_secondary: isSecondary })
+                body: JSON.stringify({ result: result })
             });
 
             if (response.ok) {
@@ -2348,10 +2134,6 @@
             if (response.ok) {
                 showToast('✅ Đã xóa card!', 'success');
                 
-                // Update accounts submenu if context menu is open
-                if (currentContextAccountId) {
-                    generateAccountsSubmenu(currentContextAccountId);
-                }
             } else {
                 showToast('Lỗi!', 'error');
                 await loadMXHData(false);
@@ -2385,20 +2167,8 @@
                 die_date: null,
                 rescue_count: 0,
                 rescue_success_count: 0,
-                secondary_username: '',
-                secondary_phone: '',
-                secondary_status: 'active',
-                secondary_wechat_created_day: null,
-                secondary_wechat_created_month: null,
-                secondary_wechat_created_year: null,
-                secondary_wechat_scan_count: 0,
-                secondary_wechat_last_scan_date: null,
-                secondary_die_date: null,
-                secondary_rescue_count: 0,
-                secondary_rescue_success_count: 0,
                 notice: null,
-                muted_until: null,
-                secondary_muted_until: null
+                muted_until: null
             };
         }
         renderMXHAccounts();
@@ -2411,10 +2181,6 @@
             if (response.ok) {
                 showToast('✅ Đã reset card!', 'success');
                 
-                // Update accounts submenu if context menu is open
-                if (currentContextAccountId) {
-                    generateAccountsSubmenu(currentContextAccountId);
-                }
             } else {
                 showToast('Lỗi!', 'error');
                 await loadMXHData(false);
@@ -2526,9 +2292,8 @@
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: selectedStatus === 'muted' ? (currentEditingIsSecondary ? mxhAccounts.find(a=>a.id === currentContextAccountId).secondary_status : mxhAccounts.find(a=>a.id === currentContextAccountId).status) : (selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus)), // Logic: 'available'->'active', 'die'->'disabled', 'muted' keeps previous status
-            wechat_status: selectedStatus === 'muted' ? (currentEditingIsSecondary ? mxhAccounts.find(a=>a.id === currentContextAccountId).secondary_wechat_status : mxhAccounts.find(a=>a.id === currentContextAccountId).wechat_status) : selectedStatus, // Logic: Sets 'wechat_status' to the exact selected value, unless muted (then keep previous wechat_status)
-            is_secondary: currentEditingIsSecondary
+            status: selectedStatus === 'muted' ? mxhAccounts.find(a=>a.id === currentContextAccountId).status : (selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus)), // Logic: 'available'->'active', 'die'->'disabled', 'muted' keeps previous status
+            wechat_status: selectedStatus === 'muted' ? mxhAccounts.find(a=>a.id === currentContextAccountId).wechat_status : selectedStatus // Logic: Sets 'wechat_status' to the exact selected value, unless muted (then keep previous wechat_status)
         };
 
         // Add mute/unmute logic for the API call if status is 'muted'
@@ -2536,17 +2301,17 @@
             await fetch(`/mxh/api/accounts/${currentContextAccountId}/mute`, { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_secondary: currentEditingIsSecondary }) 
+                body: JSON.stringify({}) 
             });
         } else {
             // Unmute if previously muted and new status is not muted
             const account = mxhAccounts.find(a=>a.id === currentContextAccountId);
-            const isMuted = currentEditingIsSecondary ? (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) : (account.muted_until && new Date(account.muted_until) > new Date());
+            const isMuted = account.muted_until && new Date(account.muted_until) > new Date();
             if(isMuted) {
                 await fetch(`/mxh/api/accounts/${currentContextAccountId}/unmute`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_secondary: currentEditingIsSecondary }) 
+                    body: JSON.stringify({}) 
                 });
             }
         }
@@ -2564,10 +2329,6 @@
             if (response.ok) {
                 showToast('✅ Đã cập nhật!', 'success');
                 
-                // Update accounts submenu if context menu is open
-                if (currentContextAccountId) {
-                    generateAccountsSubmenu(currentContextAccountId);
-                }
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi!', 'error');
@@ -2722,80 +2483,6 @@
         document.head.appendChild(style);
     })();
 
-    // ===== DYNAMIC ACCOUNTS SUBMENU GENERATION (Global Functions) =====
-    function generateAccountsSubmenu(accountId) {
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (!account) return;
-
-        const submenu = document.getElementById('accounts-submenu');
-        if (!submenu) return;
-
-        let html = '';
-        
-        // Always show "Tài khoản Chính"
-        html += `
-            <div class="menu-item" data-action="switch-account" data-account-index="1">
-                <i class="bi bi-person-fill me-2 text-primary"></i> Tài khoản Chính
-            </div>
-        `;
-
-        // Check for secondary accounts (tài khoản 2, 3, 4...)
-        const hasSecondary = account.secondary_username && account.secondary_username.trim() !== '';
-        if (hasSecondary) {
-            html += `
-                <div class="menu-item" data-action="switch-account" data-account-index="2">
-                    <i class="bi bi-person-fill me-2 text-info"></i> Tài khoản 2
-                </div>
-            `;
-        }
-
-        // TODO: Future enhancement - support for tài khoản 3, 4, 5...
-        // This would require database schema changes to support multiple secondary accounts
-        // For now, we support up to 2 accounts (primary + secondary)
-
-        // Show "Thêm Tài Khoản Mới" only if no secondary account exists
-        if (!hasSecondary) {
-            html += `
-                <div class="menu-item" data-action="add-new-account">
-                    <i class="bi bi-plus-circle me-2 text-success"></i> Thêm Tài Khoản Mới
-                </div>
-            `;
-        }
-
-        submenu.innerHTML = html;
-    }
-
-    // Switch to specific account (flip card)
-    function switchToAccount(accountIndex) {
-        if (!currentContextAccountId) return;
-        
-        const cardContainer = document.querySelector(`[data-account-id="${currentContextAccountId}"]`)?.closest('.mxh-card-container');
-        if (!cardContainer) return;
-
-        // Remove flipped class first
-        cardContainer.classList.remove('flipped');
-        
-        // If switching to secondary account (index 2), flip the card
-        if (accountIndex === 2) {
-            setTimeout(() => {
-                cardContainer.classList.add('flipped');
-            }, 50);
-        }
-        
-        // Update current editing state
-        currentEditingIsSecondary = (accountIndex === 2);
-        
-        const accountName = accountIndex === 1 ? 'Chính' : accountIndex;
-        showToast(`Đã chuyển sang Tài khoản ${accountName}`, 'success');
-    }
-
-    // Add new account (open modal for secondary account)
-    function addNewAccount() {
-        if (!currentContextAccountId) return;
-        
-        // Open WeChat modal for secondary account
-        openWeChatModal(currentContextAccountId, true);
-    }
 
     // Initialize - Load data and start auto-refresh
     document.addEventListener('DOMContentLoaded', async () => {
@@ -2844,7 +2531,7 @@
 
             switch (action) {
                 case 'edit':
-                    editCurrentContextAccount(e);
+                    openWeChatModal(currentContextAccountId);
                     break;
                 case 'mark-scanned':
                     markAccountAsScanned(e);
@@ -2952,7 +2639,7 @@
 
             switch (action) {
                 case 'edit':
-                    editCurrentContextAccount(e);
+                    openWeChatModal(currentContextAccountId);
                     break;
                 case 'status-available':
                     await updateAccountStatus('active');
@@ -3007,68 +2694,39 @@
         });
     });
 
-    // Flip Card Function - Click on account age to flip
 
     // Open WeChat Modal Function
     let currentEditingIsSecondary = false;
     let _openWeChatModalLock = false;
-    window.openWeChatModal = function (accountId, isSecondary = false) {
+    window.openWeChatModal = function (accountId) {
         if (_openWeChatModalLock) return;
         _openWeChatModalLock = true;
-        console.log('🔄 DEBUG: openWeChatModal called', { accountId, isSecondary });
+        
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (!account) {
-            console.log('❌ DEBUG: Account not found', accountId);
             _openWeChatModalLock = false;
             return;
         }
 
-        console.log('✅ DEBUG: Account found', { id: account.id, card_name: account.card_name, status: account.status });
         currentContextAccountId = accountId;
-        currentEditingIsSecondary = isSecondary;
+        currentEditingIsSecondary = false; // Always false now
 
         const modalTitle = document.querySelector('#wechat-account-modal .modal-title');
+        modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản';
 
-        if (isSecondary) {
-            console.log('🔄 DEBUG: Loading SECONDARY account data');
-            document.getElementById('wechat-card-name').value = account.secondary_card_name || account.card_name;
-            document.getElementById('wechat-username').value = account.secondary_username || '';
-            document.getElementById('wechat-phone').value = account.secondary_phone || '';
-            // Set date values in separate inputs
-            document.getElementById('wechat-day').value = account.secondary_wechat_created_day || new Date().getDate();
-            document.getElementById('wechat-month').value = account.secondary_wechat_created_month || new Date().getMonth() + 1;
-            document.getElementById('wechat-year').value = account.secondary_wechat_created_year || new Date().getFullYear();
-
-            // CRITICAL FIX: Determine status value based on priority
-            let secondaryStatus = account.secondary_wechat_status || account.secondary_status || 'available';
-            if (account.secondary_muted_until && new Date(account.secondary_muted_until) > new Date()) {
-                secondaryStatus = 'muted';
-            }
-            document.getElementById('wechat-status').value = secondaryStatus;
-            console.log('✅ DEBUG: Secondary status set to', secondaryStatus);
-
-            if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Phụ';
-        } else {
-            console.log('🔄 DEBUG: Loading PRIMARY account data');
-            document.getElementById('wechat-card-name').value = account.card_name || '';
-            document.getElementById('wechat-username').value = account.username || '';
-            document.getElementById('wechat-phone').value = account.phone || '';
-            // Set date values in separate inputs
-            document.getElementById('wechat-day').value = account.wechat_created_day || 1;
-            document.getElementById('wechat-month').value = account.wechat_created_month || 1;
-            document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
-
-            // CRITICAL FIX: Determine status value based on priority
-            let primaryStatus = account.wechat_status || account.status || 'available';
-            if (account.muted_until && new Date(account.muted_until) > new Date()) {
-                primaryStatus = 'muted';
-            }
-            document.getElementById('wechat-status').value = primaryStatus;
-            console.log('✅ DEBUG: Primary status set to', primaryStatus);
-
-            if (modalTitle) modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Tài Khoản Chính';
+        document.getElementById('wechat-card-name').value = account.card_name || '';
+        document.getElementById('wechat-username').value = account.username || '';
+        document.getElementById('wechat-phone').value = account.phone || '';
+        document.getElementById('wechat-day').value = account.wechat_created_day || 1;
+        document.getElementById('wechat-month').value = account.wechat_created_month || 1;
+        document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
+        
+        let primaryStatus = account.status || 'active';
+        if (account.muted_until && new Date(account.muted_until) > new Date()) {
+            primaryStatus = 'muted';
         }
-
+        document.getElementById('wechat-status').value = primaryStatus;
+        
         const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));
         modal.show();
         
@@ -3077,13 +2735,12 @@
 
     // ===== INLINE EDITING FUNCTIONS WITH INSTANT UPDATES =====
     // Quick update field (instant local update, debounced API call)
-    async function quickUpdateField(accountId, field, value, isSecondary) {
+    async function quickUpdateField(accountId, field, value) {
         try {
             // INSTANT LOCAL UPDATE - Update UI immediately
             const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
             if (accountIndex !== -1) {
-                const fieldKey = isSecondary ? `secondary_${field}` : field;
-                mxhAccounts[accountIndex][fieldKey] = value;
+                mxhAccounts[accountIndex][field] = value;
             }
 
             // API call in background
@@ -3092,8 +2749,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     field: field,
-                    value: value,
-                    is_secondary: isSecondary
+                    value: value
                 })
             });
 
@@ -3144,7 +2800,6 @@
                 let newValue = e.target.textContent.trim();
                 const accountId = parseInt(e.target.dataset.accountId);
                 const fieldName = e.target.dataset.field;
-                const isSecondary = e.target.dataset.isSecondary === 'true';
 
                 // Remove emoji prefix for phone
                 if (fieldName === 'phone') {
@@ -3172,7 +2827,7 @@
                 }
 
                 // Save to backend
-                const success = await quickUpdateField(accountId, fieldName, newValue, isSecondary);
+                const success = await quickUpdateField(accountId, fieldName, newValue);
 
                 if (success) {
                     field.dataset.originalValue = newValue;
@@ -3213,7 +2868,7 @@
     }
 
     // Toggle account status (click on status to change) - INSTANT UPDATE NO RELOAD
-    window.toggleAccountStatus = async function (event, accountId, isSecondary) {
+    window.toggleAccountStatus = async function (event, accountId) {
         event.stopPropagation();
         event.preventDefault();
 
@@ -3221,19 +2876,17 @@
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
         if (accountIndex === -1) return;
 
-        const statusKey = isSecondary ? 'secondary_status' : 'status';
-        const dieDateKey = isSecondary ? 'secondary_die_date' : 'die_date';
-        const currentStatus = mxhAccounts[accountIndex][statusKey];
+        const currentStatus = mxhAccounts[accountIndex].status;
 
         // Toggle status locally
         const newStatus = currentStatus === 'disabled' ? 'active' : 'disabled';
-        mxhAccounts[accountIndex][statusKey] = newStatus;
+        mxhAccounts[accountIndex].status = newStatus;
 
         // Update die_date
         if (newStatus === 'disabled') {
-            mxhAccounts[accountIndex][dieDateKey] = new Date().toISOString();
+            mxhAccounts[accountIndex].die_date = new Date().toISOString();
         } else {
-            mxhAccounts[accountIndex][dieDateKey] = null;
+            mxhAccounts[accountIndex].die_date = null;
         }
 
         // Re-render immediately (no API call wait)
@@ -3244,7 +2897,7 @@
             const response = await fetch(`/mxh/api/accounts/${accountId}/toggle-status`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_secondary: isSecondary })
+                body: JSON.stringify({})
             });
 
             if (response.ok) {
