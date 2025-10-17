@@ -12,7 +12,6 @@ def mxh_page():
 
 @mxh_bp.route("/api/groups", methods=["GET", "POST"])
 def mxh_groups():
-    # This function for managing groups remains the same
     conn = get_db_connection()
     try:
         if request.method == "GET":
@@ -96,43 +95,6 @@ def update_delete_card(card_id):
     finally:
         conn.close()
 
-@mxh_bp.route("/api/accounts/<int:account_id>/quick-update", methods=["POST"])
-def quick_update_account(account_id):
-    conn = get_db_connection()
-    try:
-        data = request.get_json()
-        fields = {k: v for k, v in data.items() if v is not None}
-        if not fields: return jsonify({'message': 'No fields to update.'})
-        fields['updated_at'] = datetime.now().isoformat()
-        set_clause = ", ".join([f"{key} = ?" for key in fields.keys()])
-        params = list(fields.values()) + [account_id]
-        conn.execute(f'UPDATE mxh_accounts SET {set_clause} WHERE id = ?', params)
-        conn.commit()
-        updated = conn.execute("SELECT * FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
-        return jsonify(dict(updated))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
-@mxh_bp.route("/api/cards/<int:card_id>", methods=["PUT", "DELETE"])
-def update_delete_card(card_id):
-    conn = get_db_connection()
-    try:
-        if request.method == "PUT":
-            data = request.get_json()
-            conn.execute("UPDATE mxh_cards SET card_name = ?, updated_at = ? WHERE id = ?", (data.get('card_name'), datetime.now().isoformat(), card_id))
-            conn.commit()
-            return jsonify({"message": "Card updated"})
-        elif request.method == "DELETE":
-            conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
-            conn.commit()
-            return jsonify({"message": "Card and sub-accounts deleted"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
 @mxh_bp.route("/api/cards/<int:card_id>/sub_accounts", methods=["POST"])
 def add_sub_account(card_id):
     conn = get_db_connection()
@@ -188,7 +150,7 @@ def manage_sub_account(sub_account_id):
     finally:
         conn.close()
 
-# Refactored endpoints to target sub-accounts
+# Các endpoint mới cho sub-account
 @mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/scan", methods=["POST"])
 def scan_sub_account(sub_account_id):
     conn = get_db_connection()
