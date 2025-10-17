@@ -56,8 +56,8 @@ def handle_auto_start_os_config(enabled):
         app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         
         # The command to execute the Python script using pythonw.exe (to suppress console window)
-        # We construct the path to run.pyw
-        run_command = f'"{os.path.join(app_root, "run.pyw")}"'
+        # We construct the full command with pythonw.exe
+        run_command = f'"{sys.executable.replace("python.exe", "pythonw.exe")}" "{os.path.join(app_root, "run.pyw")}"'
 
         # Windows Registry path for startup programs
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
