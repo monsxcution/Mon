@@ -39,16 +39,13 @@ def mxh_cards_and_sub_accounts():
     conn = get_db_connection()
     try:
         if request.method == "GET":
-            # Lấy thông tin card từ mxh_cards
-            cards = conn.execute("SELECT c.*, g.name as group_name, g.color as group_color, g.icon as group_icon FROM mxh_cards c LEFT JOIN mxh_groups g ON c.group_id = g.id ORDER BY CAST(c.card_name AS INTEGER)").fetchall()
+            cards = conn.execute("SELECT a.*, g.name as group_name, g.color as group_color, g.icon as group_icon FROM mxh_accounts a LEFT JOIN mxh_groups g ON a.group_id = g.id ORDER BY CAST(a.card_name AS INTEGER)").fetchall()
             result = [dict(c) for c in cards]
             card_ids = [c['id'] for c in result]
             
-            # Lấy tất cả sub-accounts liên quan
             if card_ids:
                 placeholders = ','.join('?' for _ in card_ids)
                 sub_accounts = conn.execute(f"SELECT * FROM mxh_sub_accounts WHERE card_id IN ({placeholders}) ORDER BY is_primary DESC, id ASC", card_ids).fetchall()
-                # Gán sub-accounts vào card tương ứng
                 for card in result:
                     card['sub_accounts'] = [dict(sa) for sa in sub_accounts if sa['card_id'] == card['id']]
             return jsonify(result)
@@ -57,12 +54,10 @@ def mxh_cards_and_sub_accounts():
             data = request.get_json()
             now_iso = datetime.now().isoformat()
             
-            # 1. Tạo card trong mxh_cards
-            cursor = conn.execute("INSERT INTO mxh_cards (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            cursor = conn.execute("INSERT INTO mxh_accounts (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
                 (data.get('card_name'), data.get('group_id'), data.get('platform'), now_iso, now_iso))
             card_id = cursor.lastrowid
             
-            # 2. Tạo sub-account chính trong mxh_sub_accounts
             conn.execute("""INSERT INTO mxh_sub_accounts (card_id, is_primary, account_name, username, phone, url, login_username, login_password, created_at, updated_at, wechat_created_day, wechat_created_month, wechat_created_year, status) 
                             VALUES (?, 1, 'Tài khoản chính', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (card_id, data.get('username'), data.get('phone'), data.get('url'), data.get('login_username'), data.get('login_password'), now_iso, now_iso, data.get('wechat_created_day'), data.get('wechat_created_month'), data.get('wechat_created_year'), 'active'))
@@ -74,28 +69,25 @@ def mxh_cards_and_sub_accounts():
     finally:
         conn.close()
 
-@mxh_bp.route("/api/cards/<int:card_id>", methods=["PUT", "DELETE"])
+@mxh_bp.route("/api/accounts/<int:card_id>", methods=["PUT", "DELETE"])
 def update_delete_card(card_id):
     conn = get_db_connection()
     try:
         if request.method == "PUT":
             data = request.get_json()
-            # Hàm này CHỈ cập nhật thông tin của card (bảng mxh_cards)
-            conn.execute("UPDATE mxh_cards SET card_name = ?, updated_at = ? WHERE id = ?", 
-                         (data.get('card_name'), datetime.now().isoformat(), card_id))
+            conn.execute("UPDATE mxh_accounts SET card_name = ?, updated_at = ? WHERE id = ?", (data.get('card_name'), datetime.now().isoformat(), card_id))
             conn.commit()
             return jsonify({"message": "Card updated"})
         elif request.method == "DELETE":
-            # Xóa card sẽ tự động xóa các sub-accounts liên quan nhờ 'ON DELETE CASCADE'
-            conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
+            conn.execute("DELETE FROM mxh_accounts WHERE id = ?", (card_id,))
             conn.commit()
-            return jsonify({"message": "Card and all associated sub-accounts deleted"})
+            return jsonify({"message": "Card and sub-accounts deleted"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
 
-@mxh_bp.route("/api/cards/<int:card_id>/sub_accounts", methods=["POST"])
+@mxh_bp.route("/api/accounts/<int:card_id>/sub_accounts", methods=["POST"])
 def add_sub_account(card_id):
     conn = get_db_connection()
     try:
@@ -117,31 +109,20 @@ def manage_sub_account(sub_account_id):
     try:
         if request.method == "PUT":
             data = request.get_json()
-            # Lọc ra các trường cần cập nhật, loại bỏ các giá trị None
             fields = {k: v for k, v in data.items() if v is not None}
             if 'card_name' in fields:
-                # Không cho phép cập nhật card_name ở đây
                 del fields['card_name']
-
-            if not fields: 
-                return jsonify({'message': 'No fields to update.'})
-
+            if not fields: return jsonify({'message': 'No fields to update.'})
             fields['updated_at'] = datetime.now().isoformat()
-            
             set_clause = ", ".join([f"{key} = ?" for key in fields.keys()])
             params = list(fields.values()) + [sub_account_id]
-            
             conn.execute(f'UPDATE mxh_sub_accounts SET {set_clause} WHERE id = ?', params)
             conn.commit()
-            
             updated = conn.execute("SELECT * FROM mxh_sub_accounts WHERE id = ?", (sub_account_id,)).fetchone()
             return jsonify(dict(updated))
-
         elif request.method == "DELETE":
             sub_account = conn.execute("SELECT is_primary FROM mxh_sub_accounts WHERE id = ?", (sub_account_id,)).fetchone()
-            if sub_account and sub_account['is_primary']:
-                return jsonify({"error": "Cannot delete the primary sub-account"}), 400
-            
+            if sub_account and sub_account['is_primary']: return jsonify({"error": "Cannot delete primary sub-account"}), 400
             conn.execute("DELETE FROM mxh_sub_accounts WHERE id = ?", (sub_account_id,))
             conn.commit()
             return jsonify({"message": "Sub-account deleted"})
@@ -150,7 +131,7 @@ def manage_sub_account(sub_account_id):
     finally:
         conn.close()
 
-# Các endpoint mới cho sub-account
+# Refactored endpoints to target sub-accounts
 @mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/scan", methods=["POST"])
 def scan_sub_account(sub_account_id):
     conn = get_db_connection()
@@ -213,12 +194,10 @@ def notice_sub_account(sub_account_id):
             data = request.get_json()
             notice = json.dumps({"enabled": True, "title": data.get("title"), "days": data.get("days"), "note": data.get("note"), "start_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")})
             conn.execute("UPDATE mxh_sub_accounts SET notice = ?, updated_at = ? WHERE id = ?", (notice, datetime.now().isoformat(), sub_account_id))
-            conn.commit()
             return jsonify({"message": "Notice set", "notice": json.loads(notice)})
         elif request.method == "DELETE":
             notice = json.dumps({"enabled": False, "title": "", "days": 0, "note": "", "start_at": None})
             conn.execute("UPDATE mxh_sub_accounts SET notice = ?, updated_at = ? WHERE id = ?", (notice, datetime.now().isoformat(), sub_account_id))
-            conn.commit()
             return jsonify({"message": "Notice cleared"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
