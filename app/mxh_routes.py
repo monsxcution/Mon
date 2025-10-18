@@ -39,13 +39,13 @@ def mxh_cards_and_sub_accounts():
     conn = get_db_connection()
     try:
         if request.method == "GET":
-            cards = conn.execute("SELECT a.*, g.name as group_name, g.color as group_color, g.icon as group_icon FROM mxh_accounts a LEFT JOIN mxh_groups g ON a.group_id = g.id ORDER BY CAST(a.card_name AS INTEGER)").fetchall()
+            cards = conn.execute("SELECT c.*, g.name as group_name, g.color as group_color, g.icon as group_icon FROM mxh_cards c LEFT JOIN mxh_groups g ON c.group_id = g.id ORDER BY CAST(c.card_name AS INTEGER)").fetchall()
             result = [dict(c) for c in cards]
             card_ids = [c['id'] for c in result]
             
             if card_ids:
                 placeholders = ','.join('?' for _ in card_ids)
-                sub_accounts = conn.execute(f"SELECT * FROM mxh_sub_accounts WHERE card_id IN ({placeholders}) ORDER BY is_primary DESC, id ASC", card_ids).fetchall()
+                sub_accounts = conn.execute(f"SELECT * FROM mxh_accounts WHERE card_id IN ({placeholders}) ORDER BY is_primary DESC, id ASC", card_ids).fetchall()
                 for card in result:
                     card['sub_accounts'] = [dict(sa) for sa in sub_accounts if sa['card_id'] == card['id']]
             return jsonify(result)
@@ -54,11 +54,11 @@ def mxh_cards_and_sub_accounts():
             data = request.get_json()
             now_iso = datetime.now().isoformat()
             
-            cursor = conn.execute("INSERT INTO mxh_accounts (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            cursor = conn.execute("INSERT INTO mxh_cards (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
                 (data.get('card_name'), data.get('group_id'), data.get('platform'), now_iso, now_iso))
             card_id = cursor.lastrowid
             
-            conn.execute("""INSERT INTO mxh_sub_accounts (card_id, is_primary, account_name, username, phone, url, login_username, login_password, created_at, updated_at, wechat_created_day, wechat_created_month, wechat_created_year, status) 
+            conn.execute("""INSERT INTO mxh_accounts (card_id, is_primary, account_name, username, phone, url, login_username, login_password, created_at, updated_at, wechat_created_day, wechat_created_month, wechat_created_year, status) 
                             VALUES (?, 1, 'Tài khoản chính', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (card_id, data.get('username'), data.get('phone'), data.get('url'), data.get('login_username'), data.get('login_password'), now_iso, now_iso, data.get('wechat_created_day'), data.get('wechat_created_month'), data.get('wechat_created_year'), 'active'))
             
@@ -75,11 +75,11 @@ def update_delete_card(card_id):
     try:
         if request.method == "PUT":
             data = request.get_json()
-            conn.execute("UPDATE mxh_accounts SET card_name = ?, updated_at = ? WHERE id = ?", (data.get('card_name'), datetime.now().isoformat(), card_id))
+            conn.execute("UPDATE mxh_cards SET card_name = ?, updated_at = ? WHERE id = ?", (data.get('card_name'), datetime.now().isoformat(), card_id))
             conn.commit()
             return jsonify({"message": "Card updated"})
         elif request.method == "DELETE":
-            conn.execute("DELETE FROM mxh_accounts WHERE id = ?", (card_id,))
+            conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
             conn.commit()
             return jsonify({"message": "Card and sub-accounts deleted"})
     except Exception as e:
@@ -199,6 +199,46 @@ def notice_sub_account(sub_account_id):
             notice = json.dumps({"enabled": False, "title": "", "days": 0, "note": "", "start_at": None})
             conn.execute("UPDATE mxh_sub_accounts SET notice = ?, updated_at = ? WHERE id = ?", (notice, datetime.now().isoformat(), sub_account_id))
             return jsonify({"message": "Notice cleared"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+# Frontend compatibility routes - handle /accounts/<id>/quick-update calls
+@mxh_bp.route("/api/accounts/<int:account_id>/quick-update", methods=["POST"])
+def quick_update_account(account_id):
+    """Handle quick update requests from frontend that calls /accounts/<id>/quick-update"""
+    conn = get_db_connection()
+    try:
+        data = request.get_json() or {}
+        field = data.get("field")
+        value = data.get("value")
+        
+        if not field:
+            return jsonify({"error": "field is required"}), 400
+            
+        # Allowed fields for quick update
+        allowed_fields = {
+            "username", "phone", "url", "login_username", "login_password", 
+            "account_name", "status", "wechat_created_day", "wechat_created_month", 
+            "wechat_created_year", "wechat_status", "muted_until"
+        }
+        
+        if field not in allowed_fields:
+            return jsonify({"error": f"field '{field}' not allowed"}), 400
+            
+        now_iso = datetime.now().isoformat()
+        conn.execute(f"UPDATE mxh_accounts SET {field} = ?, updated_at = ? WHERE id = ?", 
+                     (value, now_iso, account_id))
+        conn.commit()
+        
+        # Return updated record
+        updated_record = conn.execute("SELECT * FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
+        if not updated_record:
+            return jsonify({"error": "Account not found"}), 404
+            
+        return jsonify(dict(updated_record))
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
