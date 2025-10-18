@@ -409,6 +409,11 @@ body {
     height: 38px; 
 }
 
+/* WeChat icon color - đảm bảo màu xanh lá đúng */
+.bi-wechat {
+    color: #07c160 !important;
+}
+
 /* Remove focus outline for all modals */
 .form-control:focus,
 .form-select:focus {

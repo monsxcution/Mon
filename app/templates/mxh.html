@@ -1649,6 +1649,41 @@
         resumeAutoRefresh();
     }
 
+    // ===== Submenu cho "Tài khoản" trong context menu =====
+    function generateAccountsSubmenu(currentId) {
+        const submenu = document.getElementById('accounts-submenu');
+        if (!submenu || !Array.isArray(mxhAccounts)) return;
+
+        const me = mxhAccounts.find(a => a.id === currentId);
+        if (!me) { submenu.innerHTML = '<div class="menu-item disabled">Không có dữ liệu</div>'; return; }
+
+        const items = mxhAccounts
+            .filter(a => a.card_id === me.card_id)   // cùng card
+            .map(a => `
+                <div class="menu-item ${a.id===currentId ? 'active' : ''}" data-account-id="${a.id}">
+                    <i class="bi bi-person me-2"></i>
+                    ${escapeHtml(a.username || a.account_name || a.phone || ('ID ' + a.id))}
+                </div>
+            `).join('');
+
+        submenu.innerHTML = items || '<div class="menu-item disabled">Chưa có tài khoản khác</div>';
+
+        // (Tùy chọn) chuyển nhanh context sang account khác
+        submenu.querySelectorAll('.menu-item[data-account-id]').forEach(el => {
+            el.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const id = parseInt(el.dataset.accountId, 10);
+                currentContextAccountId = id;
+                // Cập nhật lại menu theo account mới
+                const acc = mxhAccounts.find(x => x.id === id);
+                if (acc) {
+                    // Gọi lại unified context menu để sync hiển thị
+                    showUnifiedContextMenu({pageX: ev.pageX, pageY: ev.pageY, preventDefault(){}, stopPropagation(){}}, id, (acc.platform||'wechat'));
+                }
+            });
+        });
+    }
+
     // WeChat Context Actions with instant feedback
     async function editCurrentContextAccount(event) {
         if (event) {
