@@ -536,8 +536,8 @@ window.selectGroup = function(groupId) {
             }
 
             return `
-                <div class="col" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-account-id="${account.id}">
-                    <div class="card tool-card mxh-card ${borderClass} ${extraClass}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative;">
+                <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-account-id="${account.id}">
+                    <div class="card tool-card mxh-card ${extraClass}" id="card-${account.id}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative;">
                         ${noticeIndicator}
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -599,6 +599,14 @@ window.selectGroup = function(groupId) {
 
         container.innerHTML = cardsHtml;
         window.scrollTo(0, scrollY);
+        
+        // Áp dụng ring state cho tất cả grid cells
+        filteredAccounts.forEach(account => {
+            const cell = document.querySelector(`.mxh-item[data-account-id="${account.id}"]`);
+            if (cell) {
+                paintRing(cell, account);
+            }
+        });
         
         // GỌI HÀM SETUP SAU KHI RENDER XONG
         setupEditableFields();
@@ -1297,6 +1305,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ===== BORDER STATE FUNCTIONS =====
+function parseDateAny(v) {
+    if (!v) return null;
+    if (typeof v === 'number') return new Date(v > 1e12 ? v : v * 1000); // ms hoặc s
+    if (typeof v === 'string') {
+        const s = v.trim();
+        // Ưu tiên ISO (YYYY-MM-DD hoặc có time)
+        if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(s)) return new Date(s.replace(/-/g, '/'));
+        // dd/mm/yyyy hoặc dd-mm-yyyy
+        const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+        if (m) { const d = +m[1], mo = +m[2] - 1, y = (+m[3] < 100 ? 2000 + +m[3] : +m[3]); return new Date(y, mo, d); }
+        const t = Date.parse(s); if (!isNaN(t)) return new Date(t);
+    }
+    return null;
+}
+
+function resolveState(acc) {
+    const s = String(acc?.status ?? acc?.state ?? '').toLowerCase();
+    const isDie = s === 'die' || s === 'dead' || s === 'banned' || acc?.is_die === true;
+    const isDisabled = ['disabled', 'inactive', 'deactivated', 'locked', 'suspended'].includes(s) || acc?.is_disabled === true;
+    const created = acc?.created_at ?? acc?.account_created_at ?? acc?.wechat_created_at;
+    const dt = created ? new Date(created) : null;
+    const gt1y = dt ? (Date.now() - dt.getTime()) >= 365 * 24 * 60 * 60 * 1000 : false;
+    
+    if (isDie) return 'die';
+    if (isDisabled) return 'disabled';
+    if (gt1y) return '1y';
+    return 'default';
+}
+
+function paintRing(gridCellEl, acc) {
+    const map = { die: '#FF3B30', disabled: '#FF8F00', '1y': '#07C160', default: '#D1D5DB' };
+    gridCellEl.style.setProperty('--mxh-ring', map[resolveState(acc)]);
+}
+
+function onAccountUpdated(account) {
+    const cell = document.querySelector(`.mxh-item[data-account-id="${account.id}"]`);
+    if (cell) paintRing(cell, account);
+}
+
 // ===== STATUS UPDATE FUNCTIONS =====
 async function updateAccountStatus(status) {
     if (!currentContextAccountId) {
@@ -1314,6 +1362,17 @@ async function updateAccountStatus(status) {
         if (response.ok) {
             const result = await response.json();
             showToast(result.message, 'success');
+            
+            // Cập nhật ring ngay lập tức
+            const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+            if (account) {
+                account.status = status === 'available' ? 'active' : status;
+                const cell = document.querySelector(`.mxh-item[data-account-id="${currentContextAccountId}"]`);
+                if (cell) {
+                    paintRing(cell, account);
+                }
+            }
+            
             await loadMXHData(true); // Reload data to reflect changes
             hideUnifiedContextMenu();
         } else {

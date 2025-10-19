@@ -36,6 +36,53 @@
 
 /* --- VIỀN CARD THEO TRẠNG THÁI --- */
 
+/* CSS Variables cho màu viền - Load SAU cùng */
+:root {
+  --mxh-border-default: #FF3B30; /* đỏ (test) */
+  --mxh-border-die: #FF3B30;     /* đỏ Die */
+  --mxh-border-1y: #07C160;      /* xanh lá WeChat */
+  --mxh-border-disabled: #FF8F00; /* cam Vô hiệu hóa */
+  --mxh-card-bg: #1b2230;        /* màu nền card */
+}
+
+/* Ring trạng thái: vẽ bằng inset shadow thay cho border */
+.mxh-item {
+  --mxh-ring: #D1D5DB;                 /* mặc định xám */
+  border: none !important;             /* border thật vô hiệu hóa */
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 2px var(--mxh-ring) !important; /* ⬅️ chính là "viền" */
+}
+
+/* Neon khi chọn: chỉ thêm glow, KHÔNG đổi ring */
+.mxh-item.selected,
+.mxh-item:focus,
+.mxh-item:active {
+  outline: 0 !important;
+  box-shadow: inset 0 0 0 2px var(--mxh-ring) !important;
+}
+
+.mxh-item.selected::after,
+.mxh-item:focus::after,
+.mxh-item:active::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 2px rgba(0,234,255,.9), 0 0 16px rgba(0,234,255,.45);
+  pointer-events: none;
+}
+
+/* Nếu card con (vd .tool-card/.card) tự có viền/shadow xám, dập nó luôn trong phạm vi grid item */
+.mxh-item .tool-card,
+.mxh-item .card {
+  border: none !important;
+  box-shadow: none !important;
+  background-clip: padding-box; /* tránh tràn nền đè ring */
+}
+
 /* === MXH state borders (match selected style, keep color on hover) === */
 /* === MXH BORDER STYLES - HIGH SPECIFICITY === */
 .tool-card.mxh-card.mxh-border-green {
