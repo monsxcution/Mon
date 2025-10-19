@@ -1,40 +1,82 @@
-/* ===== MXH FLEXBOX LAYOUT ===== */
+/* /app/static/css/mxh.css */
 
-/* Container phải wrap */
+/*
+ * Layout Grid cho các card MXH
+*/
 #mxh-accounts-container {
-  display: flex;
-  flex-wrap: wrap;
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -4px;
+    margin-right: -4px;
 }
 
-/* Quan trọng: ép số cột theo --cardsPerRow, override Bootstrap */
-#mxh-accounts-container > .col,
-#mxh-accounts-container > [class^="col-"],
-#mxh-accounts-container > [class*=" col-"] {
-  flex: 0 0 calc(100% / var(--cardsPerRow, 12)) !important;
-  max-width: calc(100% / var(--cardsPerRow, 12)) !important;
-  box-sizing: border-box;
+#mxh-accounts-container > .col {
+  flex: 0 0 calc(100% / var(--cardsPerRow, 12));
+  max-width: calc(100% / var(--cardsPerRow, 12));
   padding: 4px;
 }
 
-/* Giao diện cho thẻ card, đảm bảo nó chiếm toàn bộ chiều cao của .col */
 .mxh-card {
   height: 100%;
   margin: 0 !important;
+  /* Kế thừa từ .tool-card nhưng có thể override tại đây */
 }
 
-/* Các lớp CSS cho viền card theo trạng thái */
-.mxh-card.mxh-border-green{border:2px solid #2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 14px rgba(47,229,106,.45),0 0 28px rgba(47,229,106,.25)!important}
-.mxh-card.mxh-border-green:hover{border-color:#2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 18px rgba(47,229,106,.55),0 0 34px rgba(47,229,106,.35)!important}
-.mxh-card.mxh-border-green::before{background:radial-gradient(circle,rgba(47,229,106,.18) 0%,rgba(47,229,106,0) 80%);opacity:1}
+/* --- VIỀN CARD THEO TRẠNG THÁI --- */
 
-.mxh-card.mxh-border-red{border:2px solid #ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 14px rgba(255,77,79,.5),0 0 28px rgba(255,77,79,.3)!important}
-.mxh-card.mxh-border-red:hover{border-color:#ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 18px rgba(255,77,79,.6),0 0 34px rgba(255,77,79,.35)!important}
-.mxh-card.mxh-border-red::before{background:radial-gradient(circle,rgba(255,77,79,.18) 0%,rgba(255,77,79,0) 80%);opacity:1}
+/* 🟠 CAM (Thông báo) - Giữ nguyên hiệu ứng phát sáng */
+.mxh-card.mxh-border-orange {
+    border: 2px solid #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 14px rgba(255,165,0,.5), 0 0 28px rgba(255,165,0,.3) !important;
+}
+.mxh-card.mxh-border-orange:hover {
+    transform: translateY(-12px) scale(1.03);
+    border-color: #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 18px rgba(255,165,0,.6), 0 0 34px rgba(255,165,0,.35) !important;
+}
+.mxh-card.mxh-border-orange::before {
+    background: radial-gradient(circle, rgba(255,165,0,.18) 0%, rgba(255,165,0,0) 80%);
+    opacity: 1;
+}
 
-.mxh-card.mxh-border-orange{border:2px solid #ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 14px rgba(255,165,0,.5),0 0 28px rgba(255,165,0,.3)!important}
-.mxh-card.mxh-border-orange:hover{border-color:#ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 18px rgba(255,165,0,.6),0 0 34px rgba(255,165,0,.35)!important}
-.mxh-card.mxh-border-orange::before{background:radial-gradient(circle,rgba(255,165,0,.18) 0%,rgba(255,165,0,0) 80%);opacity:1}
+/* 🔴 ĐỎ (Die/Disabled) - Chỉ có viền, không phát sáng */
+.mxh-card.mxh-border-red {
+    border: 2px solid #ff4d4f !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-red:hover {
+    transform: translateY(-12px) scale(1.03);
+    border-color: #ff4d4f !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-red::before {
+    display: none !important;
+}
 
-.mxh-card.mxh-border-white{border:2px solid #fff!important;box-shadow: none !important;}
-.mxh-card.mxh-border-white:hover{border-color:#fff!important;}
-.mxh-card.mxh-border-white::before{background:none;opacity:0}
+/* 🟢 XANH LÁ (Anniversary) - Chỉ có viền, không phát sáng */
+.mxh-card.mxh-border-green {
+    border: 2px solid #2fe56a !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-green:hover {
+    transform: translateY(-12px) scale(1.03);
+    border-color: #2fe56a !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-green::before {
+    display: none !important;
+}
+
+/* ⚪ TRẮNG (Available) - Chỉ có viền, không phát sáng */
+.mxh-card.mxh-border-white {
+    border: 2px solid #fff !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-white:hover {
+    transform: translateY(-12px) scale(1.03);
+    border-color: #fff !important;
+    box-shadow: none !important;
+}
+.mxh-card.mxh-border-white::before {
+    display: none !important;
+}
