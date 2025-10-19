@@ -71,57 +71,59 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label for="mxh-username" class="form-label mb-1">Tên Người Dùng</label>
-                        <input type="text" class="form-control form-control-sm" id="mxh-username"
-                            placeholder="Nhập tên người dùng...">
+                <form id="mxh-add-card-form">
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="mxh-username" class="form-label mb-1">Tên Người Dùng</label>
+                            <input type="text" class="form-control form-control-sm" id="mxh-username"
+                                placeholder="Nhập tên người dùng...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="mxh-platform" class="form-label mb-1">Nền Tảng</label>
+                            <select class="form-select form-select-sm" id="mxh-platform" required>
+                                <option value="">Chọn nền tảng...</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="zalo">Zalo</option>
+                                <option value="wechat">WeChat</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="whatsapp">WhatsApp</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="mxh-platform" class="form-label mb-1">Nền Tảng</label>
-                        <select class="form-select form-select-sm" id="mxh-platform" required>
-                            <option value="">Chọn nền tảng...</option>
-                            <option value="facebook">Facebook</option>
-                            <option value="instagram">Instagram</option>
-                            <option value="twitter">Twitter</option>
-                            <option value="zalo">Zalo</option>
-                            <option value="wechat">WeChat</option>
-                            <option value="telegram">Telegram</option>
-                            <option value="whatsapp">WhatsApp</option>
-                        </select>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="mxh-password" class="form-label mb-1">Mật Khẩu</label>
+                            <input type="text" class="form-control form-control-sm" id="mxh-password"
+                                placeholder="Nhập mật khẩu...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="mxh-phone" class="form-label mb-1">Số Điện Thoại</label>
+                            <input type="text" class="form-control form-control-sm" id="mxh-phone"
+                                placeholder="Nhập số điện thoại...">
+                        </div>
                     </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label for="mxh-password" class="form-label mb-1">Mật Khẩu</label>
-                        <input type="text" class="form-control form-control-sm" id="mxh-password"
-                            placeholder="Nhập mật khẩu...">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="mxh-phone" class="form-label mb-1">Số Điện Thoại</label>
-                        <input type="text" class="form-control form-control-sm" id="mxh-phone"
-                            placeholder="Nhập số điện thoại...">
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
-                        <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label mb-1">Ngày Tạo</label>
-                        <div class="row g-0">
-                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px" required></div>
-                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px" required>
-                            </div>
-                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4" style="width:76px" required>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
+                            <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Ngày Tạo</label>
+                            <div class="row g-0">
+                                <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                        id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px" required></div>
+                                <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                        id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px" required>
+                                </div>
+                                <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                        id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4" style="width:76px" required>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>

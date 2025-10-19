@@ -43,6 +43,9 @@ def create_card():
                 "field": "card_name"
             }), 400
         
+        # Start transaction
+        conn.execute("BEGIN")
+        
         # Create the card
         now = datetime.now(timezone.utc).astimezone().isoformat()
         cursor = conn.execute(
@@ -51,14 +54,33 @@ def create_card():
         )
         card_id = cursor.lastrowid
         
+        # Create the primary account
+        conn.execute(
+            """INSERT INTO mxh_accounts (
+                card_id, is_primary, account_name, username, phone, url, 
+                login_username, login_password, wechat_created_day, wechat_created_month, 
+                wechat_created_year, wechat_status, status, created_at, updated_at
+            ) VALUES (?, 1, 'Primary Account', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)""",
+            (
+                card_id,
+                data.get("username", ""),
+                data.get("phone", ""),
+                data.get("url", ""),
+                data.get("login_username", data.get("username", "")),  # Fallback login username
+                data.get("login_password", ""),
+                data.get("wechat_created_day"),
+                data.get("wechat_created_month"),
+                data.get("wechat_created_year"),
+                "available",  # Default wechat_status
+                now,  # created_at
+                now   # updated_at
+            )
+        )
+        
         conn.commit()
         
-        # Return the created card
-        new_card = conn.execute("SELECT * FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
-        card_dict = dict(new_card)
-        card_dict["accounts"] = []  # Empty accounts array as specified
-        
-        return jsonify(card_dict), 201
+        # Return success message
+        return jsonify({"message": "Card and primary account created successfully", "card_id": card_id}), 201
         
     except sqlite3.IntegrityError as e:
         conn.rollback()

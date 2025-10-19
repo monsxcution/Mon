@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('Tạo tài khoản thành công', 'success');
                 await loadMXHData(true);
                 bootstrap.Modal.getInstance(document.getElementById('mxh-addAccountModal')).hide();
-                document.getElementById('mxh-addAccountModal').querySelector('form').reset();
+                document.getElementById('mxh-add-card-form').reset();
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi tạo tài khoản', 'error');
