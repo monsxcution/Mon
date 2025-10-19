@@ -327,24 +327,47 @@ window.selectGroup = function(groupId) {
         // Clear all old notice elements before rendering
         container.querySelectorAll('.notice-indicator,.notice-line,.notice-tooltip').forEach(e => e.remove());
 
+        // --- LOGIC GOM NHÓM TÀI KHOẢN THEO CARD ---
+        const cardsMap = new Map();
         const filteredAccounts = activeGroupId
             ? mxhAccounts.filter(acc => String(acc.group_id) === String(activeGroupId))
             : mxhAccounts;
 
-        if (filteredAccounts.length === 0) {
+        for (const account of filteredAccounts) {
+            const cardId = account.card_id;
+            if (!cardsMap.has(cardId)) {
+                cardsMap.set(cardId, {
+                    card_info: {
+                        id: account.card_id,
+                        card_name: account.card_name,
+                        group_id: account.group_id,
+                        platform: account.platform,
+                    },
+                    accounts: []
+                });
+            }
+            cardsMap.get(cardId).accounts.push(account);
+        }
+        // --- KẾT THÚC LOGIC GOM NHÓM ---
+
+        const sortedCards = Array.from(cardsMap.values()).sort((a, b) => {
+            const numA = parseInt(a.card_info.card_name) || 0;
+            const numB = parseInt(b.card_info.card_name) || 0;
+            return numA - numB;
+        });
+
+        if (sortedCards.length === 0) {
             container.innerHTML = `<div class="col-12"><div class="card"><div class="card-body text-center text-muted"><i class="bi bi-inbox fs-1 opacity-25"></i><h5 class="mt-3">Không có tài khoản nào</h5></div></div></div>`;
             isRendering = false;
             return;
         }
 
-        // Sort accounts by card_name numerically (allow duplicates)
-        filteredAccounts.sort((a, b) => {
-            const numA = parseInt(a.card_name) || 0;
-            const numB = parseInt(b.card_name) || 0;
-            return numA === numB ? (b.id - a.id) : (numA - numB);
-        });
+        const cardsHtml = sortedCards.map(cardData => {
+            const primaryAccount = cardData.accounts.find(a => a.is_primary) || cardData.accounts[0];
+            if (!primaryAccount) return ''; // Bỏ qua nếu không có tài khoản nào
 
-        const cardsHtml = filteredAccounts.map(account => {
+            // Sử dụng primaryAccount làm dữ liệu chính
+            const account = primaryAccount;
             // --- LOGIC XÁC ĐỊNH VIỀN MÀU ---
             let borderClass = '';
             const now = new Date();
@@ -558,68 +581,22 @@ window.selectGroup = function(groupId) {
                 }[p]) || 'bi-person-badge';
             }
 
+            // Render flip card structure
+            const secondaryAccount = cardData.accounts.find(a => !a.is_primary) || cardData.accounts[1];
+            
             return `
-                <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-account-id="${account.id}">
-                    <div class="card tool-card mxh-card ${borderClass} ${extraClass} ${blinkClass}" id="card-${account.id}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative; ${inlineStyle}">
+                <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-card-id="${cardData.card_info.id}">
+                    <div class="card tool-card mxh-card ${borderClass} ${extraClass} ${blinkClass}" id="card-${cardData.card_info.id}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative; ${inlineStyle}">
                         ${noticeIndicator}
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <div class="d-flex align-items-center gap-1">
-                                    <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
-                                    <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                            <div class="mxh-card-inner">
+                                <div class="mxh-card-face face-a">
+                                    ${renderAccountFace(account)}
                                 </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
+                                <div class="mxh-card-face face-b">
+                                    ${secondaryAccount ? renderAccountFace(secondaryAccount) : ''}
                                 </div>
                             </div>
-                            
-                            <div class="text-center mb-0">
-                                <small 
-                                    class="${statusClass} editable-field" 
-                                    contenteditable="true" 
-                                    data-account-id="${account.id}" 
-                                    data-field="username" 
-                                    data-is-secondary="false"
-                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
-                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                    onmouseleave="this.style.backgroundColor='transparent'"
-                                    onclick="event.stopPropagation()"
-                                >${account.username || 'Click để nhập'}${statusIcon}</small>
-                                <small 
-                                    class="text-muted editable-field" 
-                                    contenteditable="true" 
-                                    data-account-id="${account.id}" 
-                                    data-field="phone" 
-                                    data-is-secondary="false"
-                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                    onmouseleave="this.style.backgroundColor='transparent'"
-                                    onclick="event.stopPropagation()"
-                                >📞 ${account.phone || 'Click để nhập'}</small>
-                            </div>
-                            
-                            ${account.platform === 'wechat' ? `
-                                <div class="mt-auto">
-                                    ${isDie ?
-                                        `<div class="d-flex align-items-center justify-content-between">
-                                            <div class="text-center">
-                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày:</small>
-                                                <div class="text-danger" style="font-size: 0.77rem; font-weight: 600;">${account.die_date ? Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</div>
-                                            </div>
-                                            <div class="text-center">
-                                                <small style="font-size: 0.77rem;">Lượt cứu:</small>
-                                                <div style="font-size: 0.77rem; font-weight: 600;"><span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></div>
-                                            </div>
-                                        </div>` :
-                                        `<div class="text-center mt-1">
-                                            ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
-                                        </div>`
-                                    }
-                                </div>
-                            ` : ''}
-                            
-                            ${noticeHtml}
-                            ${tipHtml}
                         </div>
                     </div>
                 </div>
@@ -646,6 +623,86 @@ window.selectGroup = function(groupId) {
             pendingUpdates = false;
             setTimeout(renderMXHAccounts, 50);
         }
+    }
+
+    /**
+     * Hàm phụ để render nội dung cho một mặt của card.
+     * @param {object} account - Dữ liệu của tài khoản.
+     * @returns {string} - Chuỗi HTML của mặt card.
+     */
+    function renderAccountFace(account) {
+        if (!account) return '<div class="text-center p-3">...</div>'; // Trả về mặt trống
+
+        // --- LOGIC TÍNH TOÁN CHO TÀI KHOẢN NÀY ---
+        const now = new Date();
+        let accountAgeDisplay = '';
+        let ageColor = '#6c757d';
+        
+        // Tính tuổi tài khoản WeChat
+        if (account.platform === 'wechat' && account.wechat_created_year) {
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays >= 365) {
+                const years = Math.floor(diffDays / 365);
+                accountAgeDisplay = `${years}Y`;
+                ageColor = '#2fe56a';
+            } else if (diffDays >= 30) {
+                const months = Math.floor(diffDays / 30);
+                accountAgeDisplay = `${months}M`;
+                ageColor = '#ffa500';
+            } else {
+                accountAgeDisplay = `${diffDays}D`;
+                ageColor = '#6c757d';
+            }
+        }
+
+        // Trạng thái và icon
+        let statusClass = 'account-status-available';
+        let statusIcon = '';
+        if (account.status === 'die') {
+            statusClass = 'account-status-die';
+            statusIcon = '<i class="bi bi-x-circle-fill status-icon"></i>';
+        } else if (account.status === 'disabled') {
+            statusClass = 'account-status-disabled';
+            statusIcon = '<i class="bi bi-slash-circle status-icon"></i>';
+        }
+        
+        return `
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="d-flex align-items-center gap-1">
+                    <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
+                    <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
+                </div>
+            </div>
+            <div class="text-center mb-0">
+                <small 
+                    class="${statusClass} editable-field" 
+                    contenteditable="true" 
+                    data-account-id="${account.id}" 
+                    data-field="username" 
+                    data-is-secondary="false"
+                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
+                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseleave="this.style.backgroundColor='transparent'"
+                    onclick="event.stopPropagation()"
+                >${account.username || 'Click để nhập'}${statusIcon}</small>
+                <small 
+                    class="text-muted editable-field" 
+                    contenteditable="true" 
+                    data-account-id="${account.id}" 
+                    data-field="phone" 
+                    data-is-secondary="false"
+                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseleave="this.style.backgroundColor='transparent'"
+                    onclick="event.stopPropagation()"
+                >📞 ${account.phone || 'Click để nhập'}</small>
+            </div>
+        `;
     }
 
 // ===== UTILITY FUNCTIONS =====
