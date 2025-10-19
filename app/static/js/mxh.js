@@ -338,10 +338,36 @@ window.selectGroup = function(groupId) {
 
         filteredAccounts.sort((a, b) => (parseInt(a.card_name, 10) || Infinity) - (parseInt(b.card_name, 10) || Infinity));
         
-        // Chỉ cần dùng class "col", CSS sẽ tự lo phần còn lại.
         const cardsHtml = filteredAccounts.map(account => {
-            const isDie = account.status === 'die';
-            const borderClass = isDie ? 'mxh-border-red' : 'mxh-border-white';
+            // --- LOGIC XÁC ĐỊNH VIỀN MÀU ---
+            let borderClass = '';
+            const now = new Date();
+            const noticeObj = ensureNoticeParsed(account.notice);
+
+            const isDie = ['disabled', 'die'].includes(String(account.status || '').toLowerCase());
+            const hasNotice = noticeObj && noticeObj.enabled;
+            
+            let isAnniversary = false;
+            if (account.platform === 'wechat' && account.wechat_created_year) {
+                const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+                const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 365) {
+                    isAnniversary = true;
+                }
+            }
+
+            // Ưu tiên: Đỏ > Cam > Xanh > Trắng
+            if (isDie) {
+                borderClass = 'mxh-border-red';
+            } else if (hasNotice) {
+                borderClass = 'mxh-border-orange';
+            } else if (isAnniversary) {
+                borderClass = 'mxh-border-green';
+            } else {
+                borderClass = 'mxh-border-white'; // Mặc định là viền trắng
+            }
+            
+            // --- KẾT THÚC LOGIC VIỀN MÀU ---
 
             return `
                 <div class="col">
@@ -349,15 +375,11 @@ window.selectGroup = function(groupId) {
                          data-account-id="${account.id}"
                          oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
                         
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">${account.card_name}</span>
-                            </div>
-                            <div class="text-center my-2">
-                                <div class="text-truncate">${account.username || '...'}</div>
-                                <div class="text-muted small">📞 ${account.phone || '...'}</div>
-                                <div class="text-danger small">${isDie ? 'DIE' : ''}</div>
-                            </div>
+                        <div class="card-body d-flex flex-column justify-content-center text-center">
+                            <h5 class="card-title mb-1">${account.card_name}</h5>
+                            <p class="card-text text-truncate mb-1">${account.username || '...'}</p>
+                            <small class="text-muted">📞 ${account.phone || '...'}</small>
+                            <div class="text-danger small mt-1" style="height: 1.2em;">${isDie ? 'DIE' : ''}</div>
                         </div>
                     </div>
                 </div>
@@ -379,6 +401,45 @@ function ensureNoticeParsed(notice) {
     let n = (typeof notice === 'string') ? (() => { try { return JSON.parse(notice) } catch { return {} } })() : (notice || {});
     if (n && n.start_at) n.start_at = normalizeISOForJS(n.start_at);
     return n;
+}
+
+/**
+ * Mở modal và điền thông tin của một tài khoản cụ thể để chỉnh sửa.
+ * @param {number} accountId - ID của tài khoản cần chỉnh sửa.
+ */
+function openAccountModalForEdit(accountId) {
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    if (!account) {
+        showToast('Không tìm thấy dữ liệu tài khoản!', 'error');
+        return;
+    }
+
+    // Hiện tại ta dùng chung modal 'wechat-account-modal'
+    // Tương lai có thể tạo các modal khác cho từng platform
+    const modalEl = document.getElementById('wechat-account-modal');
+    if (!modalEl) {
+        showToast('Lỗi: Không tìm thấy modal!', 'error');
+        return;
+    }
+
+    // Điền dữ liệu vào form
+    modalEl.querySelector('#wechat-card-name').value = account.card_name || '';
+    modalEl.querySelector('#wechat-username').value = account.username || '';
+    modalEl.querySelector('#wechat-phone').value = account.phone || '';
+    modalEl.querySelector('#wechat-day').value = account.wechat_created_day || '';
+    modalEl.querySelector('#wechat-month').value = account.wechat_created_month || '';
+    modalEl.querySelector('#wechat-year').value = account.wechat_created_year || '';
+
+    // Xử lý status
+    let currentStatus = account.status || 'active';
+    if (account.muted_until && new Date(account.muted_until) > new Date()) {
+        currentStatus = 'muted';
+    }
+    modalEl.querySelector('#wechat-status').value = currentStatus;
+
+    // Hiển thị modal
+    const modalInstance = new bootstrap.Modal(modalEl);
+    modalInstance.show();
 }
 
 function escapeHtml(text) {
@@ -650,7 +711,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         switch (action) {
             case 'edit':
-                showToast('Chức năng đang phát triển', 'info');
+                // GỌI HÀM MỚI TẠI ĐÂY
+                openAccountModalForEdit(currentContextAccountId);
                 break;
             case 'status-available':
                 await updateAccountStatus('active');
