@@ -375,3 +375,59 @@ def mxh_groups():
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+
+@mxh_api_bp.route("/accounts/<int:account_id>", methods=["PUT"])
+def update_account(account_id):
+    """
+    PUT /mxh/api/accounts/<account_id>
+    Cập nhật toàn diện thông tin cho một account.
+    """
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
+
+        account = conn.execute("SELECT card_id FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
+        if not account:
+            return jsonify({"error": "Account not found"}), 404
+
+        now = datetime.now(timezone.utc).astimezone().isoformat()
+        
+        conn.execute("BEGIN")
+
+        # --- Update mxh_accounts table ---
+        account_fields = {}
+        allowed_account_fields = [
+            "username", "phone", "wechat_created_day", "wechat_created_month",
+            "wechat_created_year", "status", "muted_until", "wechat_status"
+        ]
+        
+        for field in allowed_account_fields:
+            if field in data:
+                account_fields[field] = data[field]
+        
+        if account_fields:
+            account_fields["updated_at"] = now
+            set_clause = ", ".join([f"{key} = ?" for key in account_fields.keys()])
+            params = list(account_fields.values()) + [account_id]
+            conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", params)
+
+        # --- Update mxh_cards table (for card_name) ---
+        if "card_name" in data:
+            conn.execute(
+                "UPDATE mxh_cards SET card_name = ?, updated_at = ? WHERE id = ?",
+                (data["card_name"], now, account['card_id'])
+            )
+
+        conn.commit()
+        
+        updated_account = conn.execute("SELECT a.*, c.card_name, c.platform, c.group_id FROM mxh_accounts a JOIN mxh_cards c ON a.card_id = c.id WHERE a.id = ?", (account_id,)).fetchone()
+        return jsonify(dict(updated_account))
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

@@ -1,16 +1,29 @@
 /* ===== MXH FLEXBOX LAYOUT ===== */
 
 /*
- * Sử dụng Flexbox và biến CSS `--cardsPerRow` để tính toán độ rộng.
+ * Thiết lập container chính để luôn là flexbox và cho phép wrap.
+ * Biến --cardsPerRow sẽ được JavaScript cung cấp.
+*/
+#mxh-accounts-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -4px; /* Bù lại cho padding của .col */
+    margin-right: -4px; /* Bù lại cho padding của .col */
+}
+
+/*
  * Ghi đè lên class .col của Bootstrap KHI nó là con của container của chúng ta.
+ * Sử dụng biến CSS `--cardsPerRow` để tính toán độ rộng.
 */
 #mxh-accounts-container > .col {
-  /* * flex-basis: tính toán chiều rộng cơ bản của mỗi item.
+  /*
+   * flex-basis: tính toán chiều rộng cơ bản của mỗi item.
    * Ví dụ: 12 cards/hàng -> calc(100% / 12) = 8.333%
    * Ví dụ: 15 cards/hàng -> calc(100% / 15) = 6.666%
    */
   flex: 0 0 calc(100% / var(--cardsPerRow, 12));
   max-width: calc(100% / var(--cardsPerRow, 12));
+  padding: 4px; /* Thêm một chút khoảng cách giữa các card */
 }
 
 /* Giao diện cho thẻ card, đảm bảo nó chiếm toàn bộ chiều cao của .col */
