@@ -840,12 +840,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // === EVENT LISTENER MỚI CHO NÚT APPLY TRONG MODAL THÔNG TIN ===
     document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
-        if (!currentContextAccountId) return;
+        if (!currentContextAccountId) {
+            showToast('Lỗi: Không có tài khoản được chọn!', 'error');
+            return;
+        }
 
         const modalEl = document.getElementById('wechat-account-modal');
         const originalAccount = mxhAccounts.find(acc => acc.id === currentContextAccountId);
         if (!originalAccount) {
-            showToast('Lỗi: Không tìm thấy tài khoản gốc!', 'error');
+            showToast('Lỗi: Không tìm thấy tài khoản để cập nhật!', 'error');
             return;
         }
 
@@ -856,24 +859,22 @@ document.addEventListener('DOMContentLoaded', function() {
             card_name: modalEl.querySelector('#wechat-card-name').value,
             username: modalEl.querySelector('#wechat-username').value,
             phone: modalEl.querySelector('#wechat-phone').value,
-            wechat_created_day: parseInt(modalEl.querySelector('#wechat-day').value),
-            wechat_created_month: parseInt(modalEl.querySelector('#wechat-month').value),
-            wechat_created_year: parseInt(modalEl.querySelector('#wechat-year').value),
+            wechat_created_day: parseInt(modalEl.querySelector('#wechat-day').value) || null,
+            wechat_created_month: parseInt(modalEl.querySelector('#wechat-month').value) || null,
+            wechat_created_year: parseInt(modalEl.querySelector('#wechat-year').value) || null,
         };
 
-        // Xử lý logic trạng thái (status) phức tạp
+        // Xử lý logic trạng thái phức tạp giống hệt file MXH_Old
         if (selectedStatus === 'muted') {
-            // Set muted_until_sql 30 ngày kể từ bây giờ
             const muteUntilDate = new Date();
             muteUntilDate.setDate(muteUntilDate.getDate() + 30);
             payload.muted_until = muteUntilDate.toISOString();
-            // Giữ lại status gốc (active/disabled) khi bị mute
-            payload.status = originalAccount.status; 
-            payload.wechat_status = originalAccount.wechat_status;
+            payload.status = originalAccount.status; // Giữ status cũ khi mute
+            payload.wechat_status = originalAccount.wechat_status; // Giữ wechat_status cũ khi mute
         } else {
-            // Nếu không phải 'muted', đảm bảo gỡ mute
-            payload.muted_until = null;
-            payload.status = selectedStatus;
+            payload.muted_until = null; // Gỡ mute
+            // Mapping status
+            payload.status = (selectedStatus === 'available') ? 'active' : ((selectedStatus === 'die') ? 'disabled' : selectedStatus);
             payload.wechat_status = selectedStatus;
         }
 
@@ -887,8 +888,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 showToast('Cập nhật thông tin thành công!', 'success');
                 bootstrap.Modal.getInstance(modalEl).hide();
-                // Tải lại dữ liệu để đảm bảo đồng bộ
-                await loadMXHData(true); 
+                await loadMXHData(true); // Tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi khi cập nhật!', 'error');
