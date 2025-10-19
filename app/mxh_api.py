@@ -434,7 +434,7 @@ def update_account(account_id):
 
 # ===== SCAN MANAGEMENT ENDPOINTS =====
 
-@app.route('/api/mxh/accounts/mark-scanned', methods=['POST'])
+@mxh_api_bp.route('/accounts/mark-scanned', methods=['POST'])
 def mark_account_scanned():
     """Đánh dấu tài khoản đã quét"""
     try:
@@ -464,7 +464,7 @@ def mark_account_scanned():
     finally:
         conn.close()
 
-@app.route('/api/mxh/accounts/reset-scan', methods=['POST'])
+@mxh_api_bp.route('/accounts/reset-scan', methods=['POST'])
 def reset_account_scan():
     """Reset lượt quét của tài khoản"""
     try:
@@ -488,6 +488,161 @@ def reset_account_scan():
         
         conn.commit()
         return jsonify({"success": True, "message": "Đã reset lượt quét"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+# ===== NOTICE MANAGEMENT ENDPOINTS =====
+
+@mxh_api_bp.route('/accounts/<int:account_id>/notice', methods=['POST'])
+def set_account_notice(account_id):
+    """Đặt thông báo cho tài khoản"""
+    try:
+        data = request.get_json()
+        title = data.get('title', '').strip()
+        days = int(data.get('days', 0))
+        note = data.get('note', '').strip()
+        
+        if not title or days <= 0:
+            return jsonify({"error": "title and days are required"}), 400
+        
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        notice_data = {
+            "enabled": True,
+            "title": title,
+            "days": days,
+            "note": note,
+            "start_at": now
+        }
+        
+        conn.execute("""
+            UPDATE mxh_accounts 
+            SET notice = ?, updated_at = ?
+            WHERE id = ?
+        """, (json.dumps(notice_data), now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Đã đặt thông báo"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@mxh_api_bp.route('/accounts/<int:account_id>/notice', methods=['DELETE'])
+def clear_account_notice(account_id):
+    """Hủy thông báo của tài khoản"""
+    try:
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        conn.execute("""
+            UPDATE mxh_accounts 
+            SET notice = NULL, updated_at = ?
+            WHERE id = ?
+        """, (now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Đã hủy thông báo"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ===== STATUS UPDATE ENDPOINTS =====
+
+@mxh_api_bp.route('/accounts/<int:account_id>/status', methods=['POST'])
+def update_account_status(account_id):
+    """Cập nhật trạng thái tài khoản: available, die, disabled"""
+    try:
+        data = request.get_json()
+        status = data.get('status')
+        
+        if not status:
+            return jsonify({"error": "status is required"}), 400
+        
+        if status not in ['available', 'die', 'disabled']:
+            return jsonify({"error": "Invalid status. Must be: available, die, disabled"}), 400
+        
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        # Map status values
+        status_map = {
+            'available': 'active',
+            'die': 'die', 
+            'disabled': 'disabled'
+        }
+        
+        db_status = status_map[status]
+        
+        # Update status and die_date if needed
+        if status == 'die':
+            conn.execute("""
+                UPDATE mxh_accounts 
+                SET status = ?, die_date = ?, updated_at = ?
+                WHERE id = ?
+            """, (db_status, now, now, account_id))
+        else:
+            conn.execute("""
+                UPDATE mxh_accounts 
+                SET status = ?, die_date = NULL, updated_at = ?
+                WHERE id = ?
+            """, (db_status, now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": f"Đã cập nhật trạng thái thành {status}"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_api_bp.route('/accounts/<int:account_id>/rescue', methods=['POST'])
+def rescue_account(account_id):
+    """Cứu tài khoản: success hoặc failed"""
+    try:
+        data = request.get_json()
+        result = data.get('result')
+        
+        if not result:
+            return jsonify({"error": "result is required"}), 400
+        
+        if result not in ['success', 'failed']:
+            return jsonify({"error": "Invalid result. Must be: success, failed"}), 400
+        
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        if result == 'success':
+            conn.execute("""
+                UPDATE mxh_accounts 
+                SET status = 'active', 
+                    die_date = NULL,
+                    rescue_count = COALESCE(rescue_count, 0) + 1,
+                    rescue_success_count = COALESCE(rescue_success_count, 0) + 1,
+                    updated_at = ?
+                WHERE id = ?
+            """, (now, account_id))
+            message = "Cứu thành công!"
+        else:  # failed
+            conn.execute("""
+                UPDATE mxh_accounts 
+                SET rescue_count = COALESCE(rescue_count, 0) + 1,
+                    updated_at = ?
+                WHERE id = ?
+            """, (now, account_id))
+            message = "Cứu thất bại!"
+        
+        conn.commit()
+        return jsonify({"success": True, "message": message})
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500

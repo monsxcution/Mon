@@ -36,62 +36,67 @@
 
 /* --- VIỀN CARD THEO TRẠNG THÁI --- */
 
-/* 🟠 CAM (Thông báo) - Giữ nguyên hiệu ứng phát sáng */
-.mxh-card.mxh-border-orange {
+/* === MXH state borders (match selected style, keep color on hover) === */
+/* === MXH BORDER STYLES - HIGH SPECIFICITY === */
+.tool-card.mxh-card.mxh-border-green {
+    border: 2px solid #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 14px rgba(47,229,106,.45), 0 0 28px rgba(47,229,106,.25) !important;
+}
+.tool-card.mxh-card.mxh-border-green:hover {
+    border-color: #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 18px rgba(47,229,106,.55), 0 0 34px rgba(47,229,106,.35) !important;
+}
+.tool-card.mxh-card.mxh-border-green::before {
+    background: radial-gradient(circle, rgba(47,229,106,.18) 0%, rgba(47,229,106,0) 80%);
+    opacity: 1;
+}
+
+.tool-card.mxh-card.mxh-border-red {
+    border: 2px solid #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 14px rgba(255,77,79,.5), 0 0 28px rgba(255,77,79,.3) !important;
+}
+.tool-card.mxh-card.mxh-border-red:hover {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 18px rgba(255,77,79,.6), 0 0 34px rgba(255,77,79,.35) !important;
+}
+.tool-card.mxh-card.mxh-border-red::before {
+    background: radial-gradient(circle, rgba(255,77,79,.18) 0%, rgba(255,77,79,0) 80%);
+    opacity: 1;
+}
+
+.tool-card.mxh-card.mxh-border-orange {
     border: 2px solid #ffa500 !important;
     box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 14px rgba(255,165,0,.5), 0 0 28px rgba(255,165,0,.3) !important;
 }
-.mxh-card.mxh-border-orange:hover {
-    transform: translateY(-12px) scale(1.03);
+.tool-card.mxh-card.mxh-border-orange:hover {
     border-color: #ffa500 !important;
     box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 18px rgba(255,165,0,.6), 0 0 34px rgba(255,165,0,.35) !important;
 }
-.mxh-card.mxh-border-orange::before {
+.tool-card.mxh-card.mxh-border-orange::before {
     background: radial-gradient(circle, rgba(255,165,0,.18) 0%, rgba(255,165,0,0) 80%);
     opacity: 1;
 }
 
-/* 🔴 ĐỎ (Die/Disabled) - Chỉ có viền, không phát sáng */
-.mxh-card.mxh-border-red {
-    border: 2px solid #ff4d4f !important;
-    box-shadow: none !important;
-}
-.mxh-card.mxh-border-red:hover {
-    transform: translateY(-12px) scale(1.03);
-    border-color: #ff4d4f !important;
-    box-shadow: none !important;
-}
-.mxh-card.mxh-border-red::before {
-    display: none !important;
-}
-
-/* 🟢 XANH LÁ (Anniversary) - Chỉ có viền, không phát sáng */
-.mxh-card.mxh-border-green {
-    border: 2px solid #2fe56a !important;
-    box-shadow: none !important;
-}
-.mxh-card.mxh-border-green:hover {
-    transform: translateY(-12px) scale(1.03);
-    border-color: #2fe56a !important;
-    box-shadow: none !important;
-}
-.mxh-card.mxh-border-green::before {
-    display: none !important;
-}
-
-/* ⚪ TRẮNG (Available) - Chỉ có viền, không phát sáng */
-.mxh-card.mxh-border-white {
+.tool-card.mxh-card.mxh-border-white {
     border: 2px solid #fff !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 14px rgba(255,255,255,.35), 0 0 28px rgba(255,255,255,.2) !important;
 }
-.mxh-card.mxh-border-white:hover {
-    transform: translateY(-12px) scale(1.03);
+.tool-card.mxh-card.mxh-border-white:hover {
     border-color: #fff !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.3), 0 0 18px rgba(255,255,255,.45), 0 0 34px rgba(255,255,255,.28) !important;
 }
-.mxh-card.mxh-border-white::before {
-    display: none !important;
+.tool-card.mxh-card.mxh-border-white::before {
+    background: radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,0) 80%);
+    opacity: 1;
 }
+
+/* Ưu tiên màu: đỏ > cam > xanh > trắng */
+.mxh-card.mxh-border-red{z-index:1}
+.mxh-card.mxh-border-orange:not(.mxh-border-red){z-index:1}
+.mxh-card.mxh-border-green:not(.mxh-border-red):not(.mxh-border-orange){z-index:1}
+.mxh-card.mxh-border-red.mxh-border-orange{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-red.mxh-border-green{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-orange.mxh-border-green{border-color:#ffa500!important}
 
 /* ===== INLINE EDITING STYLES ===== */
 .mxh-page .editable-field {
@@ -297,3 +302,72 @@
         transform: translateX(0);
     }
 }
+
+/* ===== NOTICE STYLES (copy exact from MXH_Old) ===== */
+.mxh-page .mxh-card .notice-line {
+    background-color: #fd7e14 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 0.7rem !important;
+    text-align: center !important;
+    margin: 2px 0 !important;
+    display: block !important;
+}
+
+.mxh-page .mxh-card .notice-line.expired {
+    background-color: #dc3545 !important;
+}
+
+.mxh-page .notice-expired-blink {
+    animation: noticeBlink 1s infinite;
+}
+
+@keyframes noticeBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.mxh-page .notice-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2c3340;
+    border: 1px solid #444a59;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+.mxh-page .notice-tooltip-title {
+    color: #00e0ff;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.mxh-page .notice-tooltip-note {
+    color: #b0b0b0;
+    font-size: 0.7rem;
+}
+
+/* Notice hover tooltip */
+.mxh-page .mxh-card .card-body {
+    position: relative;
+}
+
+.mxh-page .notice-line:hover + .notice-tooltip {
+    display: block;
+}
+
+.mxh-page .notice-tooltip.tooltip-center {
+    right: auto !important;
+    left: 50% !important;
+    top: -8px !important;
+    transform: translate(-50%, -100%) !important;
+}
+
