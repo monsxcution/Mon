@@ -1,50 +1,184 @@
-# Tóm Tắt Tiến Độ Dự Án Nâng Cấp MXH
+# 🎯 **MỤC TIÊU: Tái cấu trúc (refactor) module MXH một cách tuần tự theo từng tính năng**
 
-Dưới đây là bản tóm tắt về mục tiêu ban đầu, các công việc đã hoàn thành, và kế hoạch tiếp theo cho dự án.
+## 📁 **THƯ MỤC MXH_Old - CODE MẪU**
 
-## 1. Mục Tiêu Ban Đầu
+**LƯU Ý QUAN TRỌNG:** Thư mục `MXH_Old/` chứa code dự án cũ, chỉ làm **MẪU THAM KHẢO**. 
+- ✅ **Có sẵn giao diện** hoàn chỉnh trong `MXH_Old/mxh.html`
+- ✅ **Có sẵn logic** JavaScript trong `MXH_Old/mxh_routes.py` 
+- ✅ **Có sẵn CSS** styling trong `MXH_Old/style.css`
+- 🎯 **Mục đích:** Dựa vào đó để làm cho nhanh
 
-Mục tiêu chính của dự án là tái cấu trúc toàn bộ ứng dụng để hỗ trợ mô hình dữ liệu 1-N (một thẻ có thể chứa nhiều tài khoản). Các giai đoạn chính bao gồm:
+---
 
-*   **Giai đoạn 1:** Cập nhật cấu trúc Database.
-*   **Giai đoạn 2:** Nâng cấp API Backend.
-*   **Giai đoạn 3:** Viết lại giao diện Frontend.
-*   **Giai đoạn 4:** Kiểm thử toàn diện.
-*   **Giai đoạn 5:** Hoàn thiện tài liệu và bàn giao.
+Mỗi giai đoạn là một đơn vị công việc hoàn chỉnh và có thể kiểm thử được. Chúng ta sẽ xây dựng từ đầu, bắt đầu bằng việc sửa lỗi backend, sau đó triển khai từng tính năng một ở phía frontend.
 
-## 2. Những Gì Đã Hoàn Thành
+---
 
-Chúng ta đã hoàn thành phần lớn các công việc kỹ thuật cốt lõi, nhưng đang gặp khó khăn ở giai đoạn kiểm thử.
+## 🔧 **GIAI ĐOẠN 1: NỀN TẢNG - SỬA LỖI BACKEND (BẮT BUỘC)**
 
-### Backend (Hoàn thành)
-*   **Database:** Đã di chuyển thành công cấu trúc cơ sở dữ liệu. Bảng `mxh_accounts` đã được tạo và liên kết với `mxh_cards` thông qua khóa ngoại.
-*   **API:** Toàn bộ các endpoint trong `app/mxh_routes.py` đã được cập nhật để xử lý cấu trúc dữ liệu 1-N mới, bao gồm các chức năng lấy, tạo, sửa, xóa thẻ và các tài khoản con.
+**MÔ TẢ:** Trước khi viết bất kỳ tính năng mới nào, chúng ta phải sửa các điểm không nhất quán giữa kế hoạch và code backend hiện tại. Đây là điều kiện tiên quyết cho tất cả các bước tiếp theo.
 
-### Frontend (Hoàn thành về mặt tính năng, nhưng còn lỗi)
-*   **Tái cấu trúc `mxh.js`:** Đã viết lại phần lớn logic trong `mxh.js` để tương thích với API và cấu trúc dữ liệu mới.
-*   **Giao diện người dùng (UI):**
-    *   Triển khai giao diện mới cho phép hiển thị nhiều tài khoản trong một thẻ.
-    *   Tạo một menu ngữ cảnh (chuột phải) hợp nhất cho tất cả các hành động liên quan đến thẻ và tài khoản.
-    *   Cập nhật tất cả các modal (Thêm, Sửa, Ghi chú...) để hoạt động với API mới.
-*   **Sửa lỗi:** Đã dành nhiều thời gian để chẩn đoán và sửa các lỗi JavaScript phát sinh sau khi tái cấu trúc, bao gồm:
-    *   `SyntaxError`: Lỗi cú pháp do ký tự thoát và code thừa.
-    *   `TypeError`: Lỗi `flatMap` do backend trả về dữ liệu không hợp lệ.
-    *   `ReferenceError`: Lỗi `setupEditableFields is not defined` - **đây là lỗi đang lặp lại và cần được giải quyết triệt để.**
+### **1.1. Sửa Tên Bảng trong app/database.py**
 
-## 3. Công Việc Còn Lại (Kế Hoạch Tiếp Theo)
+**HÀNH ĐỘNG:** Trong file `app/database.py`, tìm câu lệnh `CREATE TABLE` cho `mxh_card`.
 
-Trọng tâm hiện tại là ổn định ứng dụng để có thể tiến hành kiểm thử.
+**THAY ĐỔI:** 
+- Đổi tên bảng từ `mxh_card` thành `mxh_cards`
+- Cập nhật `FOREIGN KEY` trong bảng `mxh_accounts` để tham chiếu đến `mxh_cards(id)`
+- Cập nhật tên các chỉ mục (index) thành:
+  - `idx_accounts_card_id`
+  - `idx_cards_group_id` 
+  - `idx_cards_platform`
+  - `idx_accounts_status`
 
-1.  **Giải Quyết Dứt Điểm Lỗi `ReferenceError`:**
-    *   **Hành động:** Tôi sẽ dừng máy chủ và thực hiện một cuộc rà soát **toàn bộ** file `mxh.js` một cách cẩn thận để tìm và xóa **tất cả** các lời gọi đến hàm `setupEditableFields` đã bị xóa. Đây là ưu tiên hàng đầu.
+### **1.2. Cập nhật Tất cả Truy vấn API trong app/mxh_api.py**
 
-2.  **Tiếp Tục Giai Đoạn 4: Kiểm Thử Toàn Diện:**
-    *   **Điều kiện:** Sau khi ứng dụng có thể khởi chạy ổn định mà không còn lỗi JavaScript.
-    *   **Nhiệm vụ:** Bạn (người dùng) và tôi sẽ phối hợp kiểm thử lại từ đầu tất cả các luồng nghiệp vụ theo kế hoạch đã vạch ra, bao gồm:
-        *   Tạo, sửa, xóa thẻ và tài khoản.
-        *   Chức năng chuyển đổi tài khoản.
-        *   Hoạt động của menu ngữ cảnh.
-        *   Tương tác với tất cả các modal.
+**HÀNH ĐỘNG:** Trong file `app/mxh_api.py`, xem lại mọi hàm (`create_card`, `get_cards`, `create_account`).
 
-3.  **Giai Đoạn 5: Hoàn Thiện và Bàn Giao:**
-    *   Sau khi giai đoạn kiểm thử hoàn tất và không còn lỗi nghiêm trọng, tôi sẽ tiến hành hoàn thiện tài liệu kỹ thuật và bàn giao dự án.
+**THAY ĐỔI:** Thay thế tất cả các tham chiếu SQL từ bảng `mxh_card` thành `mxh_cards`.
+
+### **1.3. Triển khai Lồng ghép Dữ liệu Chính xác trong GET /mxh/api/cards**
+
+**HÀNH ĐỘNG:** Trong file `app/mxh_api.py`, sửa đổi hàm `get_cards()`.
+
+**TRẠNG THÁI HIỆN TẠI:** Hàm này trả về một `accounts_summary` tĩnh và không chính xác.
+
+**THAY ĐỔI YÊU CẦU:**
+1. Lấy tất cả các card từ `mxh_cards`
+2. Lấy **TẤT CẢ** các tài khoản từ `mxh_accounts`
+3. Với mỗi card, tạo một khóa (key) mới là `sub_accounts` có giá trị là một mảng (array)
+4. Đưa các đối tượng tài khoản thuộc về card đó vào mảng `sub_accounts` tương ứng
+5. Phản hồi JSON cuối cùng phải là một mảng các đối tượng card, mỗi đối tượng chứa danh sách `sub_accounts` của nó
+
+**TÀI LIỆU THAM KHẢO:** Sử dụng logic từ file cũ `MXH_Old/mxh_routes.py.txt` (hàm `mxh_cards_and_sub_accounts`).
+
+---
+
+## 🎨 **GIAI ĐOẠN 2: FRONTEND - HIỂN THỊ CARD (CHỈ ĐỌC)**
+
+**MÔ TẢ:** Mục tiêu là hiển thị dữ liệu hiện có lên màn hình, dựa trên API đã được sửa lỗi.
+
+### **2.1. Tái tạo Toàn bộ Cấu trúc HTML**
+
+**HÀNH ĐỘNG:** Thay thế toàn bộ nội dung của `app/templates/mxh.html` bằng nội dung từ `MXH_Old/mxh.html`.
+
+**LÝ DO:** Việc này sẽ mang vào tất cả các yếu tố giao diện người dùng (UI) cần thiết như modal và menu ngữ cảnh cho các giai đoạn sau.
+
+### **2.2. Triển khai JavaScript ban đầu trong app/static/js/mxh.js**
+
+**HÀNH ĐỘNG:** Ghi đè lên nội dung hiện có của `app/static/js/mxh.js`.
+
+**NHIỆM VỤ:** Viết đoạn script ban đầu có chức năng:
+
+1. **Khi sự kiện `DOMContentLoaded` được kích hoạt**, gọi một hàm chính như `initializeMXH()`
+2. **Hàm `initializeMXH()`** sẽ gọi `loadMXHData()`
+3. **Hàm `loadMXHData()`** thực hiện:
+   - Fetch dữ liệu từ `GET /mxh/api/groups` và `GET /mxh/api/cards`
+   - Lưu trữ kết quả vào các mảng toàn cục (`mxhGroups`, `mxhCards`)
+   - Sau khi fetch xong, gọi `renderMXHAccounts()`
+4. **Hàm `renderMXHAccounts()`**:
+   - Lặp qua `mxhCards`
+   - Với mỗi card, tìm tài khoản chính (`is_primary: 1`) trong mảng `sub_accounts`
+   - Sử dụng dữ liệu của tài khoản đó để xây dựng HTML cho card
+   - Chèn HTML cuối cùng vào phần tử có id là `#mxh-accounts-container`
+
+---
+
+## ➕ **GIAI ĐOẠN 3: CHỨC NĂNG TẠO MỚI - THÊM CARD MỚI**
+
+**MÔ TẢ:** Triển khai quy trình thêm một card mới cùng với tài khoản chính của nó.
+
+### **3.1. Kết nối Sự kiện cho Modal "Thêm Tài Khoản"**
+
+**HÀNH ĐỘNG:** Trong `app/static/js/mxh.js`, thêm một trình lắng nghe sự kiện (event listener) cho nút "Thêm Tài Khoản" (nút kích hoạt `#mxh-addAccountModal`).
+
+**NHIỆM VỤ:** Triển khai logic cho nút lưu (save) bên trong modal `#mxh-addAccountModal`.
+
+### **3.2. Triển khai Lệnh gọi API**
+
+**HÀNH ĐỘNG:** Khi nút lưu được nhấp, thu thập tất cả dữ liệu từ form.
+
+**NHIỆM VỤ:** 
+- Thực hiện một yêu cầu `POST` đến `/mxh/api/cards`
+- Phần thân (body) của yêu cầu phải là một đối tượng JSON chứa tất cả các trường cần thiết (`card_name`, `group_id`, `platform`, `username`, `phone`, v.v.) để tạo cả card và tài khoản chính ban đầu của nó
+
+**LƯU Ý:** Backend cần được điều chỉnh để xử lý việc tạo tài khoản chính ngay trong endpoint `POST /mxh/api/cards`, tương tự như logic cũ của `alias_create_card_from_accounts`.
+
+### **3.3. Cập nhật Giao diện người dùng (UI)**
+
+Khi nhận được phản hồi thành công từ API:
+- Đóng modal
+- Gọi lại hàm `loadMXHData()` để làm mới giao diện và hiển thị card mới
+
+---
+
+## 🖱️ **GIAI ĐOẠN 4: TƯƠNG TÁC - MENU NGỮ CẢNH & XÓA**
+
+**MÔ TẢ:** Thêm menu ngữ cảnh khi nhấp chuột phải và triển khai hành động đầu tiên, đơn giản nhất: Xóa.
+
+### **4.1. Triển khai Hiển thị Menu Ngữ cảnh**
+
+**HÀNH ĐỘNG:** Trong `mxh.js`, tạo một hàm `handleCardContextMenu(event, cardId)`.
+
+**NHIỆM VỤ:** 
+- Trong bước `renderMXHAccounts`, thêm thuộc tính `oncontextmenu` vào div chính của mỗi card để gọi hàm này
+- Hàm này nên:
+  - Ngăn chặn menu mặc định
+  - Lấy `cardId`
+  - Lưu nó vào một biến toàn cục (ví dụ: `currentContextCardId`)
+  - Hiển thị menu `#unified-context-menu` tại vị trí con trỏ chuột
+
+### **4.2. Triển khai Hành động "Xóa Card"**
+
+**HÀNH ĐỘNG:** Thêm một trình lắng nghe sự kiện nhấp chuột cho mục "Xóa Card" trong menu ngữ cảnh.
+
+**NHIỆM VỤ:** 
+- Khi được nhấp, nó sẽ mở modal xác nhận (`#delete-card-modal`)
+- **GỌI API:** Nút xác nhận (`#confirm-delete-btn`) sẽ kích hoạt một yêu cầu `DELETE` đến `/mxh/api/cards/<card_id>`, sử dụng `currentContextCardId` đã lưu
+- **CẬP NHẬT UI:** Khi thành công, xóa card khỏi giao diện ngay lập tức (để có phản hồi tức thì) và sau đó có thể tùy chọn gọi `loadMXHData()` để đồng bộ lại dữ liệu
+
+---
+
+## ✏️ **GIAI ĐOẠN 5: TƯƠNG TÁC - SỬA CARD/TÀI KHOẢN**
+
+**MÔ TẢ:** Triển khai khả năng chỉnh sửa thông tin của một tài khoản.
+
+### **5.1. Kết nối Sự kiện cho mục Menu "Thông tin" (Sửa)**
+
+**HÀNH ĐỘNG:** Trong `mxh.js`, thêm một trình lắng nghe sự kiện nhấp chuột cho mục menu "Thông tin".
+
+**NHIỆM VỤ:** 
+- Khi được nhấp, nó sẽ mở modal tương ứng (ví dụ: `#wechat-account-modal`)
+- **NẠP DỮ LIỆU:** Tìm card và tài khoản chính chính xác từ trạng thái toàn cục bằng cách sử dụng `currentContextCardId`. Điền dữ liệu này vào các trường trong form của modal
+
+### **5.2. Triển khai Logic Lưu**
+
+**HÀNH ĐỘNG:** Nút "Apply" trong modal sẽ kích hoạt logic lưu.
+
+**GỌI API:** Nó sẽ thực hiện một yêu cầu `PUT` đến `/mxh/api/accounts/<account_id>` với dữ liệu đã được cập nhật. 
+
+**LƯU Ý:** Chúng ta đang cập nhật **TÀI KHOẢN**, không phải card.
+
+**CẬP NHẬT UI:** Khi thành công, đóng modal và làm mới dữ liệu.
+
+---
+
+## 🚀 **CÁC GIAI ĐOẠN TIẾP THEO: MỖI LẦN MỘT TÍNH NĂNG**
+
+**MÔ TẢ:** Triển khai các tính năng còn lại của menu ngữ cảnh một cách riêng lẻ. Đối với mỗi tính năng, hãy tuân theo mẫu sau:
+
+1. **Thêm trình lắng nghe sự kiện** cho mục menu
+2. **Kích hoạt lệnh gọi API** tương ứng (ví dụ: `POST /mxh/api/accounts/<id>/scan`)
+3. **Cập nhật giao diện người dùng** khi thành công
+
+### **📋 CÁC TÍNH NĂNG TIẾP THEO CẦN TRIỂN KHAI THEO THỨ TỰ:**
+
+- **Tính năng:** Submenu "Tài khoản" (liệt kê tất cả sub_accounts)
+- **Tính năng:** Submenu "Trạng Thái" (Available, Die, Disabled)  
+- **Tính năng:** Submenu "Quét" (Đánh dấu Đã Quét, Đặt lại Quét)
+- **Tính năng:** "Thông báo" (Đặt/Xóa thông báo)
+- **... và cứ thế tiếp tục**
+
+---
+
+**[KẾT THÚC KHỐI LỆNH CHO AI]**
