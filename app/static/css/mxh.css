@@ -1,11 +1,13 @@
-/* === MXH layout: CHỈ điều khiển số cards mỗi hàng === */
-#mxh-accounts-container .col {
-  flex: 0 0 calc(100% / var(--cardsPerRow, 6)) !important;
-  max-width: calc(100% / var(--cardsPerRow, 6)) !important;
-  border: 2px solid red !important; /* DEBUG: Remove this line */
+.mxh-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cardsPerRow, 6), 1fr);
+    gap: 1rem;
 }
 
-/* Card full-width trong cột */
+.mxh-cards-grid .col {
+    /* No need for flex styles */
+}
+
 .mxh-card {
-  width: 100%;
+    width: 100%;
 }

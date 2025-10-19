@@ -405,7 +405,7 @@ window.selectGroup = function(groupId) {
                             <i class="bi bi-eye-fill"></i>
                         </button>
                     </div>
-                    <div class="row g-2" id="${cardsContainerId}">
+</div>\n                    <div class="mxh-cards-grid" id="${cardsContainerId}">
                 `;
 
             accounts.forEach(account => {
@@ -475,9 +475,9 @@ window.selectGroup = function(groupId) {
         }
 
                 html += `
-                    <div class="col" style="padding: 2px;" data-account-id="${account.id}">
-                        <div class="card tool-card mxh-card ${borderClass} ${noticeClass}" 
-                             oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+                    <div class="card tool-card mxh-card ${borderClass} ${noticeClass}" 
+                         style="padding: 2px;" data-account-id="${account.id}"
+                         oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
                     <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <div class="d-flex align-items-center gap-1">
