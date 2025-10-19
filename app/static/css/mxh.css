@@ -1,32 +1,12 @@
 /* ===== MXH MODULE STYLES ===== */
 
 /*
- * QUY TẮC CHÍNH ĐỂ ĐIỀU KHIỂN SỐ CARD MỖI HÀNG BẰNG CSS GRID
- * - Sử dụng !important để override Bootstrap CSS
- * - Các card (.mxh-card) giờ là con trực tiếp của container grid này.
+ * Giao diện cho thẻ card.
+ * Các hiệu ứng viền neon, hover... được kế thừa từ style.css
+ * Chỉ cần đảm bảo thẻ có class "mxh-card" và "tool-card".
+ * Quan trọng: Không còn các quy tắc về display: grid ở đây.
 */
-#mxh-accounts-container.mxh-cards-grid {
-  display: grid !important;
-  /* Đây là dòng code cốt lõi: tạo ra số cột bằng biến --cardsPerRow */
-  grid-template-columns: repeat(var(--cardsPerRow, 12), 1fr) !important;
-  gap: 8px !important; /* Khoảng cách giữa các card */
-  width: 100% !important;
-}
-
-/*
- * Card bây giờ là một grid item.
- * - `min-width: 0` là một phương pháp tốt để ngăn các item tràn ra ngoài.
- * - Bỏ margin để không xung đột với `gap` của grid.
- * - Đảm bảo card không bị Bootstrap flexbox ảnh hưởng
-*/
-.mxh-cards-grid .mxh-card {
-  min-width: 0 !important;
+.mxh-card {
+  height: 100%; /* Đảm bảo các card trong 1 hàng cao bằng nhau */
   margin: 0 !important;
-  width: 100% !important;
-  display: block !important;
-}
-
-/* Override Bootstrap container styles */
-#mxh-accounts-container.mxh-cards-grid * {
-  box-sizing: border-box !important;
 }

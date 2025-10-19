@@ -28,11 +28,13 @@
         </div>
     </div>
 
-    <div id="mxh-accounts-container" class="mxh-cards-grid" style="--cardsPerRow: 12;">
-        <div class="card" style="grid-column: 1 / -1;">
-            <div class="card-body text-center text-muted">
-                <i class="bi bi-arrow-clockwise" style="font-size: 3rem; opacity: 0.3;"></i>
-                <h5 class="mt-3">Đang tải dữ liệu...</h5>
+    <div id="mxh-accounts-container" class="row g-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="bi bi-arrow-clockwise" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h5 class="mt-3">Đang tải dữ liệu...</h5>
+                </div>
             </div>
         </div>
     </div>
@@ -50,8 +52,8 @@
       <div class="modal-body">
         <div class="mb-3">
           <label for="mxh-cards-per-row" class="form-label">Số Cards Mỗi Hàng</label>
-          <input type="number" class="form-control" id="mxh-cards-per-row" min="1" max="50" value="12">
-          <div class="form-text">Ví dụ: 12 = 12 cards trên một hàng.</div>
+          <input type="number" class="form-control" id="mxh-cards-per-row" min="1" max="24" value="12">
+          <div class="form-text">Ví dụ: 12 = 12 cards trên một hàng. Bootstrap sẽ tự động sắp xếp.</div>
         </div>
       </div>
 
