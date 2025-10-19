@@ -2189,6 +2189,7 @@ async function createSubAccount(cardId) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      account_name: ".",  // ✅ Bổ sung field bắt buộc
       platform: "wechat",
       username: ".",   // <- yêu cầu Sếp
       phone: "."       // <- yêu cầu Sếp
@@ -2196,7 +2197,7 @@ async function createSubAccount(cardId) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
-  return data.account;
+  return data;
 }
 
 function setActiveAccount(cardId, accountId) {
@@ -2214,16 +2215,16 @@ MXH.addSubAccount = async (cardId)=>{
   const st=_readPrimaryFromDOM(cardId);
   
   try {
-    const acc = await createSubAccount(cardId);
+    const response = await createSubAccount(cardId);
     
     // Tạo account object từ response
     const accountObj = {
-      id: String(acc.id),
-      label: acc.label,
-      createdAt: acc.created_at,
+      id: String(response.id),
+      label: response.account_name || 'Tài khoản phụ',
+      createdAt: response.created_at,
       fields: { 
-        username: acc.username || '.', 
-        phone: acc.phone || '.' 
+        username: response.username || '.', 
+        phone: response.phone || '.' 
       }
     };
     
