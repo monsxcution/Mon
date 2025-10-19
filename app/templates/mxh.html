@@ -5,6 +5,7 @@
 {% block head %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mxh.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cards_per_row_fix.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -50,7 +51,7 @@
                 <div class="mb-3">
                     <label for="mxh-cards-per-row" class="form-label">Số Cards Mỗi Hàng</label>
                     <input type="number" class="form-control" id="mxh-cards-per-row"
-                        placeholder="Nhập số cards mỗi hàng..." min="1" max="20" value="12">
+                        placeholder="Nhập số cards mỗi hàng..." min="1" max="20" value="6">
                     <div class="form-text">Nhập số từ 1 đến 20. Ví dụ: 12 = 12 cards mỗi hàng</div>
                 </div>
             </div>

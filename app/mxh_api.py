@@ -7,6 +7,58 @@ from app.database import get_db_connection
 mxh_api_bp = Blueprint("mxh_api", __name__, url_prefix="/mxh/api")
 
 
+@mxh_api_bp.route("/accounts", methods=["GET"])
+def get_accounts():
+    """
+    GET /mxh/api/accounts
+    Get all accounts with optional last_updated_at filter for incremental updates.
+    """
+    conn = get_db_connection()
+    try:
+        last_updated_at = request.args.get('last_updated_at')
+        
+        if last_updated_at:
+            # Get accounts updated after the specified timestamp
+            query = """
+                SELECT a.*, c.card_name, c.platform, c.group_id, g.name as group_name, g.color as group_color, g.icon as group_icon
+                FROM mxh_accounts a
+                JOIN mxh_cards c ON a.card_id = c.id
+                JOIN mxh_groups g ON c.group_id = g.id
+                WHERE a.updated_at > ?
+                ORDER BY a.updated_at DESC
+            """
+            accounts = conn.execute(query, (last_updated_at,)).fetchall()
+        else:
+            # Get all accounts
+            query = """
+                SELECT a.*, c.card_name, c.platform, c.group_id, g.name as group_name, g.color as group_color, g.icon as group_icon
+                FROM mxh_accounts a
+                JOIN mxh_cards c ON a.card_id = c.id
+                JOIN mxh_groups g ON c.group_id = g.id
+                ORDER BY a.updated_at DESC
+            """
+            accounts = conn.execute(query).fetchall()
+        
+        # Convert to list of dictionaries
+        accounts_list = []
+        for account in accounts:
+            account_dict = dict(account)
+            # Parse notice JSON if it exists
+            if account_dict.get('notice'):
+                try:
+                    account_dict['notice'] = json.loads(account_dict['notice'])
+                except (json.JSONDecodeError, TypeError):
+                    account_dict['notice'] = None
+            accounts_list.append(account_dict)
+        
+        return jsonify(accounts_list)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
 @mxh_api_bp.route("/cards", methods=["POST"])
 def create_card():
     """
@@ -217,6 +269,54 @@ def create_account(card_id):
     except sqlite3.IntegrityError as e:
         conn.rollback()
         return jsonify({"error": f"Database constraint violation: {str(e)}"}), 400
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_api_bp.route("/accounts/<int:account_id>/quick-update", methods=["POST"])
+def quick_update_account(account_id):
+    """
+    POST /mxh/api/accounts/<id>/quick-update
+    Quick update for inline editing of account fields.
+    """
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
+        
+        # Get the field and value to update
+        field = data.get("field")
+        value = data.get("value")
+        
+        if not field:
+            return jsonify({"error": "field is required"}), 400
+        
+        # Validate field name to prevent SQL injection
+        allowed_fields = [
+            'account_name', 'username', 'phone', 'url', 'login_username', 
+            'login_password', 'wechat_status', 'status', 'notice'
+        ]
+        
+        if field not in allowed_fields:
+            return jsonify({"error": f"Invalid field: {field}"}), 400
+        
+        # Update the field
+        now = datetime.now(timezone.utc).astimezone().isoformat()
+        conn.execute(
+            f"UPDATE mxh_accounts SET {field} = ?, updated_at = ? WHERE id = ?",
+            (value, now, account_id)
+        )
+        
+        if conn.total_changes == 0:
+            return jsonify({"error": "Account not found"}), 404
+        
+        conn.commit()
+        return jsonify({"message": "Account updated successfully"}), 200
+        
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500

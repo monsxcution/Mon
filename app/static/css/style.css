@@ -1201,8 +1201,9 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 }
 
 #mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 12));
-    max-width: calc(100% / var(--cardsPerRow, 12));
+    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    min-width: 200px; /* Ensure minimum card width */
 }
 
 
@@ -1594,8 +1595,9 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 }
 
 #mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 12));
-    max-width: calc(100% / var(--cardsPerRow, 12));
+    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    min-width: 200px; /* Ensure minimum card width */
 }
 
 /* Notice system styling */
@@ -2883,8 +2885,9 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 }
 
 #mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 12));
-    max-width: calc(100% / var(--cardsPerRow, 12));
+    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
+    min-width: 200px; /* Ensure minimum card width */
 }
 
 
