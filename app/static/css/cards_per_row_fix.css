@@ -1,7 +1,0 @@
-/* ===== FIX CARDS PER ROW - TARGET ACTUAL STRUCTURE ===== */
-/* JavaScript creates .row .col structure, not #mxh-cards-grid */
-.row .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 6)) !important;
-    max-width: calc(100% / var(--cardsPerRow, 6)) !important;
-    min-width: 200px !important;
-}

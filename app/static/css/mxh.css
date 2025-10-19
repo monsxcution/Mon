@@ -1,9 +1,14 @@
-/* MXH Module Styles - Clean State */
-/* This file is ready for the new multi-account card implementation */
+/* ===== MXH MODULE STYLES ===== */
 
-.mxh-container {
-    /* Container styles for MXH module */
+/* * RULE TO CONTROL CARDS PER ROW
+ * This is the primary rule for the view mode functionality.
+ * It targets the columns directly inside the main accounts container.
+ * It uses the `--cardsPerRow` CSS variable, which is set by JavaScript.
+ * The `!important` flag ensures this rule overrides any conflicting generic Bootstrap styles.
+*/
+#mxh-accounts-container .row > .col {
+    flex: 0 0 calc(100% / var(--cardsPerRow, 6)) !important;
+    max-width: calc(100% / var(--cardsPerRow, 6)) !important;
 }
 
-/* Placeholder for future styles */
-/* Step 2 will add styles for the new card modal and multi-account system */
+/* Add other MXH-specific styles below this line as needed */
