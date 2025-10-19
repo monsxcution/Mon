@@ -1,22 +1,22 @@
 /* ===== MXH MODULE STYLES ===== */
 
 /*
- * RULE TO CONTROL CARDS PER ROW USING CSS GRID
- * This is the primary rule for the view mode functionality.
- * It defines a grid layout and uses the `--cardsPerRow` variable to set the number of columns.
- * `grid-template-columns: repeat(var(...), 1fr)` is the core of the fix, ensuring
- * that the grid has exactly the specified number of columns and will wrap automatically.
+ * QUY TẮC CHÍNH ĐỂ ĐIỀU KHIỂN SỐ CARD MỖI HÀNG BẰNG CSS GRID
+ * Sử dụng selector ID + class để tăng độ ưu tiên, đảm bảo layout luôn đúng.
+ * Các card (.mxh-card) giờ là con trực tiếp của container grid này.
 */
-.mxh-cards-grid {
+#mxh-accounts-container.mxh-cards-grid {
   display: grid;
-  grid-template-columns: repeat(var(--cardsPerRow, 6), 1fr);
-  gap: 8px; /* Defines the space between cards */
+  grid-template-columns: repeat(var(--cardsPerRow, 12), 1fr);
+  gap: 8px; /* Khoảng cách giữa các card */
 }
 
 /*
- * The .col class is now a grid item. `min-width: 0` is a good practice
- * to prevent grid items from overflowing if their content is too wide.
+ * Card bây giờ là một grid item.
+ * `min-width: 0` là một phương pháp tốt để ngăn các item tràn ra ngoài nếu nội dung quá rộng.
+ * Bỏ margin để không xung đột với `gap` của grid.
 */
-.mxh-cards-grid .col {
-  min-width: 0; 
+.mxh-cards-grid .mxh-card {
+  min-width: 0;
+  margin: 0 !important;
 }

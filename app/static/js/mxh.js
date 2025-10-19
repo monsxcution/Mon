@@ -18,45 +18,59 @@ let activeGroupId = null;
 let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
 // ===== VIEW MODE CONFIGURATION =====
+/**
+ * Áp dụng giá trị số card mỗi hàng vào CSS và lưu vào localStorage.
+ * @param {number | string} value - Số lượng card mong muốn trên một hàng.
+ */
 function applyViewMode(value) {
-  var n = Math.max(1, Number(value || localStorage.getItem('mxh_cards_per_row') || 6));
+  // Đảm bảo giá trị là một số hợp lệ, tối thiểu là 1, mặc định là 12.
+  var n = Math.max(1, Number(value || localStorage.getItem('mxh_cards_per_row') || 12));
+  
+  // Lưu giá trị vào localStorage để ghi nhớ cho lần sau.
   localStorage.setItem('mxh_cards_per_row', n);
 
-  // đặt CSS var cho container và :root (phòng khi CSS ăn var từ 2 nơi)
+  // Lấy container chính và đặt giá trị cho biến CSS `--cardsPerRow`.
   var container = document.getElementById('mxh-accounts-container');
-  if (container) container.style.setProperty('--cardsPerRow', n);
-  document.documentElement.style.setProperty('--cardsPerRow', n);
+  if (container) {
+    container.style.setProperty('--cardsPerRow', n);
+  }
 }
 
+/**
+ * Khởi tạo chức năng "Chế Độ Xem" khi trang được tải.
+ * - Lấy giá trị đã lưu từ localStorage.
+ * - Gán giá trị vào input.
+ * - Thêm sự kiện 'click' cho nút "Áp dụng".
+ */
 function initializeViewMode() {
   var input = document.getElementById('mxh-cards-per-row');
   var btn = document.getElementById('mxh-apply-view-mode-btn');
-  var saved = Number(localStorage.getItem('mxh_cards_per_row') || 6);
+  var savedValue = localStorage.getItem('mxh_cards_per_row') || 12;
 
-  if (input) input.value = saved;
-  applyViewMode(saved); // áp dụng khi load trang
+  if (input) {
+    input.value = savedValue;
+  }
+  
+  // Áp dụng giá trị đã lưu ngay khi tải trang.
+  applyViewMode(savedValue);
 
   if (btn) {
     btn.addEventListener('click', function() {
-      var val = Number((input && input.value) || 6);
-      if (!Number.isFinite(val) || val < 1) val = 1;
-      applyViewMode(val);
+      var currentValue = (input && input.value) ? input.value : 12;
+      applyViewMode(currentValue);
 
-      // đóng modal đúng chuẩn Bootstrap, tránh lỗi focus/ARIA
-      if (typeof bootstrap !== 'undefined') {
-        var modalEl = document.getElementById('mxh-view-mode-modal');
-        if (modalEl) {
-          var inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-          // TRƯỚC khi hide, blur phần tử đang focus để khỏi warning aria-hidden
-          if (document.activeElement && typeof document.activeElement.blur === 'function') {
-            document.activeElement.blur();
-          }
-          inst.hide();
+      // Đóng modal sau khi áp dụng.
+      var modalEl = document.getElementById('mxh-view-mode-modal');
+      if (modalEl && typeof bootstrap !== 'undefined') {
+        var modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+          modalInstance.hide();
         }
       }
 
+      // Hiển thị thông báo thành công.
       if (typeof showToast === 'function') {
-        showToast('Đã áp dụng số cards mỗi hàng: ' + val, 'success');
+        showToast('Đã áp dụng ' + currentValue + ' card mỗi hàng!', 'success');
       }
     });
   }
@@ -312,264 +326,198 @@ window.selectGroup = function(groupId) {
     renderMXHAccounts();
 };
 
-    // ===== COMPLEX RENDERING LOGIC (ADAPTED FROM OLD FILE) =====
+    // ===== VIẾT LẠI HOÀN TOÀN: RENDER CÁC CARD TÀI KHOẢN =====
+    /**
+     * VIẾT LẠI HOÀN TOÀN: Render các card tài khoản.
+     * Hàm này giờ sẽ tạo ra một cấu trúc HTML phẳng, các card là con trực tiếp của grid container.
+     */
     function renderMXHAccounts() {
         if (isRendering) {
             pendingUpdates = true;
             return;
         }
-
         isRendering = true;
+
         const container = document.getElementById('mxh-accounts-container');
+        const scrollY = window.scrollY;
 
-        // 💾 SAVE SCROLL POSITION BEFORE RENDER
-        const scrollY = window.scrollY || window.pageYOffset;
-        const scrollX = window.scrollX || window.pageXOffset;
+        const filteredAccounts = activeGroupId
+            ? mxhAccounts.filter(acc => String(acc.group_id) === String(activeGroupId))
+            : mxhAccounts;
 
-    if (mxhAccounts.length === 0) {
+        if (filteredAccounts.length === 0) {
             container.innerHTML = `
-            <div class="card">
-                <div class="card-body text-center text-muted">
-                    <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <h5 class="mt-3">Chưa có tài khoản MXH nào</h5>
-                    <p>Nhấn "Thêm Tài Khoản MXH" để bắt đầu.</p>
-                </div>
-            </div>
-        `;
-            isRendering = false;
-            return;
-        }
-
-    // Filter accounts based on active group
-    const filteredAccounts = activeGroupId === null
-        ? mxhAccounts 
-        : mxhAccounts.filter(acc => acc.group_id === activeGroupId);
-
-    if (filteredAccounts.length === 0) {
-            container.innerHTML = `
-                <div class="card">
+                <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-body text-center text-muted">
-                        <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
-                        <h5 class="mt-3">Chưa có tài khoản MXH nào</h5>
-                        <p>Nhấn "Thêm Tài Khoản MXH" để bắt đầu.</p>
+                        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3">Không có tài khoản nào</h5>
+                        <p>Nhấn "Thêm Tài Khoản" để bắt đầu.</p>
                     </div>
-                </div>
-            `;
+                </div>`;
             isRendering = false;
             return;
         }
 
-    // Sort accounts by card_name (numeric if possible)
-    filteredAccounts.sort((a, b) => {
-            const numA = parseInt(a.card_name, 10);
-            const numB = parseInt(b.card_name, 10);
-            if (!isNaN(numA) && !isNaN(numB)) {
-                return numA - numB;
-            }
-            return a.card_name.localeCompare(b.card_name);
+        // Sắp xếp theo card_name dạng số
+        filteredAccounts.sort((a, b) => {
+            const numA = parseInt(a.card_name, 10) || Infinity;
+            const numB = parseInt(b.card_name, 10) || Infinity;
+            return numA - numB;
         });
 
-        // Use DocumentFragment for better performance
-        const fragment = document.createDocumentFragment();
-        const tempDiv = document.createElement('div');
-        let html = '';
+        // Tạo HTML cho tất cả các card
+        const cardsHtml = filteredAccounts.map(account => {
+            // Calculate age for WeChat accounts
+            let accountAgeDisplay = '';
+            let ageColor = '#fff';
+            let scanCountdown = '';
 
-    // Group accounts by group_id
-    const accountsByGroup = {};
-    filteredAccounts.forEach(account => {
-        const groupId = account.group_id || 'no-group';
-        if (!accountsByGroup[groupId]) {
-            accountsByGroup[groupId] = [];
-        }
-        accountsByGroup[groupId].push(account);
-    });
+            if (account.platform === 'wechat' && account.wechat_created_year) {
+                const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
+                const diffDays = Math.ceil((new Date() - createdDate) / (1000 * 60 * 60 * 24));
 
-    Object.keys(accountsByGroup).forEach(groupId => {
-        const accounts = accountsByGroup[groupId];
-            const group = mxhGroups.find(g => g.id == groupId);
+                if (diffDays >= 365) {
+                    const years = Math.floor(diffDays / 365);
+                    const months = Math.floor((diffDays % 365) / 30);
+                    accountAgeDisplay = `${years}năm ${months}th`;
+                    ageColor = '#07c160';
+                } else if (diffDays >= 30) {
+                    const months = Math.floor(diffDays / 30);
+                    accountAgeDisplay = `${months}th ${diffDays % 30}d`;
+                } else {
+                    accountAgeDisplay = `${diffDays}d`;
+                }
 
-            if (group) {
-                const cardsContainerId = `cards-${groupId}`;
+                // Calculate scan countdown with QR icon
+                const currentScanCount = account.wechat_scan_count || 0;
+                const maxScans = 3;
+                const remainingScans = Math.max(0, maxScans - currentScanCount);
+                if (remainingScans > 0) {
+                    scanCountdown = `<i class="bi bi-qr-code me-1"></i>${remainingScans}`;
+                }
+            }
 
-            // Render group header with toggle
-                html += `
-                <div class="mb-4">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h6 class="mb-0">
-                            <i class="bi ${group.icon} me-2" style="color: ${group.color};"></i>
-                            ${group.name}
-                            <span class="badge bg-secondary ms-2">${accounts.length}</span>
-                        </h6>
-                        <button class="btn btn-sm btn-outline-secondary" id="toggle-${groupId}" 
-                                onclick="toggleGroupVisibility(${groupId})">
-                            <i class="bi bi-eye-fill"></i>
-                        </button>
-                    </div>
-</div>\n                    <div class="mxh-cards-grid" id="${cardsContainerId}">
-                `;
+            // Notice handling
+            const notice = ensureNoticeParsed(account.notice);
+            const hasNotice = notice && notice.title;
+            const isNoticeExpired = hasNotice && notice.end_at && new Date(notice.end_at) < new Date();
+            const noticeClass = isNoticeExpired ? 'expired' : '';
+            const noticeText = hasNotice ? escapeHtml(notice.title) : '';
 
-            accounts.forEach(account => {
-                // Calculate age for WeChat accounts
-        let accountAgeDisplay = '';
-        let ageColor = '#fff';
-        let scanCountdown = '';
+            // Status and border classes
+            let statusClass = 'account-status-available';
+            let borderClass = '';
+            let statusIcon = '';
 
-        if (account.platform === 'wechat' && account.wechat_created_year) {
-            const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-                    const diffDays = Math.ceil((new Date() - createdDate) / (1000 * 60 * 60 * 24));
-
-            if (diffDays >= 365) {
-                const years = Math.floor(diffDays / 365);
-                const months = Math.floor((diffDays % 365) / 30);
-                accountAgeDisplay = `${years}năm ${months}th`;
-                ageColor = '#07c160';
-            } else if (diffDays >= 30) {
-                const months = Math.floor(diffDays / 30);
-                accountAgeDisplay = `${months}th ${diffDays % 30}d`;
+            if (account.status === 'die') {
+                statusClass = 'account-status-die';
+                borderClass = 'mxh-border-red';
+                statusIcon = '<i class="bi bi-x-circle-fill status-icon"></i>';
+            } else if (account.status === 'disabled') {
+                statusClass = 'account-status-disabled';
+                borderClass = 'mxh-border-orange';
+                statusIcon = '<i class="bi bi-slash-circle status-icon"></i>';
             } else {
-                accountAgeDisplay = `${diffDays}d`;
-            }
-
-            // Calculate scan countdown with QR icon
-            const currentScanCount = account.wechat_scan_count || 0;
-            const maxScans = 3;
-            const remainingScans = Math.max(0, maxScans - currentScanCount);
-            if (remainingScans > 0) {
-                scanCountdown = `<i class="bi bi-qr-code me-1"></i>${remainingScans}`;
-            }
-        }
-
-        // Notice handling
-        const notice = ensureNoticeParsed(account.notice);
-        const hasNotice = notice && notice.title;
-                const isNoticeExpired = hasNotice && notice.end_at && new Date(notice.end_at) < new Date();
-        const noticeClass = isNoticeExpired ? 'expired' : '';
-        const noticeText = hasNotice ? escapeHtml(notice.title) : '';
-
-        // Status and border classes
-        let statusClass = 'account-status-available';
-        let borderClass = '';
-        let statusIcon = '';
-
-        if (account.status === 'die') {
-            statusClass = 'account-status-die';
-            borderClass = 'mxh-border-red';
-            statusIcon = '<i class="bi bi-x-circle-fill status-icon"></i>';
-        } else if (account.status === 'disabled') {
-            statusClass = 'account-status-disabled';
-            borderClass = 'mxh-border-orange';
-            statusIcon = '<i class="bi bi-slash-circle status-icon"></i>';
-        } else {
-            // Available status with age-based colors
-            if (account.platform === 'wechat' && accountAgeDisplay) {
-                        if (accountAgeDisplay.includes('năm')) {
-                    borderClass = 'mxh-border-green';
-                } else if (accountAgeDisplay.includes('th') && parseInt(accountAgeDisplay) >= 13) {
-                    borderClass = 'mxh-border-green';
+                // Available status with age-based colors
+                if (account.platform === 'wechat' && accountAgeDisplay) {
+                    if (accountAgeDisplay.includes('năm')) {
+                        borderClass = 'mxh-border-green';
+                    } else if (accountAgeDisplay.includes('th') && parseInt(accountAgeDisplay) >= 13) {
+                        borderClass = 'mxh-border-green';
+                    } else {
+                        borderClass = 'mxh-border-white';
+                    }
                 } else {
                     borderClass = 'mxh-border-white';
                 }
-            } else {
-                borderClass = 'mxh-border-white';
             }
-        }
 
-                html += `
-                    <div class="card tool-card mxh-card ${borderClass} ${noticeClass}" 
-                         style="padding: 2px;" data-account-id="${account.id}"
-                         oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+            // QUAN TRỌNG: KHÔNG còn thẻ <div class="col"> bao ngoài
+            return `
+                <div class="card tool-card mxh-card ${borderClass} ${noticeClass}" 
+                     data-account-id="${account.id}"
+                     oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+                    
                     <div class="card-body">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
-                                        <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
-                                        </div>
-                                    <div class="d-flex align-items-center gap-1">
-                                        ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
-                                        </div>
-                                    </div>
-                                    
-                                <div class="text-center mb-0">
-                                    <small 
-                                        class="${statusClass} editable-field" 
-                                        contenteditable="true" 
-                                        data-account-id="${account.id}" 
-                                        data-field="username" 
-                                        data-is-secondary="false"
-                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
-                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                        onclick="event.stopPropagation()"
-                                    >${account.username || 'Click để nhập'}${statusIcon}</small>
-                                    <small 
-                                        class="text-muted editable-field" 
-                                        contenteditable="true" 
-                                        data-account-id="${account.id}" 
-                                        data-field="phone" 
-                                        data-is-secondary="false"
-                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                        onclick="event.stopPropagation()"
-                                    >📞 ${account.phone || 'Click để nhập'}</small>
-                                    </div>
-                                    
-                                ${account.platform === 'wechat' ? `
-                                    <div class="mt-auto">
-                                        ${account.status === 'disabled' ?
-                                            `<div class="d-flex align-items-center justify-content-between">
-                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((new Date() - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
-                                                <small style="font-size: 0.77rem;">Lần cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
-                                            </div>` :
-                                            `<div class="text-center mt-1">
-                                                ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
-                                            </div>`
-                                        }
-                                    </div>
-                        ` : ''}
-                                    
-                                    ${hasNotice ? `
-                                    <div class="notice-line ${noticeClass}">
-                                        <i class="bi bi-bell-fill me-1"></i>${noticeText}
-                        </div>
-                        ` : ''}
-                                </div>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <div class="d-flex align-items-center gap-1">
+                                <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
+                                <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
                             </div>
                         </div>
-                `;
-            });
-
-            html += `
+                        
+                        <div class="text-center mb-0">
+                            <small 
+                                class="${statusClass} editable-field" 
+                                contenteditable="true" 
+                                data-account-id="${account.id}" 
+                                data-field="username" 
+                                data-is-secondary="false"
+                                style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
+                                onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                onmouseleave="this.style.backgroundColor='transparent'"
+                                onclick="event.stopPropagation()"
+                            >${account.username || 'Click để nhập'}${statusIcon}</small>
+                            <small 
+                                class="text-muted editable-field" 
+                                contenteditable="true" 
+                                data-account-id="${account.id}" 
+                                data-field="phone" 
+                                data-is-secondary="false"
+                                style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                onmouseleave="this.style.backgroundColor='transparent'"
+                                onclick="event.stopPropagation()"
+                            >📞 ${account.phone || 'Click để nhập'}</small>
+                        </div>
+                        
+                        ${account.platform === 'wechat' ? `
+                            <div class="mt-auto">
+                                ${account.status === 'disabled' ?
+                                    `<div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((new Date() - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
+                                        <small style="font-size: 0.77rem;">Lần cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                                    </div>` :
+                                    `<div class="text-center mt-1">
+                                        ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
+                                    </div>`
+                                }
+                            </div>
+                        ` : ''}
+                        
+                        ${hasNotice ? `
+                            <div class="notice-line ${noticeClass}">
+                                <i class="bi bi-bell-fill me-1"></i>${noticeText}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }).join('');
+
+        container.innerHTML = cardsHtml;
+
+        // Khôi phục vị trí cuộn và các tác vụ sau khi render
+        window.scrollTo(0, scrollY);
+        setupEditableFields();
+
+        // Sau khi render xong, áp dụng lại view mode:
+        try {
+            var saved = Number(localStorage.getItem('mxh_cards_per_row') || 12);
+            applyViewMode(saved);
+        } catch (e) {
+            console.warn('applyViewMode after render failed:', e);
+        }
+
+        isRendering = false;
+        if (pendingUpdates) {
+            pendingUpdates = false;
+            setTimeout(renderMXHAccounts, 50);
+        }
     }
-    });
-
-    tempDiv.innerHTML = html;
-    container.innerHTML = '';
-    container.appendChild(tempDiv);
-
-    // Restore scroll position
-    window.scrollTo(scrollX, scrollY);
-
-    // Setup inline editing after render
-    setupEditableFields();
-
-    // Sau khi render xong:
-    try {
-      var saved = Number(localStorage.getItem('mxh_cards_per_row') || 6);
-      applyViewMode(saved);
-    } catch (e) {
-      console.warn('applyViewMode after render failed:', e);
-    }
-
-    isRendering = false;
-    if (pendingUpdates) {
-        pendingUpdates = false;
-        renderMXHAccounts();
-    }
-}
 
 // ===== UTILITY FUNCTIONS =====
 function ensureNoticeParsed(notice) {
@@ -823,11 +771,16 @@ function setupEditableFields() {
     
     // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
+  // Khởi tạo Chế Độ Xem trước tiên.
   initializeViewMode();
 
-  // sau đó mới load dữ liệu v.v...
-  loadMXHData && loadMXHData(true);
-  startAutoRefresh && startAutoRefresh();
+  // Sau đó tải dữ liệu và các thành phần khác.
+  if (typeof loadMXHData === 'function') {
+    loadMXHData(true);
+  }
+  if (typeof startAutoRefresh === 'function') {
+    startAutoRefresh();
+  }
 
     // Unified context menu event listener
     document.getElementById('unified-context-menu').addEventListener('click', async (e) => {
