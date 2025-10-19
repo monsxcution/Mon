@@ -1366,7 +1366,12 @@ async function updateAccountStatus(status) {
             // Cập nhật ring ngay lập tức
             const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
             if (account) {
-                account.status = status === 'available' ? 'active' : status;
+                // Đồng bộ logic mapping với modal
+                if (status === 'available') {
+                    account.status = 'active'; // Ánh xạ 'available' của UI thành 'active' của DB
+                } else {
+                    account.status = status; // Sử dụng trực tiếp: 'die', 'disabled', 'muted'
+                }
                 const cell = document.querySelector(`.mxh-item[data-account-id="${currentContextAccountId}"]`);
                 if (cell) {
                     paintRing(cell, account);
