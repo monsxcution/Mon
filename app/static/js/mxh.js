@@ -17,35 +17,19 @@ let autoRefreshTimer = null;
 let activeGroupId = null;
 let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
-// ===== VIEW MODE LOGIC (SỬ DỤNG BOOTSTRAP GRID) =====
+// ===== VIEW MODE LOGIC (FLEXBOX + CSS VARIABLE) =====
 
 /**
- * Chuyển đổi số card mỗi hàng thành class của Bootstrap.
- * @param {number} cardsPerRow - Số card mong muốn trên một hàng (ví dụ: 12).
- * @returns {string} - Class của Bootstrap (ví dụ: "col-1").
- */
-function getBootstrapColClass(cardsPerRow) {
-    const n = Math.max(1, parseInt(cardsPerRow, 10) || 12);
-    // Bootstrap có 12 cột. Nếu muốn 12 card/hàng -> mỗi card chiếm 1 cột (col-1)
-    // Nếu muốn 6 card/hàng -> mỗi card chiếm 2 cột (col-2)
-    const colCount = Math.round(12 / n);
-    
-    // Đảm bảo giá trị hợp lệ từ 1 đến 12
-    const finalCol = Math.max(1, Math.min(12, colCount));
-
-    // Thêm các breakpoint khác để responsive
-    // Ví dụ: trên màn hình nhỏ (md) luôn là 4 cột, nhỏ hơn (sm) là 6 cột
-    return `col-sm-6 col-md-4 col-lg-3 col-xl-${finalCol}`;
-}
-
-/**
- * Áp dụng và lưu chế độ xem.
+ * Áp dụng và lưu chế độ xem bằng cách set biến CSS.
  * @param {number | string} value - Số lượng card mong muốn trên một hàng.
  */
 function applyViewMode(value) {
     const n = Math.max(1, parseInt(value, 10) || 12);
     localStorage.setItem('mxh_cards_per_row', n);
-    // Không cần làm gì thêm ở đây, việc áp dụng class sẽ do renderMXHAccounts xử lý.
+    
+    // Gán giá trị vào biến CSS --cardsPerRow
+    // CSS sẽ tự động tính toán lại layout
+    document.documentElement.style.setProperty('--cardsPerRow', n);
 }
 
 /**
@@ -65,9 +49,8 @@ function initializeViewMode() {
             const currentValue = input ? input.value : 12;
             applyViewMode(currentValue);
 
-            // Render lại toàn bộ card với class mới
-            renderMXHAccounts();
-
+            // Không cần render lại, CSS sẽ tự cập nhật.
+            // Chỉ cần đóng modal và thông báo.
             const modalEl = document.getElementById('mxh-view-mode-modal');
             if (modalEl && typeof bootstrap !== 'undefined') {
                 const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -331,7 +314,7 @@ window.selectGroup = function(groupId) {
 };
 
     /**
-     * VIẾT LẠI HOÀN TOÀN: Render các card tài khoản sử dụng Bootstrap Grid.
+     * VIẾT LẠI: Render các card tài khoản sử dụng Bootstrap row và class .col đơn giản.
      */
     function renderMXHAccounts() {
         if (isRendering) {
@@ -348,42 +331,21 @@ window.selectGroup = function(groupId) {
             : mxhAccounts;
 
         if (filteredAccounts.length === 0) {
-            container.innerHTML = `
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body text-center text-muted">
-                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
-                            <h5 class="mt-3">Không có tài khoản nào</h5>
-                        </div>
-                    </div>
-                </div>`;
+            container.innerHTML = `<div class="col-12"><div class="card"><div class="card-body text-center text-muted"><i class="bi bi-inbox fs-1 opacity-25"></i><h5 class="mt-3">Không có tài khoản nào</h5></div></div></div>`;
             isRendering = false;
             return;
         }
 
-        // Sắp xếp theo card_name dạng số
-        filteredAccounts.sort((a, b) => {
-            const numA = parseInt(a.card_name, 10) || Infinity;
-            const numB = parseInt(b.card_name, 10) || Infinity;
-            return numA - numB;
-        });
-
-        // Lấy class cột từ localStorage
-        const savedCardsPerRow = localStorage.getItem('mxh_cards_per_row') || 12;
-        const colClass = getBootstrapColClass(savedCardsPerRow);
-
-        // Tạo HTML cho tất cả các card
+        filteredAccounts.sort((a, b) => (parseInt(a.card_name, 10) || Infinity) - (parseInt(b.card_name, 10) || Infinity));
+        
+        // Chỉ cần dùng class "col", CSS sẽ tự lo phần còn lại.
         const cardsHtml = filteredAccounts.map(account => {
-            // (Toàn bộ logic tính toán `age`, `scan`, `notice`, `status`, `border` của bạn giữ nguyên ở đây)
-            // ...
             const isDie = account.status === 'die';
             const borderClass = isDie ? 'mxh-border-red' : 'mxh-border-white';
-            const extraClass = '';
 
-            // QUAN TRỌNG: Bọc card trong một div với class cột của Bootstrap
             return `
-                <div class="${colClass}">
-                    <div class="card tool-card mxh-card ${borderClass} ${extraClass}" 
+                <div class="col">
+                    <div class="card tool-card mxh-card ${borderClass}" 
                          data-account-id="${account.id}"
                          oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
                         
@@ -403,8 +365,6 @@ window.selectGroup = function(groupId) {
         }).join('');
 
         container.innerHTML = cardsHtml;
-
-        // Khôi phục vị trí cuộn
         window.scrollTo(0, scrollY);
         isRendering = false;
 

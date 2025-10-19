@@ -1,12 +1,20 @@
-/* ===== MXH MODULE STYLES ===== */
+/* ===== MXH FLEXBOX LAYOUT ===== */
 
 /*
- * Giao diện cho thẻ card.
- * Các hiệu ứng viền neon, hover... được kế thừa từ style.css
- * Chỉ cần đảm bảo thẻ có class "mxh-card" và "tool-card".
- * Quan trọng: Không còn các quy tắc về display: grid ở đây.
+ * Ghi đè lên class .col của Bootstrap KHI nó là con của container của chúng ta.
+ * Sử dụng Flexbox và biến CSS `--cardsPerRow` để tính toán độ rộng.
 */
+#mxh-accounts-container > .col {
+  /* * flex-basis: tính toán chiều rộng cơ bản của mỗi item.
+   * Ví dụ: 12 cards/hàng -> calc(100% / 12) = 8.333%
+   * Ví dụ: 15 cards/hàng -> calc(100% / 15) = 6.666%
+   */
+  flex: 0 0 calc(100% / var(--cardsPerRow, 12));
+  max-width: calc(100% / var(--cardsPerRow, 12));
+}
+
+/* Giao diện cho thẻ card, đảm bảo nó chiếm toàn bộ chiều cao của .col */
 .mxh-card {
-  height: 100%; /* Đảm bảo các card trong 1 hàng cao bằng nhau */
+  height: 100%;
   margin: 0 !important;
 }
