@@ -431,3 +431,65 @@ def update_account(account_id):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+# ===== SCAN MANAGEMENT ENDPOINTS =====
+
+@app.route('/api/mxh/accounts/mark-scanned', methods=['POST'])
+def mark_account_scanned():
+    """Đánh dấu tài khoản đã quét"""
+    try:
+        data = request.get_json()
+        account_id = data.get('account_id')
+        
+        if not account_id:
+            return jsonify({"error": "account_id is required"}), 400
+        
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        # Cập nhật lượt quét và thời gian quét cuối
+        conn.execute("""
+            UPDATE mxh_accounts 
+            SET wechat_scan_count = COALESCE(wechat_scan_count, 0) + 1,
+                wechat_last_scan_date = ?,
+                updated_at = ?
+            WHERE id = ?
+        """, (now, now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Đã đánh dấu đã quét"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/mxh/accounts/reset-scan', methods=['POST'])
+def reset_account_scan():
+    """Reset lượt quét của tài khoản"""
+    try:
+        data = request.get_json()
+        account_id = data.get('account_id')
+        
+        if not account_id:
+            return jsonify({"error": "account_id is required"}), 400
+        
+        conn = get_db_connection()
+        now = datetime.now().isoformat()
+        
+        # Reset lượt quét về 0
+        conn.execute("""
+            UPDATE mxh_accounts 
+            SET wechat_scan_count = 0,
+                wechat_last_scan_date = NULL,
+                updated_at = ?
+            WHERE id = ?
+        """, (now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Đã reset lượt quét"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

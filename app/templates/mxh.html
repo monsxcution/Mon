@@ -4,11 +4,15 @@
 
 {% block head %}
     {{ super() }}
-    <!-- MXH CSS (đặt SAU Bootstrap để override) -->
+    <!-- MXH CSS (đặt SAU Bootstrap và style.css để override) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mxh.css') }}">
 {% endblock %}
 
 {% block content %}
+<script>
+document.body.classList.add('mxh-page');
+</script>
 <div class="container-fluid" style="padding: 0.5rem 1rem;">
     <!-- Action Buttons and Groups - All in one row -->
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -28,7 +32,7 @@
         </div>
     </div>
 
-    <div id="mxh-accounts-container" class="row g-2 d-flex flex-wrap">
+    <div id="mxh-accounts-container" class="d-flex flex-wrap">
         <div class="col-12">
             <div class="card">
                 <div class="card-body text-center text-muted">
@@ -233,7 +237,7 @@
                     </div>
                     <div class="col-auto">
                         <label class="form-label mb-1">Trạng Thái</label>
-                        <select class="form-select form-select-sm" id="wechat-status" style="width: 120px;" required>
+                        <select class="form-select form-select-sm" id="wechat-status" style="width: 84px;" required>
                             <option value="active">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
                             <option value="die">Die</option>
@@ -244,9 +248,9 @@
                 
                 <!-- Hàng 2: Tên Người Dùng -->
                 <div class="row mb-2">
-                    <div class="col-md-6">
+                    <div class="col-auto">
                         <label class="form-label mb-1">Tên Người Dùng</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-username" required>
+                        <input type="text" class="form-control form-control-sm" id="wechat-username" style="width: 150px;" required>
                     </div>
                 </div>
                 

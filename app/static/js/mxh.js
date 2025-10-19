@@ -23,13 +23,7 @@ let lastUpdateTime = null; // NEW: Store the timestamp of the last successful da
  * Áp dụng và lưu chế độ xem bằng cách set biến CSS.
  * @param {number | string} value - Số lượng card mong muốn trên một hàng.
  */
-function applyViewMode(value) {
-    const n = Math.max(1, parseInt(value, 10) || 12);
-    localStorage.setItem('mxh_cards_per_row', n);
-    document.documentElement.style.setProperty('--cardsPerRow', n);
-    const c = document.getElementById('mxh-accounts-container');
-    if (c) c.style.setProperty('--cardsPerRow', n);
-}
+function applyViewMode(value){const n=Math.max(1,parseInt(value,10)||12);localStorage.setItem('mxh_cards_per_row',n);document.documentElement.style.setProperty('--cardsPerRow',n);const c=document.getElementById('mxh-accounts-container');if(c)c.style.setProperty('--cardsPerRow',n);}
 
 /**
  * Khởi tạo chức năng "Chế Độ Xem".
@@ -368,21 +362,174 @@ window.selectGroup = function(groupId) {
             
             // --- KẾT THÚC LOGIC VIỀN MÀU ---
 
-            return `
-                <div class="col" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px">
-                    <div class="card tool-card mxh-card ${borderClass}" 
-                         data-account-id="${account.id}"
-                         oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+            // --- TÍNH TOÁN THÔNG TIN HIỂN THỊ ---
+            let accountAgeDisplay = '';
+            let ageColor = '#6c757d';
+            
+            // Tính tuổi tài khoản WeChat
+            if (account.platform === 'wechat' && account.wechat_created_year) {
+                const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+                const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays >= 365) {
+                    const years = Math.floor(diffDays / 365);
+                    accountAgeDisplay = `${years}Y`;
+                    ageColor = '#2fe56a'; // Xanh lá cho anniversary
+                } else if (diffDays >= 30) {
+                    const months = Math.floor(diffDays / 30);
+                    accountAgeDisplay = `${months}M`;
+                    ageColor = '#6c757d';
+                } else {
+                    accountAgeDisplay = `${diffDays}D`;
+                    ageColor = '#6c757d';
+                }
+            }
+
+            // Tính lượt quét và countdown (copy từ MXH_Old)
+            let scanCountdown = '';
+            if (account.platform === 'wechat') {
+                const currentScanCount = account.wechat_scan_count || 0;
+                const maxScans = 3;
+
+                if (currentScanCount >= maxScans) {
+                    // Đã hết lượt - QR đỏ
+                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
+                } else if (account.wechat_last_scan_date) {
+                    // Có lịch sử quét - kiểm tra thời gian
+                    const lastScanDate = new Date(account.wechat_last_scan_date);
+                    const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
+                    const remainingDays = 30 - daysSinceScan;
+
+                    if (remainingDays > 0) {
+                        // Còn thời gian chờ - hiển thị countdown
+                        const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
+                        const remainingHours = (30 * 24) - hoursSinceScan;
+
+                        if (remainingHours < 24) {
+                            // Gần hết thời gian - QR cam
+                            scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ff8c00;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
+                        } else if (remainingDays < 7) {
+                            // Còn ít ngày - QR cam
+                            scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ff8c00; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                        } else {
+                            // Còn nhiều thời gian - QR trắng
+                            scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                        }
+                    } else {
+                        // Đủ điều kiện quét tiếp - QR xanh
+                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+                    }
+                } else {
+                    // Chưa quét lần nào
+                    if (account.wechat_created_year) {
+                        const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+                        const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
                         
-                        <div class="card-body d-flex flex-column justify-content-center text-center">
-                            <h5 class="card-title mb-1">${account.card_name}</h5>
-                            <div class="text-truncate mb-1">
-                                <span class="editable-field" contenteditable="true" data-account-id="${account.id}" data-field="username">${account.username || '...'}</span>
+                        if (diffDays < 90) {
+                            scanCountdown = `Còn ${90 - diffDays} ngày`;
+                        } else {
+                            // Đủ điều kiện quét lần đầu - QR xanh
+                            scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+                        }
+                    } else {
+                        // Không có ngày tạo - QR xanh
+                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+                    }
+                }
+            }
+
+            // Trạng thái và icon (copy từ MXH_Old)
+            let statusClass = 'account-status-available';
+            let statusIcon = '';
+            let accountStatus = account.status || 'active';
+
+            if (accountStatus === 'die') {
+                statusClass = 'account-status-die';
+                statusIcon = '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>';
+            } else if (accountStatus === 'disabled') {
+                statusClass = 'account-status-disabled';
+                statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
+            }
+            
+            // Platform functions (copy từ MXH_Old)
+            function getPlatformColor(platform) {
+                const colors = {
+                    'facebook': '#1877f2',
+                    'instagram': '#e4405f',
+                    'twitter': '#1da1f2',
+                    'zalo': '#0068ff',
+                    'wechat': '#07c160',
+                    'telegram': '#0088cc',
+                    'whatsapp': '#25d366'
+                };
+                return colors[platform] || '#6c757d';
+            }
+
+            function getPlatformIconClass(platform) {
+                const p = String(platform || '').toLowerCase();
+                return ({
+                    wechat: 'bi-wechat',
+                    telegram: 'bi-telegram',
+                    facebook: 'bi-facebook',
+                    instagram: 'bi-instagram',
+                    zalo: 'bi-chat-dots-fill',
+                    twitter: 'bi-twitter',
+                    whatsapp: 'bi-whatsapp'
+                }[p]) || 'bi-person-badge';
+            }
+
+            return `
+                <div class="col" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-account-id="${account.id}">
+                    <div class="card tool-card mxh-card ${borderClass}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-1">
+                                    <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
+                                    <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
+                                </div>
                             </div>
-                            <small class="text-muted">
-                                <span class="editable-field" contenteditable="true" data-account-id="${account.id}" data-field="phone">📞 ${account.phone || '...'}</span>
-                            </small>
-                            <div class="text-danger small mt-1" style="height: 1.2em;">${isDie ? 'DIE' : ''}</div>
+                            
+                            <div class="text-center mb-0">
+                                <small 
+                                    class="${statusClass} editable-field" 
+                                    contenteditable="true" 
+                                    data-account-id="${account.id}" 
+                                    data-field="username" 
+                                    data-is-secondary="false"
+                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
+                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                    onmouseleave="this.style.backgroundColor='transparent'"
+                                    onclick="event.stopPropagation()"
+                                >${account.username || 'Click để nhập'}${statusIcon}</small>
+                                <small 
+                                    class="text-muted editable-field" 
+                                    contenteditable="true" 
+                                    data-account-id="${account.id}" 
+                                    data-field="phone" 
+                                    data-is-secondary="false"
+                                    style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                    onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                                    onmouseleave="this.style.backgroundColor='transparent'"
+                                    onclick="event.stopPropagation()"
+                                >📞 ${account.phone || 'Click để nhập'}</small>
+                            </div>
+                            
+                            ${account.platform === 'wechat' ? `
+                                <div class="mt-auto">
+                                    ${isDie ?
+                                        `<div class="d-flex align-items-center justify-content-between">
+                                            <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
+                                            <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                                        </div>` :
+                                        `<div class="text-center mt-1">
+                                            ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
+                                        </div>`
+                                    }
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -766,6 +913,82 @@ function setupEditableFields() {
     });
 }
     
+    // ===== SUBMENU LOGIC (from MXH_Old) =====
+    let currentSubmenu = null;
+    let hideTimeout = null;
+    
+    // Function to show submenu
+    function showSubmenu(menuItem) {
+        // Hide current submenu if different
+        if (currentSubmenu && currentSubmenu !== menuItem) {
+            const currentSubmenuEl = currentSubmenu.querySelector('.submenu');
+            if (currentSubmenuEl) {
+                currentSubmenuEl.classList.remove('show');
+            }
+        }
+        
+        // Show new submenu
+        const submenuEl = menuItem.querySelector('.submenu');
+        if (submenuEl) {
+            submenuEl.classList.add('show');
+            currentSubmenu = menuItem;
+        }
+        
+        // Clear any pending hide timeout
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            hideTimeout = null;
+        }
+    }
+    
+    // Function to hide submenu with delay
+    function hideSubmenu(delay = 300) {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+        }
+        hideTimeout = setTimeout(() => {
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.remove('show');
+                }
+                currentSubmenu = null;
+            }
+        }, delay);
+    }
+    
+    // Enhanced submenu hover handling
+    document.addEventListener('mouseover', function(event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        
+        if (menuItem) {
+            showSubmenu(menuItem);
+        } else if (submenu) {
+            // Keep submenu open when hovering over submenu
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.add('show');
+                }
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            }
+        }
+    });
+    
+    document.addEventListener('mouseout', function(event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        
+        if (!menuItem && !submenu) {
+            // Hide submenu when leaving all related elements
+            hideSubmenu();
+        }
+    });
+
     // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
   // Khởi tạo và áp dụng ngay Chế Độ Xem
@@ -1002,8 +1225,27 @@ async function rescueAccountUnified(result) {
     showToast('Chức năng đang phát triển', 'info');
 }
 
-function markAccountAsScanned(e) {
-    showToast('Chức năng đang phát triển', 'info');
+async function markAccountAsScanned(e) {
+    const accountId = parseInt(e.target.dataset.accountId);
+    if (!accountId) return;
+    
+    try {
+        const response = await fetch('/api/mxh/accounts/mark-scanned', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_id: accountId })
+        });
+        
+        if (response.ok) {
+            showToast('Đã đánh dấu đã quét!', 'success');
+            await loadMXHData(true);
+        } else {
+            showToast('Lỗi khi đánh dấu đã quét!', 'error');
+        }
+    } catch (error) {
+        console.error('Error marking as scanned:', error);
+        showToast('Lỗi kết nối!', 'error');
+    }
 }
 
 function openNoticeModal(e) {
@@ -1022,8 +1264,27 @@ function copyEmail(e) {
     showToast('Chức năng đang phát triển', 'info');
 }
 
-function resetScanCount(e) {
-    showToast('Chức năng đang phát triển', 'info');
+async function resetScanCount(e) {
+    const accountId = parseInt(e.target.dataset.accountId);
+    if (!accountId) return;
+    
+    try {
+        const response = await fetch('/api/mxh/accounts/reset-scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_id: accountId })
+        });
+        
+        if (response.ok) {
+            showToast('Đã reset lượt quét!', 'success');
+            await loadMXHData(true);
+        } else {
+            showToast('Lỗi khi reset lượt quét!', 'error');
+        }
+    } catch (error) {
+        console.error('Error resetting scan count:', error);
+        showToast('Lỗi kết nối!', 'error');
+    }
 }
 
 function changeCardNumber(e) {

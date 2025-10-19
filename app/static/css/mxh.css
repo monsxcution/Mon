@@ -1,6 +1,18 @@
 /* /app/static/css/mxh.css */
 
 /*
+ * QUY TẮC TỔ CHỨC CSS:
+ * 1. Layout Grid (cards, containers)
+ * 2. Card States (borders, colors)  
+ * 3. Interactive Elements (editing, inputs)
+ * 4. Modal Components (WeChat modal)
+ * 5. Utilities (spinners, gaps)
+ * 
+ * LƯU Ý: Mỗi section chỉ có 1 định nghĩa cho mỗi selector
+ * Không được trùng lặp rules trong cùng file
+ */
+
+/*
  * Layout Grid cho các card MXH
 */
 #mxh-accounts-container {
@@ -82,7 +94,7 @@
 }
 
 /* ===== INLINE EDITING STYLES ===== */
-.editable-field {
+.mxh-page .editable-field {
     cursor: text;
     transition: background-color 0.2s;
     padding: 2px 4px;
@@ -90,24 +102,25 @@
     display: inline-block; /* Quan trọng để hover đúng kích thước chữ */
 }
 
-.editable-field:hover {
+.mxh-page .editable-field:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== HIDE NUMBER INPUT SPINNERS ===== */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+.mxh-page input[type="number"]::-webkit-outer-spin-button,
+.mxh-page input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-input[type="number"] {
+.mxh-page input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
 }
 
 
 /* ===== WECHAT MODAL LAYOUT FIXES ===== */
+/* FORCE REFRESH: 2024-12-19 - Header height reduction */
 #wechat-account-modal .modal-dialog {
     max-width: 700px;
 }
@@ -118,8 +131,10 @@ input[type="number"] {
 }
 
 #wechat-account-modal .modal-header {
-    padding: 0.5rem 1rem;
+    padding: 0.175rem 1rem !important;
     border-bottom: 1px solid #dee2e6;
+    min-height: auto !important;
+    height: auto !important;
 }
 
 #wechat-account-modal .modal-body {
@@ -133,8 +148,9 @@ input[type="number"] {
 
 /* Giảm chiều cao title */
 #wechat-account-modal .modal-title {
-    font-size: 1rem;
-    margin: 0;
+    font-size: 0.8rem !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
 }
 
 /* Giảm chiều cao các ô nhập */
@@ -187,4 +203,97 @@ input[type="number"] {
 #wechat-year::-webkit-inner-spin-button {
     -webkit-appearance: none !important;
     margin: 0 !important;
+}
+
+/* ===== ACCOUNT STATUS STYLING (from MXH_Old) ===== */
+/* Available: White (default) */
+.mxh-page .account-status-available {
+    color: #fff !important;
+}
+
+/* Die: Red with X icon */
+.mxh-page .account-status-die {
+    color: #dc3545 !important;
+}
+
+/* Disabled: Orange with slash-circle icon */
+.mxh-page .account-status-disabled {
+    color: #ff8c00 !important;
+}
+
+.mxh-page .status-icon {
+    margin-left: 4px;
+    font-size: 0.8rem;
+}
+
+/* ===== SUBMENU STYLES (from MXH_Old) ===== */
+.mxh-page .custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid #444a59;
+    animation: fadeInMenu 0.1s;
+    z-index: 10001;
+}
+
+/* Submenu hiển thị bên trái khi menu ở rìa phải */
+.mxh-page .custom-context-menu .submenu.submenu-left {
+    left: auto;
+    right: 100%;
+}
+
+/* Bridge element để tránh flickering */
+.mxh-page .submenu-bridge {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+/* Bridge cho submenu bên trái */
+.mxh-page .submenu.submenu-left .submenu-bridge {
+    left: -5px;
+    right: auto;
+}
+
+/* Submenu hiển thị qua JavaScript */
+.mxh-page .custom-context-menu .submenu.show {
+    display: block;
+}
+
+.mxh-page .custom-context-menu .submenu .menu-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.mxh-page .custom-context-menu .submenu .menu-item i.bi-check-circle-fill {
+    color: #00e0ff;
+}
+
+.mxh-page .custom-context-menu .submenu-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+/* Animation for submenu */
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }

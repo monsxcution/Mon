@@ -263,7 +263,6 @@ body {
 }
 
 /* ===== GENERAL CONTEXT MENU STYLES ===== */
-/* General Context Menu Styles */
 .custom-context-menu {
     display: none;
     position: fixed;
@@ -271,18 +270,14 @@ body {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 0.375rem;
-    padding: 0.75rem;
-    /* Tăng từ 0.5rem */
+    padding: 0.4875rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    min-width: 330px;
-    /* Tăng từ 220px */
-    font-size: 1.35rem;
-    /* Tăng từ 0.9rem */
+    min-width: 214px;
+    font-size: 0.8775rem;
 }
 
 .custom-context-menu .menu-item {
-    padding: 0.9rem 1.5rem;
-    /* Tăng từ 0.6rem 1rem */
+    padding: 0.585rem 0.975rem;
     cursor: pointer;
     display: flex;
     align-items: center;
