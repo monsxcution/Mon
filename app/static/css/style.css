@@ -1393,3 +1393,290 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 }
 .notice-line:hover + .notice-tooltip{ display:block; }
 
+/* ===== MXH MODULE STYLES ===== */
+
+/* MXH Card Container - 3D Flip Support */
+.mxh-card-container {
+    perspective: 1000px;
+    width: 100%;
+    height: 160px;
+    cursor: pointer;
+}
+
+.mxh-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.mxh-card-container.flipped .mxh-card-inner {
+    transform: rotateY(180deg);
+}
+
+/* Chặn click vào mặt đang ẩn để ngừa auto-focus/auto-click */
+.mxh-card-front, .mxh-card-back { pointer-events: none; }
+.mxh-card-container:not(.flipped) .mxh-card-front { pointer-events: auto; }
+.mxh-card-container.flipped .mxh-card-back { pointer-events: auto; }
+
+.mxh-card-front,
+.mxh-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.mxh-card-back {
+    transform: rotateY(180deg);
+}
+
+/* MXH Card Styles - Matching temp_index.html exactly */
+.mxh-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+    cursor: pointer;
+    height: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: visible;
+}
+
+.mxh-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: #00e0ff;
+}
+
+.mxh-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 0;
+}
+
+.mxh-card:hover::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Blink animation for anniversary cards */
+@keyframes border-blink {
+    0%, 50% { border-color: #ffa500; }
+    51%, 100% { border-color: #ff4d4f; }
+}
+
+.mxh-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.mxh-card .card-body {
+    padding: 0.6rem;
+    min-height: 128px;
+    position: relative;
+    z-index: 1;
+}
+
+.mxh-card .card-title {
+    font-size: 1.26rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* === MXH Notice System CSS === */
+.notice-line {
+    margin-top: 6px;
+    font-weight: 600;
+    color: #ff8c00;
+    font-size: 0.72rem;
+    text-align: center;
+}
+
+.notice-line.expired {
+    color: #ff4d4f;
+}
+
+.notice-expired-blink {
+    animation: border-blink 1s linear infinite;
+}
+
+/* === Account Status Styling === */
+/* Available: White (default) */
+.account-status-available {
+    color: #fff !important;
+}
+
+/* Die: Red with X icon */
+.account-status-die {
+    color: #dc3545 !important;
+}
+
+/* Disabled: Orange with slash-circle icon */
+.account-status-disabled {
+    color: #ff8c00 !important;
+}
+
+.status-icon {
+    margin-left: 4px;
+}
+
+/* === MXH state borders (match selected style, keep color on hover) === */
+.mxh-card.mxh-border-green{border:2px solid #2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 14px rgba(47,229,106,.45),0 0 28px rgba(47,229,106,.25)!important}
+.mxh-card.mxh-border-green:hover{border-color:#2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 18px rgba(47,229,106,.55),0 0 34px rgba(47,229,106,.35)!important}
+.mxh-card.mxh-border-green::before{background:radial-gradient(circle,rgba(47,229,106,.18) 0%,rgba(47,229,106,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-red{border:2px solid #ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 14px rgba(255,77,79,.5),0 0 28px rgba(255,77,79,.3)!important}
+.mxh-card.mxh-border-red:hover{border-color:#ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 18px rgba(255,77,79,.6),0 0 34px rgba(255,77,79,.35)!important}
+.mxh-card.mxh-border-red::before{background:radial-gradient(circle,rgba(255,77,79,.18) 0%,rgba(255,77,79,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-orange{border:2px solid #ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 14px rgba(255,165,0,.5),0 0 28px rgba(255,165,0,.3)!important}
+.mxh-card.mxh-border-orange:hover{border-color:#ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 18px rgba(255,165,0,.6),0 0 34px rgba(255,165,0,.35)!important}
+.mxh-card.mxh-border-orange::before{background:radial-gradient(circle,rgba(255,165,0,.18) 0%,rgba(255,165,0,0) 80%);opacity:1}
+
+/* Trắng sáng (không animation) */
+.mxh-card.mxh-border-white{border:2px solid #fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 0 14px rgba(255,255,255,.35),0 0 28px rgba(255,255,255,.2)!important}
+.mxh-card.mxh-border-white:hover{border-color:#fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.3),0 0 18px rgba(255,255,255,.45),0 0 34px rgba(255,255,255,.28)!important}
+.mxh-card.mxh-border-white::before{background:radial-gradient(circle,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 80%);opacity:1}
+
+/* Ưu tiên màu: đỏ > cam > xanh > trắng */
+.mxh-card.mxh-border-red{z-index:1}
+.mxh-card.mxh-border-orange:not(.mxh-border-red){z-index:1}
+.mxh-card.mxh-border-green:not(.mxh-border-red):not(.mxh-border-orange){z-index:1}
+.mxh-card.mxh-border-red.mxh-border-orange{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-red.mxh-border-green{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-orange.mxh-border-green{border-color:#ffa500!important}
+
+/* Border classes for platform-based status */
+.mxh-card.mxh-border-red {
+    border-left: 4px solid #ff4d4f !important;
+}
+
+.mxh-card.mxh-border-orange {
+    border-left: 4px solid #ffa500 !important;
+}
+
+.mxh-card.mxh-border-green {
+    border-left: 4px solid #52c41a !important;
+}
+
+.mxh-card.mxh-border-white {
+    border-left: 4px solid #f0f0f0 !important;
+    background-color: #fafafa !important;
+}
+
+/* Grid layout for MXH cards */
+#mxh-cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#mxh-cards-grid > .col {
+    flex: 0 0 calc(100% / var(--cardsPerRow, 12));
+    max-width: calc(100% / var(--cardsPerRow, 12));
+}
+
+/* Notice system styling */
+.notice-line {
+    background-color: #fd7e14;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.notice-line.expired {
+    background-color: #dc3545;
+}
+
+/* Specific Neon Border Styles for MXH Cards */
+.mxh-card.mxh-border-green {
+    border: 2px solid #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 14px rgba(47,229,106,.45), 0 0 28px rgba(47,229,106,.25) !important;
+}
+.mxh-card.mxh-border-green:hover {
+    border-color: #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 18px rgba(47,229,106,.55), 0 0 34px rgba(47,229,106,.35) !important;
+}
+.mxh-card.mxh-border-green::before {
+    background: radial-gradient(circle, rgba(47,229,106,.18) 0%, rgba(47,229,106,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-red {
+    border: 2px solid #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 14px rgba(255,77,79,.5), 0 0 28px rgba(255,77,79,.3) !important;
+}
+.mxh-card.mxh-border-red:hover {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 18px rgba(255,77,79,.6), 0 0 34px rgba(255,77,79,.35) !important;
+}
+.mxh-card.mxh-border-red::before {
+    background: radial-gradient(circle, rgba(255,77,79,.18) 0%, rgba(255,77,79,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-orange {
+    border: 2px solid #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 14px rgba(255,165,0,.5), 0 0 28px rgba(255,165,0,.3) !important;
+}
+.mxh-card.mxh-border-orange:hover {
+    border-color: #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 18px rgba(255,165,0,.6), 0 0 34px rgba(255,165,0,.35) !important;
+}
+.mxh-card.mxh-border-orange::before {
+    background: radial-gradient(circle, rgba(255,165,0,.18) 0%, rgba(255,165,0,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-white {
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 14px rgba(255,255,255,.35), 0 0 28px rgba(255,255,255,.2) !important;
+}
+.mxh-card.mxh-border-white:hover {
+    border-color: #fff !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.3), 0 0 18px rgba(255,255,255,.45), 0 0 34px rgba(255,255,255,.28) !important;
+}
+.mxh-card.mxh-border-white::before {
+    background: radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,0) 80%);
+    opacity: 1;
+}
+
+.card-number { letter-spacing: .2px; }
+
+.mxh-card.mxh-border-white{background-color:var(--card-bg)!important;border-left:none!important}
+
+/* MXH notice preview – ghim ở đáy card */
+.mxh-card .card-body{ position:relative }
+.notice-line:hover + .notice-tooltip{ display:block }
+
+.notice-tooltip.tooltip-center{right:auto!important;left:50%!important;top:-8px!important;transform:translate(-50%,-100%)!important}
+
+/* Phone row */
+.mxh-card .phone-line{display:flex;align-items:center;justify-content:center;gap:.35rem;line-height:1}
+
+/* ===== END: MXH MODULE STYLES ===== */
+
