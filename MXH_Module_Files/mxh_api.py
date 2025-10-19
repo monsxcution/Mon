@@ -206,15 +206,22 @@ def create_account(card_id):
         if not data:
             return jsonify({"error": "Request body is required"}), 400
         
-        # Check if card exists and get card info
-        card = conn.execute("SELECT * FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
+        # Validate required fields
+        account_name = data.get("account_name")
+        username = data.get("username")
+        phone = data.get("phone")
+        
+        if not account_name:
+            return jsonify({"error": "account_name is required", "field": "account_name"}), 400
+        if not username:
+            return jsonify({"error": "username is required", "field": "username"}), 400
+        if not phone:
+            return jsonify({"error": "phone is required", "field": "phone"}), 400
+        
+        # Check if card exists
+        card = conn.execute("SELECT id FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
         if not card:
             return jsonify({"error": "Card not found"}), 404
-        
-        # Get or set default values
-        account_name = data.get("account_name", "Sub Account")
-        username = data.get("username", "...")
-        phone = data.get("phone", "...")
         
         # Create the account
         now = datetime.now(timezone.utc).astimezone().isoformat()
@@ -255,13 +262,8 @@ def create_account(card_id):
         
         conn.commit()
         
-        # Return the created account with card info
-        new_account = conn.execute("""
-            SELECT a.*, c.card_name, c.platform, c.group_id
-            FROM mxh_accounts a
-            JOIN mxh_cards c ON a.card_id = c.id
-            WHERE a.id = ?
-        """, (account_id,)).fetchone()
+        # Return the created account
+        new_account = conn.execute("SELECT * FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
         return jsonify(dict(new_account)), 201
         
     except sqlite3.IntegrityError as e:
@@ -399,7 +401,7 @@ def update_account(account_id):
         account_fields = {}
         allowed_account_fields = [
             "username", "phone", "wechat_created_day", "wechat_created_month",
-            "wechat_created_year", "status", "muted_until", "wechat_status", "die_date"
+            "wechat_created_year", "status", "muted_until", "wechat_status"
         ]
         
         for field in allowed_account_fields:
