@@ -314,9 +314,6 @@ window.selectGroup = function(groupId) {
     /**
      * VIẾT LẠI: Render các card tài khoản sử dụng Bootstrap row và class .col đơn giản.
      */
-    /**
-     * VIẾT LẠI: Render các card tài khoản, gom nhóm các tài khoản phụ vào card chính.
-     */
     function renderMXHAccounts() {
         if (isRendering) {
             pendingUpdates = true;
@@ -326,6 +323,9 @@ window.selectGroup = function(groupId) {
 
         const container = document.getElementById('mxh-accounts-container');
         const scrollY = window.scrollY;
+
+        // Clear all old notice elements before rendering
+        container.querySelectorAll('.notice-indicator,.notice-line,.notice-tooltip').forEach(e => e.remove());
 
         // --- LOGIC GOM NHÓM TÀI KHOẢN THEO CARD ---
         const cardsMap = new Map();
@@ -337,7 +337,6 @@ window.selectGroup = function(groupId) {
             const cardId = account.card_id;
             if (!cardsMap.has(cardId)) {
                 cardsMap.set(cardId, {
-                    // Lấy thông tin chung của card từ account đầu tiên tìm thấy
                     card_info: {
                         id: account.card_id,
                         card_name: account.card_name,
@@ -364,121 +363,12 @@ window.selectGroup = function(groupId) {
         }
 
         const cardsHtml = sortedCards.map(cardData => {
-            // Tài khoản chính luôn được ưu tiên hiển thị ở mặt trước
             const primaryAccount = cardData.accounts.find(a => a.is_primary) || cardData.accounts[0];
-            if (!primaryAccount) return '';
+            if (!primaryAccount) return ''; // Bỏ qua nếu không có tài khoản nào
 
-            // Render card với cấu trúc lật
-            return `
-                <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-card-id="${cardData.card_info.id}">
-                    <div class="card tool-card mxh-card" id="card-${cardData.card_info.id}" oncontextmenu="handleCardContextMenu(event, ${primaryAccount.id}, '${primaryAccount.platform}'); return false;">
-                        <div class="card-body">
-                            <div class="mxh-card-inner">
-                                <div class="mxh-card-face face-a">
-                                    ${renderAccountFace(primaryAccount)}
-                                </div>
-                                <div class="mxh-card-face face-b">
-                                    ${renderAccountFace(cardData.accounts.length > 1 ? (cardData.accounts.find(a => !a.is_primary) || cardData.accounts[1]) : null)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
-
-        container.innerHTML = cardsHtml;
-        window.scrollTo(0, scrollY);
-        
-        // Áp dụng lại trạng thái viền cho từng card sau khi render
-        sortedCards.forEach(cardData => {
-            const primaryAccount = cardData.accounts.find(a => a.is_primary) || cardData.accounts[0];
-            const cell = document.querySelector(`.mxh-item[data-card-id="${cardData.card_info.id}"]`);
-            if (cell && primaryAccount) {
-                paintRing(cell, primaryAccount);
-            }
-        });
-        
-        setupEditableFields();
-        isRendering = false;
-
-        if (pendingUpdates) {
-            pendingUpdates = false;
-            setTimeout(renderMXHAccounts, 50);
-        }
-    }
-
-    /**
-     * Hàm phụ trợ để render nội dung cho MỘT mặt của card (trước hoặc sau).
-     * @param {object | null} account - Đối tượng tài khoản để render.
-     * @returns {string} - Chuỗi HTML cho nội dung của một mặt card.
-     */
-    function renderAccountFace(account) {
-        if (!account) return '<div class="text-center p-3 text-muted small">...</div>'; // Mặt trống
-
-        const now = new Date();
-        let accountAgeDisplay = '';
-        let ageColor = '#6c757d';
-        let scanCountdown = '';
-
-        if (account.platform === 'wechat' && account.wechat_created_year) {
-            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 365) {
-                accountAgeDisplay = `${Math.floor(diffDays / 365)}Y`;
-                ageColor = '#2fe56a';
-            } else {
-                accountAgeDisplay = `${diffDays}D`;
-            }
-        }
-        
-        const isDie = ['disabled', 'die', 'banned', 'blocked'].includes(String(account.status || '').toLowerCase()) || !!account.die_date;
-        
-        let statusClass = 'account-status-available';
-        let statusIcon = '';
-        if (isDie) {
-            statusClass = 'account-status-die';
-            statusIcon = '<i class="bi bi-x-circle-fill status-icon"></i>';
-        } else if (account.status === 'disabled') {
-            statusClass = 'account-status-disabled';
-            statusIcon = '<i class="bi bi-slash-circle status-icon"></i>';
-        }
-
-        const noticeObj = ensureNoticeParsed(account.notice);
-        let noticeHtml = '', tipHtml = '';
-        if (noticeObj.enabled && noticeObj.start_at && noticeObj.days > 0) {
-            const start = new Date(noticeObj.start_at);
-            const end = new Date(start.getTime() + noticeObj.days * 86400000);
-            const remainMs = end - now;
-            const remainDays = Math.ceil(remainMs / 86400000);
-            if (remainMs > 0) {
-                noticeHtml = `<div class="notice-line">${escapeHtml(noticeObj.title)}: ${remainDays}d</div>`;
-            } else {
-                noticeHtml = `<div class="notice-line expired">${escapeHtml(noticeObj.title)}: hết hạn</div>`;
-            }
-            tipHtml = `<div class="notice-tooltip"><div class="notice-tooltip-title">${escapeHtml(noticeObj.title)}</div><div class="notice-tooltip-note">${escapeHtml(noticeObj.note || '')}</div></div>`;
-        }
-
-        return `
-            <div class="d-flex align-items-center justify-content-between mb-1">
-                <div class="d-flex align-items-center gap-1">
-                    <h6 class="card-title mb-0 card-number">${account.card_name}</h6>
-                    <i class="bi ${getPlatformIconClass(account.platform)}" style="color: ${getPlatformColor(account.platform)};"></i>
-                </div>
-                ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
-            </div>
-            <div class="text-center mb-0">
-                <small class="${statusClass} editable-field" contenteditable="true" data-account-id="${account.id}" data-field="username">${account.username || '...'}${statusIcon}</small>
-                <small class="text-muted editable-field" contenteditable="true" data-account-id="${account.id}" data-field="phone">📞 ${account.phone || '...'}</small>
-            </div>
-            <div class="mt-auto">
-                ${isDie ? `<div class="text-center"><small class="text-danger" style="font-size: 0.77rem;">Die từ: ${account.die_date ? new Date(account.die_date).toLocaleDateString('vi-VN') : 'N/A'}</small></div>` : ''}
-            </div>
-            ${noticeHtml}
-            ${tipHtml}
-        `;
-    }
-
-// ===== UTILITY FUNCTIONS =====
+            // Sử dụng primaryAccount làm dữ liệu chính
+            const account = primaryAccount;
+            // --- LOGIC XÁC ĐỊNH VIỀN MÀU ---
             let borderClass = '';
             const now = new Date();
             const noticeObj = ensureNoticeParsed(account.notice);

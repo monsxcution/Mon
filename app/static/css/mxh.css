@@ -556,4 +556,3 @@ body #mxh-accounts-container .tool-card.mxh-card.mxh-border-red {
 .mxh-card-face{position:absolute;inset:0;backface-visibility:hidden}
 .mxh-card-face.face-b{transform:rotateY(180deg)}
 .mxh-card.is-flipped .mxh-card-inner{transform:rotateY(180deg)}
-
