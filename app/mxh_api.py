@@ -202,16 +202,53 @@ def create_account(card_id):
         conn.close()
 
 
-@mxh_api_bp.route("/groups", methods=["GET"])
-def get_groups():
-    """
-    GET /mxh/api/groups
-    Return a list of groups.
-    """
+@mxh_api_bp.route("/groups", methods=["GET", "POST"])
+def mxh_groups():
     conn = get_db_connection()
     try:
-        groups = conn.execute("SELECT * FROM mxh_groups ORDER BY name").fetchall()
-        return jsonify([dict(group) for group in groups])
+        if request.method == "GET":
+            groups = conn.execute(
+                "SELECT * FROM mxh_groups ORDER BY created_at DESC"
+            ).fetchall()
+            return jsonify([dict(g) for g in groups])
+        elif request.method == "POST":
+            data = request.get_json()
+            name, color = data.get("name"), data.get("color")
+            if not name or not color:
+                return jsonify({"error": "Name and color are required"}), 400
+            platform_icons = {
+                "wechat": "bi-wechat",
+                "facebook": "bi-facebook",
+                "instagram": "bi-instagram",
+                "tiktok": "bi-tiktok",
+                "youtube": "bi-youtube",
+                "twitter": "bi-twitter",
+                "linkedin": "bi-linkedin",
+                "zalo": "bi-chat-dots",
+                "telegram": "bi-telegram",
+                "whatsapp": "bi-whatsapp",
+            }
+            icon = platform_icons.get(name.lower(), "bi-share-fill")
+            try:
+                cursor = conn.execute(
+                    "INSERT INTO mxh_groups (name, color, icon, created_at) VALUES (?, ?, ?, ?)",
+                    (name, color, icon, datetime.now().isoformat()),
+                )
+                conn.commit()
+                return (
+                    jsonify(
+                        {
+                            "id": cursor.lastrowid,
+                            "name": name,
+                            "color": color,
+                            "icon": icon,
+                            "message": "Group created",
+                        }
+                    ),
+                    201,
+                )
+            except sqlite3.IntegrityError:
+                return jsonify({"error": f'Group "{name}" already exists.'}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

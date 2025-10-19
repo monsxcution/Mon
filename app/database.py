@@ -23,11 +23,11 @@ def init_database():
     """
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
-        print(f"INFO: Đã tạo thư mục dữ liệu tại: {DATA_DIR}")
+        print(f"INFO: Created data directory at: {DATA_DIR}")
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    print("INFO: Bắt đầu khởi tạo và kiểm tra cơ sở dữ liệu...")
+    print("INFO: Starting database initialization...")
 
     # Bảng ghi chú
     cursor.execute("""
@@ -52,6 +52,15 @@ def init_database():
             created_at TEXT NOT NULL
         )
     """)
+    
+    # Insert default group if none exists
+    cursor.execute("SELECT COUNT(*) FROM mxh_groups")
+    group_count = cursor.fetchone()[0]
+    if group_count == 0:
+        cursor.execute(
+            "INSERT INTO mxh_groups (name, color, icon, created_at) VALUES (?, ?, ?, ?)",
+            ("Default", "#007bff", "bi-share-fill", datetime.now().isoformat())
+        )
     
     # Bảng thẻ MXH (cha) - corrected table name
     cursor.execute("""
@@ -104,4 +113,4 @@ def init_database():
     
     conn.commit()
     conn.close()
-    print("SUCCESS: Khởi tạo cơ sở dữ liệu hoàn tất. Cấu trúc đã sẵn sàng cho mô hình 1-N.")
+    print("SUCCESS: Database initialization complete. Ready for 1-N model.")

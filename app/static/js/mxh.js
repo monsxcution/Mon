@@ -479,13 +479,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const cardNumbers = mxhCards.map(c => parseInt(c.card_name, 10)).filter(n => !isNaN(n));
             const nextCardName = String((cardNumbers.length ? Math.max(...cardNumbers) : 0) + 1);
             
+            // Get the first available group_id
+            const groupsResponse = await fetch('/mxh/api/groups');
+            const groups = await groupsResponse.json();
+            const defaultGroupId = groups.length > 0 ? groups[0].id : 1;
+            
             // Create card with primary account
             const response = await fetch('/mxh/api/cards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     card_name: nextCardName,
-                    group_id: 1, // Default group
+                    group_id: defaultGroupId,
                     platform: platform,
                     // This will create the primary account
                     username: username,
