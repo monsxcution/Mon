@@ -1,13 +1,22 @@
+/* ===== MXH MODULE STYLES ===== */
+
+/*
+ * RULE TO CONTROL CARDS PER ROW USING CSS GRID
+ * This is the primary rule for the view mode functionality.
+ * It defines a grid layout and uses the `--cardsPerRow` variable to set the number of columns.
+ * `grid-template-columns: repeat(var(...), 1fr)` is the core of the fix, ensuring
+ * that the grid has exactly the specified number of columns and will wrap automatically.
+*/
 .mxh-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(var(--cardsPerRow, 6), 1fr);
-    gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(var(--cardsPerRow, 6), 1fr);
+  gap: 8px; /* Defines the space between cards */
 }
 
+/*
+ * The .col class is now a grid item. `min-width: 0` is a good practice
+ * to prevent grid items from overflowing if their content is too wide.
+*/
 .mxh-cards-grid .col {
-    /* No need for flex styles */
-}
-
-.mxh-card {
-    width: 100%;
+  min-width: 0; 
 }
