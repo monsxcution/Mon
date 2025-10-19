@@ -14,8 +14,8 @@ from app.settings_routes import load_dashboard_settings, DASHBOARD_SETTINGS_FILE
 
 # --- GLOBAL CONFIGURATION ---
 HOST = "0.0.0.0"
-PORT = 5001
-BASE_URL = f"http://127.0.0.1:5001"
+PORT = 5000
+BASE_URL = f"http://127.0.0.1:5000"
 APP_NAME = "MonDashboard"
 
 # --- APPLICATION INSTANCE ---

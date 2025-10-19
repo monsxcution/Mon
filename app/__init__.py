@@ -14,10 +14,12 @@ def create_app():
         from . import routes
         from . import notes_routes
         from . import mxh_routes
+        from . import mxh_api
         from . import settings_routes
         from . import image_routes
         app.register_blueprint(notes_routes.notes_bp)
         app.register_blueprint(mxh_routes.mxh_bp)
+        app.register_blueprint(mxh_api.mxh_api_bp)
         app.register_blueprint(settings_routes.settings_bp)
         app.register_blueprint(image_routes.image_bp)
         
