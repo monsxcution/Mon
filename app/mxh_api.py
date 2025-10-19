@@ -255,8 +255,14 @@ def create_account(card_id):
         
         conn.commit()
         
-        # Return the created account
-        new_account = conn.execute("SELECT * FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
+        # Return the created account with card info
+        new_account = conn.execute(
+            """SELECT a.*, c.card_name, c.platform, c.group_id 
+               FROM mxh_accounts a 
+               JOIN mxh_cards c ON a.card_id = c.id 
+               WHERE a.id = ?""", 
+            (account_id,)
+        ).fetchone()
         return jsonify(dict(new_account)), 201
         
     except sqlite3.IntegrityError as e:

@@ -1,33 +1,35 @@
 // ===== MXH REAL-TIME CONFIGURATION =====
 const MXH_CONFIG = {
-    AUTO_REFRESH_INTERVAL: 15000, // Changed from 3000 to 15000ms (15 seconds)
-    DEBOUNCE_DELAY: 500, // Debounce for inline editing
-    RENDER_BATCH_SIZE: 50, // Cards to render per batch (for smooth rendering)
-    ENABLE_AUTO_REFRESH: true // Changed from false to true
+    AUTO_REFRESH_INTERVAL: 15000,
+    DEBOUNCE_DELAY: 500,
+    RENDER_BATCH_SIZE: 50,
+    ENABLE_AUTO_REFRESH: true
 };
 
-
-// MXH Global State
-    let mxhGroups = [];
+// ===== GLOBAL STATE MANAGEMENT =====
+let mxhGroups = [];
 let mxhAccounts = [];
-    let currentContextAccountId = null;
+let currentContextAccountId = null;
 let autoRefreshTimer = null;
-    let isRendering = false;
-    let pendingUpdates = false;
+let isRendering = false;
+let pendingUpdates = false;
 let activeGroupId = null;
-let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
+let lastUpdateTime = null;
+
+// ===== WINDOW.MXH: State Manager cho Flip Cards =====
+window.MXH = window.MXH || {};
+// Map<cardId, {accounts: [], activeId: null, isFlipped: false, frontAccount: null, backAccount: null}>
+MXH.cards = MXH.cards || new Map();
 
 // ===== VIEW MODE LOGIC (FLEXBOX + CSS VARIABLE) =====
+function applyViewMode(value) {
+    const n = Math.max(1, parseInt(value, 10) || 12);
+    localStorage.setItem('mxh_cards_per_row', n);
+    document.documentElement.style.setProperty('--cardsPerRow', n);
+    const c = document.getElementById('mxh-accounts-container');
+    if (c) c.style.setProperty('--cardsPerRow', n);
+}
 
-/**
- * Áp dụng và lưu chế độ xem bằng cách set biến CSS.
- * @param {number | string} value - Số lượng card mong muốn trên một hàng.
- */
-function applyViewMode(value){const n=Math.max(1,parseInt(value,10)||12);localStorage.setItem('mxh_cards_per_row',n);document.documentElement.style.setProperty('--cardsPerRow',n);const c=document.getElementById('mxh-accounts-container');if(c)c.style.setProperty('--cardsPerRow',n);}
-
-/**
- * Khởi tạo chức năng "Chế Độ Xem".
- */
 function initializeViewMode() {
     const input = document.getElementById('mxh-cards-per-row');
     const btn = document.getElementById('mxh-apply-view-mode-btn');
@@ -42,8 +44,6 @@ function initializeViewMode() {
             const currentValue = input ? input.value : 12;
             applyViewMode(currentValue);
 
-            // Không cần render lại, CSS sẽ tự cập nhật.
-            // Chỉ cần đóng modal và thông báo.
             const modalEl = document.getElementById('mxh-view-mode-modal');
             if (modalEl && typeof bootstrap !== 'undefined') {
                 const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -57,7 +57,6 @@ function initializeViewMode() {
 }
 
 // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
-// Debounce function - prevents excessive API calls
 function debounce(func, delay) {
     let timeoutId;
     return function (...args) {
@@ -66,7 +65,6 @@ function debounce(func, delay) {
     };
 }
 
-// Throttle function - ensures function runs at most once per interval
 function throttle(func, interval) {
     let lastCall = 0;
     return function (...args) {
@@ -78,20 +76,16 @@ function throttle(func, interval) {
     };
 }
 
-
 // ===== REAL-TIME DATA LOADING WITH SMART UPDATES =====
-// Load MXH data from API with optimized rendering
 async function loadMXHData(forceRender = true) {
     try {
-        // Check lastUpdateTime for delta polling
         const accountsUrl = lastUpdateTime
             ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}`
             : '/mxh/api/accounts';
 
-        // Parallel loading for speed
         const [groupsResponse, accountsResponse] = await Promise.all([
             fetch('/mxh/api/groups'),
-            fetch(accountsUrl) // Use the dynamic URL
+            fetch(accountsUrl)
         ]);
 
         if (groupsResponse.ok) {
@@ -105,7 +99,6 @@ async function loadMXHData(forceRender = true) {
 
             if (newAccountsDelta.length > 0) {
                 dataChanged = true;
-                // MERGE LOGIC: Replace/Update existing accounts with delta
                 const accountMap = new Map(mxhAccounts.map(acc => [acc.id, acc]));
 
                 newAccountsDelta.forEach(deltaAcc => {
@@ -114,8 +107,6 @@ async function loadMXHData(forceRender = true) {
 
                 mxhAccounts = Array.from(accountMap.values());
 
-                // Update lastUpdateTime with the latest timestamp from the delta
-                // Use the *current* time if the delta is empty or the updated_at field is missing
                 const latestTimestamp = newAccountsDelta.reduce((latest, acc) => {
                     return (acc.updated_at && acc.updated_at > latest) ? acc.updated_at : latest;
                 }, lastUpdateTime || new Date(0).toISOString());
@@ -123,16 +114,8 @@ async function loadMXHData(forceRender = true) {
                 lastUpdateTime = latestTimestamp;
             }
 
-            // Debug: log first account with notice
-            const accWithNotice = mxhAccounts.find(a => a.notice && a.notice.enabled);
-            if (accWithNotice) {
-                // Debug disabled
-            }
-
-            // console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: mxhAccounts.length });
-
             if (forceRender || dataChanged) {
-                renderGroupsNav(); // Render groups navigation first
+                renderGroupsNav();
                 if (!isRendering) {
                     renderMXHAccounts();
                 } else {
@@ -155,13 +138,11 @@ async function loadMXHData(forceRender = true) {
 function startAutoRefresh() {
     if (!MXH_CONFIG.ENABLE_AUTO_REFRESH) return;
 
-    stopAutoRefresh(); // Clear any existing timer
+    stopAutoRefresh();
 
     autoRefreshTimer = setInterval(async () => {
-        await loadMXHData(false); // Don't force render, only if data changed
+        await loadMXHData(false);
     }, MXH_CONFIG.AUTO_REFRESH_INTERVAL);
-
-    // console.log('✅ MXH Auto-refresh enabled (every', MXH_CONFIG.AUTO_REFRESH_INTERVAL / 1000, 'seconds)');
 }
 
 function stopAutoRefresh() {
@@ -171,7 +152,6 @@ function stopAutoRefresh() {
     }
 }
 
-// Pause auto-refresh when user is interacting (context menu open, modal open, etc.)
 let interactionPaused = false;
 function pauseAutoRefresh() {
     interactionPaused = true;
@@ -181,7 +161,7 @@ function resumeAutoRefresh() {
     interactionPaused = false;
 }
 
-// Ensure platform group exists
+// ===== PLATFORM UTILITIES =====
 async function ensurePlatformGroup(platform) {
     const existingGroup = mxhGroups.find(g => g.name.toLowerCase() === platform.toLowerCase());
     if (existingGroup) {
@@ -211,49 +191,38 @@ async function ensurePlatformGroup(platform) {
     }
 }
 
-// Get platform color
-    function getPlatformColor(platform) {
-        const colors = {
-            'facebook': '#1877f2',
-            'instagram': '#e4405f',
-            'twitter': '#1da1f2',
-            'zalo': '#0068ff',
-            'wechat': '#07c160',
-            'telegram': '#0088cc',
-            'whatsapp': '#25d366'
-        };
-        return colors[platform] || '#6c757d';
-    }
-
-    function getPlatformIconClass(platform) {
-        const p = String(platform || '').toLowerCase();
-        return ({
-            wechat: 'bi-wechat',
-            telegram: 'bi-telegram',
-            facebook: 'bi-facebook',
-            instagram: 'bi-instagram',
-        zalo: 'bi-chat-dots-fill',   // không có icon Zalo -> dùng chat
-            twitter: 'bi-twitter',
-            whatsapp: 'bi-whatsapp'
-        }[p]) || 'bi-person-badge';
-    }
-
-    // Global flip card function
-    window.flipCard = function (el, event) {
-        if (event) { event.preventDefault(); event.stopPropagation(); }
-        const wrap = el.closest('.mxh-card-container');
-        if (wrap) wrap.classList.toggle('flipped');
+function getPlatformColor(platform) {
+    const colors = {
+        'facebook': '#1877f2',
+        'instagram': '#e4405f',
+        'twitter': '#1da1f2',
+        'zalo': '#0068ff',
+        'wechat': '#07c160',
+        'telegram': '#0088cc',
+        'whatsapp': '#25d366'
     };
+    return colors[platform] || '#6c757d';
+}
 
-// Get next card number (per platform/group)
+function getPlatformIconClass(platform) {
+    const p = String(platform || '').toLowerCase();
+    return ({
+        wechat: 'bi-wechat',
+        telegram: 'bi-telegram',
+        facebook: 'bi-facebook',
+        instagram: 'bi-instagram',
+        zalo: 'bi-chat-dots-fill',
+        twitter: 'bi-twitter',
+        whatsapp: 'bi-whatsapp'
+    }[p]) || 'bi-person-badge';
+}
+
 async function getNextCardNumber(groupId) {
-    // Get all accounts in the same group (using group_id from joined data)
     const groupAccounts = mxhAccounts.filter(acc => acc.group_id === groupId);
     const numbers = groupAccounts.map(acc => parseInt(acc.card_name)).filter(n => !isNaN(n));
 
     if (numbers.length === 0) return 1;
 
-    // Find first available number starting from 1
     for (let i = 1; i <= numbers.length + 1; i++) {
         if (!numbers.includes(i)) {
             return i;
@@ -262,25 +231,21 @@ async function getNextCardNumber(groupId) {
     return Math.max(...numbers) + 1;
 }
 
-// Toggle group visibility
 // ===== RENDER GROUP NAVIGATION WITH BADGES =====
-    function renderGroupsNav() {
+function renderGroupsNav() {
     const groupsNavContainer = document.getElementById('mxh-groups-nav');
     if (!groupsNavContainer) return;
 
     let html = '';
 
-    // Get unique groups from accounts
     const uniqueGroupIds = [...new Set(mxhAccounts.map(acc => acc.group_id).filter(id => id))];
 
     uniqueGroupIds.forEach(groupId => {
         const group = mxhGroups.find(g => g.id == groupId);
         if (group) {
-            // Calculate badge count for this group
             const badgeCount = calculateGroupBadge(groupId);
             const isActive = activeGroupId === groupId;
 
-            // Get platform color for this group
             const platformColor = getPlatformColor(group.name.toLowerCase());
             const activeStyle = isActive ? `background-color: ${platformColor}; border-color: ${platformColor}; color: white;` : `color: ${platformColor}; border-color: ${platformColor};`;
             
@@ -299,20 +264,56 @@ async function getNextCardNumber(groupId) {
     groupsNavContainer.innerHTML = html;
 }
 
-// Calculate badge count for a group
 function calculateGroupBadge(groupId) {
     return mxhAccounts.filter(acc => acc.group_id === groupId).length;
 }
 
-// Select group function
 window.selectGroup = function(groupId) {
     activeGroupId = groupId;
     renderGroupsNav();
     renderMXHAccounts();
 };
 
+// ===== CORE STATE MANAGEMENT FUNCTIONS =====
+
 /**
- * VIẾT LẠI: Render các card tài khoản, gom nhóm các tài khoản phụ vào card chính.
+ * Lấy hoặc khởi tạo state cho một card.
+ * @param {number} cardId - ID của card
+ * @returns {object} State object của card
+ */
+function _getCardState(cardId) {
+    if (!MXH.cards.has(cardId)) {
+        MXH.cards.set(cardId, {
+            accounts: [],
+            activeId: null,
+            isFlipped: false,
+            frontAccount: null,
+            backAccount: null
+        });
+    }
+    return MXH.cards.get(cardId);
+}
+
+/**
+ * Cập nhật state của card với danh sách tài khoản mới.
+ * @param {number} cardId - ID của card
+ * @param {array} accounts - Danh sách tài khoản thuộc card này
+ */
+function _updateCardState(cardId, accounts) {
+    const state = _getCardState(cardId);
+    state.accounts = accounts;
+    
+    // Nếu chưa có activeId, set mặc định là tài khoản chính
+    if (!state.activeId && accounts.length > 0) {
+        const primary = accounts.find(a => a.is_primary) || accounts[0];
+        state.activeId = primary.id;
+        state.frontAccount = primary.id;
+    }
+}
+
+/**
+ * VIẾT LẠI: Render các card tài khoản, gom nhóm các tài khoản theo card_id.
+ * Mỗi card_id chỉ render MỘT div.mxh-item với cấu trúc flip 3D.
  */
 function renderMXHAccounts() {
     if (isRendering) {
@@ -324,7 +325,7 @@ function renderMXHAccounts() {
     const container = document.getElementById('mxh-accounts-container');
     const scrollY = window.scrollY;
 
-    // --- LOGIC GOM NHÓM TÀI KHOẢN THEO CARD ---
+    // --- LOGIC GOM NHÓM TÀI KHOẢN THEO CARD_ID ---
     const cardsMap = new Map();
     const filteredAccounts = activeGroupId
         ? mxhAccounts.filter(acc => String(acc.group_id) === String(activeGroupId))
@@ -334,7 +335,6 @@ function renderMXHAccounts() {
         const cardId = account.card_id;
         if (!cardsMap.has(cardId)) {
             cardsMap.set(cardId, {
-                // Lấy thông tin chung của card từ account đầu tiên tìm thấy
                 card_info: {
                     id: account.card_id,
                     card_name: account.card_name,
@@ -347,6 +347,11 @@ function renderMXHAccounts() {
         cardsMap.get(cardId).accounts.push(account);
     }
     // --- KẾT THÚC LOGIC GOM NHÓM ---
+
+    // Cập nhật state cho tất cả các cards
+    cardsMap.forEach((cardData, cardId) => {
+        _updateCardState(cardId, cardData.accounts);
+    });
 
     const sortedCards = Array.from(cardsMap.values()).sort((a, b) => {
         const numA = parseInt(a.card_info.card_name) || 0;
@@ -361,21 +366,41 @@ function renderMXHAccounts() {
     }
 
     const cardsHtml = sortedCards.map(cardData => {
-        // Tài khoản chính luôn được ưu tiên hiển thị ở mặt trước
+        const cardId = cardData.card_info.id;
+        const state = _getCardState(cardId);
+        
+        // Xác định tài khoản nào hiển thị ở mặt trước và mặt sau
         const primaryAccount = cardData.accounts.find(a => a.is_primary) || cardData.accounts[0];
         if (!primaryAccount) return '';
 
+        // Lấy tài khoản đang active từ state
+        const activeAccount = cardData.accounts.find(a => a.id === state.activeId) || primaryAccount;
+        
+        // Xác định tài khoản cho mặt trước và mặt sau dựa trên state
+        let frontAccount, backAccount;
+        if (state.isFlipped) {
+            // Nếu đang lật, mặt sau (hiện tại đang nhìn thấy) hiển thị account active
+            backAccount = activeAccount;
+            frontAccount = state.frontAccount ? cardData.accounts.find(a => a.id === state.frontAccount) : primaryAccount;
+        } else {
+            // Nếu không lật, mặt trước hiển thị account active
+            frontAccount = activeAccount;
+            backAccount = state.backAccount ? cardData.accounts.find(a => a.id === state.backAccount) : null;
+        }
+
         // Render card với cấu trúc lật
+        const flippedClass = state.isFlipped ? 'is-flipped' : '';
+        
         return `
-            <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-card-id="${cardData.card_info.id}">
-                <div class="card tool-card mxh-card" id="card-${cardData.card_info.id}" oncontextmenu="handleCardContextMenu(event, ${primaryAccount.id}, '${primaryAccount.platform}'); return false;">
+            <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-card-id="${cardId}">
+                <div class="card tool-card mxh-card ${flippedClass}" id="card-${cardId}" oncontextmenu="handleCardContextMenu(event, ${activeAccount.id}, '${activeAccount.platform}'); return false;">
                     <div class="card-body">
                         <div class="mxh-card-inner">
                             <div class="mxh-card-face face-a">
-                                ${renderAccountFace(primaryAccount)}
+                                ${renderAccountFace(frontAccount, cardData.accounts)}
                             </div>
                             <div class="mxh-card-face face-b">
-                                ${renderAccountFace(cardData.accounts.length > 1 ? (cardData.accounts.find(a => !a.is_primary) || cardData.accounts[1]) : null)}
+                                ${renderAccountFace(backAccount, cardData.accounts)}
                             </div>
                         </div>
                     </div>
@@ -388,10 +413,17 @@ function renderMXHAccounts() {
     
     // Áp dụng lại trạng thái viền cho từng card sau khi render
     sortedCards.forEach(cardData => {
-        const primaryAccount = cardData.accounts.find(a => a.is_primary) || cardData.accounts[0];
-        const cell = document.querySelector(`.mxh-item[data-card-id="${cardData.card_info.id}"]`);
-        if (cell && primaryAccount) {
-            paintRing(cell, primaryAccount);
+        const cardId = cardData.card_info.id;
+        const state = _getCardState(cardId);
+        
+        // Dùng account đang active, không phải primary
+        const activeAccount = cardData.accounts.find(a => a.id === state.activeId) 
+                           || cardData.accounts.find(a => a.is_primary) 
+                           || cardData.accounts[0];
+        
+        const cell = document.querySelector(`.mxh-item[data-card-id="${cardId}"]`);
+        if (cell && activeAccount) {
+            paintRing(cell, activeAccount);
         }
     });
     
@@ -407,18 +439,23 @@ function renderMXHAccounts() {
 /**
  * Hàm phụ trợ để render nội dung cho MỘT mặt của card (trước hoặc sau).
  * @param {object | null} account - Đối tượng tài khoản để render.
+ * @param {array} allAccountsOnCard - Tất cả tài khoản thuộc card này (để tính toán nếu cần)
  * @returns {string} - Chuỗi HTML cho nội dung của một mặt card.
  */
-function renderAccountFace(account) {
-    if (!account) return '<div class="text-center p-3 text-muted small">...</div>'; // Mặt trống
+function renderAccountFace(account, allAccountsOnCard = []) {
+    if (!account) return '<div class="text-center p-3 text-muted small">...</div>';
 
     const now = new Date();
     let accountAgeDisplay = '';
     let ageColor = '#6c757d';
-    let scanCountdown = '';
 
+    // Tính tuổi tài khoản (nếu là WeChat)
     if (account.platform === 'wechat' && account.wechat_created_year) {
-        const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+        const createdDate = new Date(
+            account.wechat_created_year,
+            (account.wechat_created_month || 1) - 1,
+            account.wechat_created_day || 1
+        );
         const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
         if (diffDays >= 365) {
             accountAgeDisplay = `${Math.floor(diffDays / 365)}Y`;
@@ -428,18 +465,40 @@ function renderAccountFace(account) {
         }
     }
     
-    const isDie = ['disabled', 'die', 'banned', 'blocked'].includes(String(account.status || '').toLowerCase()) || !!account.die_date;
+    // Xác định trạng thái Die/Disabled
+    const isDisabled = String(account.status || '').toLowerCase() === 'disabled';
+    const isDie = ['die', 'banned', 'blocked'].includes(String(account.status || '').toLowerCase()) || !!account.die_date;
     
     let statusClass = 'account-status-available';
     let statusIcon = '';
     if (isDie) {
         statusClass = 'account-status-die';
         statusIcon = '<i class="bi bi-x-circle-fill status-icon"></i>';
-    } else if (account.status === 'disabled') {
+    } else if (isDisabled) {
         statusClass = 'account-status-disabled';
         statusIcon = '<i class="bi bi-slash-circle status-icon"></i>';
     }
 
+    // Xử lý scan countdown (cho WeChat)
+    let scanCountdown = '';
+    if (account.platform === 'wechat' && !isDisabled && !isDie) {
+        const scanCount = account.wechat_scan_count || 0;
+        const lastScanDate = account.wechat_last_scan_date ? new Date(account.wechat_last_scan_date) : null;
+        if (lastScanDate) {
+            const nextScanDate = new Date(lastScanDate.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
+            const remainMs = nextScanDate - now;
+            const remainDays = Math.ceil(remainMs / (1000 * 60 * 60 * 24));
+            if (remainDays > 0) {
+                scanCountdown = `<span style="color: #07c160;">Q:${scanCount}</span> | ${remainDays}d`;
+            } else {
+                scanCountdown = `<span style="color: #ff4d4f;">Q:${scanCount}</span> | Cần quét`;
+            }
+        } else {
+            scanCountdown = `<span style="color: #ffa500;">Q:${scanCount}</span> | Chưa quét`;
+        }
+    }
+
+    // Xử lý thông báo (notice)
     const noticeObj = ensureNoticeParsed(account.notice);
     let noticeHtml = '', tipHtml = '';
     if (noticeObj.enabled && noticeObj.start_at && noticeObj.days > 0) {
@@ -458,22 +517,153 @@ function renderAccountFace(account) {
     return `
         <div class="d-flex align-items-center justify-content-between mb-1">
             <div class="d-flex align-items-center gap-1">
-                <h6 class="card-title mb-0 card-number">${account.card_name}</h6>
-                <i class="bi ${getPlatformIconClass(account.platform)}" style="color: ${getPlatformColor(account.platform)};"></i>
+                <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
+                <i class="bi ${getPlatformIconClass(account.platform)}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
+                ${allAccountsOnCard.length > 1 ? `<span class="badge bg-secondary" style="font-size: 0.6rem;">${allAccountsOnCard.findIndex(a => a.id === account.id) + 1}/${allAccountsOnCard.length}</span>` : ''}
             </div>
             ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
         </div>
         <div class="text-center mb-0">
-            <small class="${statusClass} editable-field" contenteditable="true" data-account-id="${account.id}" data-field="username">${account.username || '...'}${statusIcon}</small>
-            <small class="text-muted editable-field" contenteditable="true" data-account-id="${account.id}" data-field="phone">📞 ${account.phone || '...'}</small>
+            <small class="${statusClass} editable-field" contenteditable="true" data-account-id="${account.id}" data-field="username" style="font-size: 0.84rem; display: inline-block;">${account.username || '...'}${statusIcon}</small>
+            <small class="text-muted editable-field" contenteditable="true" data-account-id="${account.id}" data-field="phone" style="font-size: 0.84rem; display: block;">📞 ${account.phone || '...'}</small>
         </div>
-        <div class="mt-auto">
-            ${isDie ? `<div class="text-center"><small class="text-danger" style="font-size: 0.77rem;">Die từ: ${account.die_date ? new Date(account.die_date).toLocaleDateString('vi-VN') : 'N/A'}</small></div>` : ''}
-        </div>
+        ${account.platform === 'wechat' ? `
+            <div class="mt-auto">
+                ${isDisabled || isDie ?
+                    `<div class="d-flex align-items-center justify-content-between">
+                        <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
+                        <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                    </div>` :
+                    `<div class="text-center mt-1">
+                        ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
+                    </div>`
+                }
+            </div>
+        ` : ''}
         ${noticeHtml}
         ${tipHtml}
     `;
 }
+
+// ===== FLIP CARD CORE LOGIC =====
+
+/**
+ * Hàm cốt lõi để lật card sang tài khoản khác.
+ * @param {number} cardId - ID của card cần lật
+ * @param {object} account - Tài khoản mới cần hiển thị
+ */
+function _flipTo(cardId, account) {
+    if (!account) return;
+
+    const state = _getCardState(cardId);
+    const cardEl = document.getElementById(`card-${cardId}`);
+    if (!cardEl) return;
+
+    // Lưu lại account cũ TRƯỚC KHI cập nhật
+    const oldActiveId = state.activeId;
+
+    // Tìm mặt đang ẩn (để render thông tin mới vào đó)
+    const hiddenFace = state.isFlipped ? 'a' : 'b';
+    
+    // Render thông tin account mới vào mặt ẩn
+    const hiddenFaceEl = cardEl.querySelector(`.mxh-card-face.face-${hiddenFace}`);
+    if (hiddenFaceEl) {
+        hiddenFaceEl.innerHTML = renderAccountFace(account, state.accounts);
+    }
+
+    // Toggle class is-flipped để kích hoạt animation CSS
+    cardEl.classList.toggle('is-flipped');
+
+    // Cập nhật state
+    state.isFlipped = !state.isFlipped;
+    state.activeId = account.id;
+    
+    if (state.isFlipped) {
+        // Sau khi lật, mặt B đang hiển thị
+        state.backAccount = account.id;
+        state.frontAccount = oldActiveId; // Lưu lại account cũ
+    } else {
+        // Sau khi lật, mặt A đang hiển thị
+        state.frontAccount = account.id;
+        state.backAccount = oldActiveId; // Lưu lại account cũ
+    }
+
+    // Re-setup editable fields cho mặt mới
+    setupEditableFields();
+}
+
+// ===== MXH PUBLIC API =====
+
+/**
+ * Thêm tài khoản phụ vào một card.
+ * Sau khi thành công, card sẽ tự động lật ra mặt sau để hiển thị tài khoản mới.
+ * @param {number} cardId - ID của card
+ */
+MXH.addSubAccount = async (cardId) => {
+    const state = _getCardState(cardId);
+    
+    try {
+        // Gọi API để tạo tài khoản phụ
+        const response = await fetch(`/mxh/api/cards/${cardId}/accounts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                account_name: "Tài khoản phụ",
+                platform: "wechat",
+                username: ".",
+                phone: "."
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || error.error || `HTTP ${response.status}`);
+        }
+        
+        const newAccount = await response.json();
+        
+        // Cập nhật mxhAccounts global
+        mxhAccounts.push(newAccount);
+        
+        // Cập nhật state của card
+        state.accounts.push(newAccount);
+        
+        // Lật card sang tài khoản mới
+        _flipTo(cardId, newAccount);
+        
+        showToast('Đã tạo tài khoản phụ!', 'success');
+        
+    } catch (err) {
+        if (err instanceof TypeError) {
+            showToast('API không phản hồi (mất kết nối)', 'warning');
+        } else {
+            showToast(`Tạo tài khoản phụ thất bại: ${err.message}`, 'error');
+        }
+    }
+};
+
+/**
+ * Chuyển đổi hiển thị sang tài khoản khác trên cùng một card.
+ * @param {number} cardId - ID của card
+ * @param {number} accountId - ID của tài khoản cần chuyển sang
+ */
+MXH.switchAccount = (cardId, accountId) => {
+    const state = _getCardState(cardId);
+    const account = state.accounts.find(a => a.id == accountId);
+    
+    if (!account) {
+        console.warn(`Account ${accountId} not found in card ${cardId}`);
+        return;
+    }
+    
+    // Nếu đã đang hiển thị account này rồi thì không làm gì
+    if (state.activeId === account.id) {
+        return;
+    }
+    
+    // Lật card sang account mới
+    _flipTo(cardId, account);
+};
 
 // ===== UTILITY FUNCTIONS =====
 function ensureNoticeParsed(notice) {
@@ -482,13 +672,17 @@ function ensureNoticeParsed(notice) {
     return n;
 }
 
-/**
- * Gán sự kiện cho các trường có thể chỉnh sửa trực tiếp trên card.
- */
 function setupEditableFields() {
     const editableFields = document.querySelectorAll('.editable-field');
 
     editableFields.forEach(field => {
+        // Remove old listeners by cloning
+        const newField = field.cloneNode(true);
+        field.parentNode.replaceChild(newField, field);
+    });
+
+    // Re-select after cloning
+    document.querySelectorAll('.editable-field').forEach(field => {
         field.addEventListener('blur', async (e) => {
             const accountId = parseInt(e.target.dataset.accountId);
             const fieldName = e.target.dataset.field;
@@ -507,12 +701,11 @@ function setupEditableFields() {
         field.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                e.target.blur(); // Trigger blur event to save
+                e.target.blur();
             }
         });
         
         field.addEventListener('focus', (e) => {
-             // Select all text on focus
             setTimeout(() => {
                 const selection = window.getSelection();
                 const range = document.createRange();
@@ -524,12 +717,6 @@ function setupEditableFields() {
     });
 }
 
-/**
- * Gửi yêu cầu cập nhật nhanh một trường dữ liệu đến server.
- * @param {number} accountId ID của tài khoản
- * @param {string} field Tên trường (e.g., 'username', 'phone')
- * @param {string} value Giá trị mới
- */
 async function quickUpdateField(accountId, field, value) {
     try {
         const response = await fetch(`/mxh/api/accounts/${accountId}/quick-update`, {
@@ -540,7 +727,6 @@ async function quickUpdateField(accountId, field, value) {
 
         if (response.ok) {
             showToast(`Đã cập nhật ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
-            // Cập nhật lại dữ liệu local để giao diện đồng bộ
             const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
             if (accountIndex !== -1) {
                 mxhAccounts[accountIndex][field] = value;
@@ -548,7 +734,7 @@ async function quickUpdateField(accountId, field, value) {
         } else {
             const error = await response.json();
             showToast(error.error || 'Lỗi khi cập nhật!', 'error');
-            await loadMXHData(true); // Tải lại toàn bộ nếu lỗi
+            await loadMXHData(true);
         }
     } catch (error) {
         showToast('Lỗi kết nối!', 'error');
@@ -556,10 +742,6 @@ async function quickUpdateField(accountId, field, value) {
     }
 }
 
-/**
- * Mở modal và điền thông tin của một tài khoản cụ thể để chỉnh sửa.
- * @param {number} accountId - ID của tài khoản cần chỉnh sửa.
- */
 function openAccountModalForEdit(accountId) {
     const account = mxhAccounts.find(acc => acc.id === accountId);
     if (!account) {
@@ -567,15 +749,12 @@ function openAccountModalForEdit(accountId) {
         return;
     }
 
-    // Hiện tại ta dùng chung modal 'wechat-account-modal'
-    // Tương lai có thể tạo các modal khác cho từng platform
     const modalEl = document.getElementById('wechat-account-modal');
     if (!modalEl) {
         showToast('Lỗi: Không tìm thấy modal!', 'error');
         return;
     }
 
-    // Điền dữ liệu vào form
     modalEl.querySelector('#wechat-card-name').value = account.card_name || '';
     modalEl.querySelector('#wechat-username').value = account.username || '';
     modalEl.querySelector('#wechat-phone').value = account.phone || '';
@@ -583,14 +762,12 @@ function openAccountModalForEdit(accountId) {
     modalEl.querySelector('#wechat-month').value = account.wechat_created_month || '';
     modalEl.querySelector('#wechat-year').value = account.wechat_created_year || '';
 
-    // Xử lý status
     let currentStatus = account.status || 'active';
     if (account.muted_until && new Date(account.muted_until) > new Date()) {
         currentStatus = 'muted';
     }
     modalEl.querySelector('#wechat-status').value = currentStatus;
 
-    // Hiển thị modal
     const modalInstance = new bootstrap.Modal(modalEl);
     modalInstance.show();
 }
@@ -617,135 +794,6 @@ function normalizeISOForJS(iso) {
 
 // ===== CONTEXT MENU FUNCTIONS =====
 function showUnifiedContextMenu(event, accountId, platform) {
-        event.preventDefault();
-        event.stopPropagation();
-        currentContextAccountId = accountId;
-    pauseAutoRefresh();
-
-        const contextMenu = document.getElementById('unified-context-menu');
-    const account = mxhAccounts.find(acc => acc.id === accountId);
-
-    if (!account) return;
-
-    // Show/hide WeChat-specific items
-    const wechatOnlyItems = contextMenu.querySelectorAll('.wechat-only');
-    wechatOnlyItems.forEach(item => {
-        item.style.display = platform === 'wechat' ? 'block' : 'none';
-    });
-
-    // Show/hide phone item if phone exists
-    const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
-    const phone = account.phone;
-    if (copyPhoneItem) {
-        copyPhoneItem.style.display = phone ? 'block' : 'none';
-    }
-
-    // Configure notice toggle
-    const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
-    if (noticeToggle) {
-        const noticeObj = ensureNoticeParsed(account.notice);
-        const hasNotice = !!(noticeObj && noticeObj.enabled);
-        noticeToggle.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
-        noticeToggle.innerHTML = hasNotice
-            ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
-            : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
-        }
-        
-    // Configure status submenu based on current status (giống 100% MXH_Old)
-    const currentStatus = account.status;
-    const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
-    const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
-
-    if (currentStatus === 'disabled') {
-        // Khi disabled: Ẩn Available/Die/Vô hiệu hóa, hiện Được Cứu/Cứu Thất Bại
-        statusNormalItems.forEach(item => item.style.display = 'none');
-        statusRescueItems.forEach(item => item.style.display = 'block');
-    } else {
-        // Khi không disabled: Hiện Available/Die/Vô hiệu hóa, ẩn Được Cứu/Cứu Thất Bại
-        statusNormalItems.forEach(item => item.style.display = 'block');
-        statusRescueItems.forEach(item => item.style.display = 'none');
-    }
-        
-        // Smart positioning logic
-        const menuWidth = 200;
-        const menuHeight = 300;
-        const buffer = 50;
-        
-        const mouseX = event.pageX;
-        const mouseY = event.pageY;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        
-        let finalX = mouseX;
-        let finalY = mouseY;
-        
-        // Smart X positioning
-        if (mouseX < buffer) {
-            finalX = mouseX + 20; // Show to the right
-        } else if (mouseX > windowWidth - menuWidth - buffer) {
-            finalX = mouseX - menuWidth - 20; // Show to the left
-        }
-        
-        // Smart Y positioning
-        if (mouseY < buffer) {
-            finalY = mouseY + 20; // Show below
-        } else if (mouseY > windowHeight - menuHeight - buffer) {
-            finalY = mouseY - menuHeight - 20; // Show above
-        }
-        
-        // Position and show menu with smooth animation
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = finalX + 'px';
-        contextMenu.style.top = finalY + 'px';
-        contextMenu.style.opacity = '0';
-        contextMenu.style.transform = 'scale(0.8)';
-        
-        // Smooth fade in animation
-        setTimeout(() => {
-            contextMenu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-            contextMenu.style.opacity = '1';
-            contextMenu.style.transform = 'scale(1)';
-        }, 10);
-        
-        setTimeout(() => {
-        document.addEventListener('click', hideUnifiedContextMenu, { once: true });
-    }, 100);
-}
-
-function hideUnifiedContextMenu() {
-    const contextMenu = document.getElementById('unified-context-menu');
-    
-    // Smooth fade out animation
-    contextMenu.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
-    contextMenu.style.opacity = '0';
-    contextMenu.style.transform = 'scale(0.9)';
-    
-    // Hide after animation completes
-    setTimeout(() => {
-        contextMenu.style.display = 'none';
-        contextMenu.style.transition = '';
-        contextMenu.style.opacity = '';
-        contextMenu.style.transform = '';
-    }, 150);
-    
-    resumeAutoRefresh();
-}
-
-// Handle Card Context Menu - Use Unified Menu with Flip Card Integration
-window.handleCardContextMenu = function (event, accountId, platform) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    // Lấy card_id từ account để sử dụng cho flip logic
-    const account = mxhAccounts.find(acc => acc.id === accountId);
-    const cardId = account?.card_id || accountId; // fallback to accountId if no card_id
-    
-    // Tích hợp flip card logic vào context menu
-    showUnifiedContextMenuWithFlip(event, accountId, platform, cardId);
-}
-
-// Enhanced context menu with flip card integration
-function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
     event.preventDefault();
     event.stopPropagation();
     currentContextAccountId = accountId;
@@ -756,20 +804,17 @@ function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
 
     if (!account) return;
 
-    // Show/hide WeChat-specific items
     const wechatOnlyItems = contextMenu.querySelectorAll('.wechat-only');
     wechatOnlyItems.forEach(item => {
         item.style.display = platform === 'wechat' ? 'block' : 'none';
     });
 
-    // Show/hide phone item if phone exists
     const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
     const phone = account.phone;
     if (copyPhoneItem) {
         copyPhoneItem.style.display = phone ? 'block' : 'none';
     }
 
-    // Configure notice toggle
     const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
     if (noticeToggle) {
         const noticeObj = ensureNoticeParsed(account.notice);
@@ -780,58 +825,18 @@ function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
             : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
     }
         
-    // Configure status submenu based on current status (giống 100% MXH_Old)
     const currentStatus = account.status;
     const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
     const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
 
     if (currentStatus === 'disabled') {
-        // Khi disabled: Ẩn Available/Die/Vô hiệu hóa, hiện Được Cứu/Cứu Thất Bại
         statusNormalItems.forEach(item => item.style.display = 'none');
         statusRescueItems.forEach(item => item.style.display = 'block');
     } else {
-        // Khi không disabled: Hiện Available/Die/Vô hiệu hóa, ẩn Được Cứu/Cứu Thất Bại
         statusNormalItems.forEach(item => item.style.display = 'block');
         statusRescueItems.forEach(item => item.style.display = 'none');
     }
-
-    // ===== FLIP CARD INTEGRATION =====
-    // Tạo submenu "Tài khoản" với flip logic
-    const accountsSubmenu = contextMenu.querySelector('#accounts-submenu');
-    if (accountsSubmenu) {
-        // Khởi tạo flip skeleton nếu chưa có
-        const st = _readPrimaryFromDOM(cardId);
         
-        // Xóa nội dung cũ
-        accountsSubmenu.innerHTML = '';
-        
-        // Thêm các tài khoản hiện có
-        st.accounts.forEach(acc => {
-            const isActive = acc.id === st.activeId;
-            const item = document.createElement('div');
-            item.className = 'menu-item';
-            item.dataset.ctx = 'switchAccount';
-            item.dataset.cardId = cardId;
-            item.dataset.accountId = acc.id;
-            item.innerHTML = `
-                <i class="bi bi-person me-2"></i> 
-                ${acc.label}${isActive ? ' ✓' : ''}
-            `;
-            accountsSubmenu.appendChild(item);
-        });
-        
-        // Bỏ separator để tránh khoảng trống "ảo" trong dark theme
-        
-        // Thêm nút "Thêm Tài Khoản"
-        const addItem = document.createElement('div');
-        addItem.className = 'menu-item';
-        addItem.dataset.ctx = 'addAccount';
-        addItem.dataset.cardId = cardId;
-        addItem.innerHTML = '<i class="bi bi-plus-circle me-2"></i> Thêm Tài Khoản';
-        accountsSubmenu.appendChild(addItem);
-    }
-        
-    // Smart positioning logic
     const menuWidth = 200;
     const menuHeight = 300;
     const buffer = 50;
@@ -844,28 +849,24 @@ function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
     let finalX = mouseX;
     let finalY = mouseY;
     
-    // Smart X positioning
     if (mouseX < buffer) {
-        finalX = mouseX + 20; // Show to the right
+        finalX = mouseX + 20;
     } else if (mouseX > windowWidth - menuWidth - buffer) {
-        finalX = mouseX - menuWidth - 20; // Show to the left
+        finalX = mouseX - menuWidth - 20;
     }
     
-    // Smart Y positioning
     if (mouseY < buffer) {
-        finalY = mouseY + 20; // Show below
+        finalY = mouseY + 20;
     } else if (mouseY > windowHeight - menuHeight - buffer) {
-        finalY = mouseY - menuHeight - 20; // Show above
+        finalY = mouseY - menuHeight - 20;
     }
     
-    // Position and show menu with smooth animation
     contextMenu.style.display = 'block';
     contextMenu.style.left = finalX + 'px';
     contextMenu.style.top = finalY + 'px';
     contextMenu.style.opacity = '0';
     contextMenu.style.transform = 'scale(0.8)';
     
-    // Smooth fade in animation
     setTimeout(() => {
         contextMenu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
         contextMenu.style.opacity = '1';
@@ -877,63 +878,204 @@ function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
     }, 100);
 }
 
-// Event delegation cho context menu items (cũ - giữ để tương thích)
+function hideUnifiedContextMenu() {
+    const contextMenu = document.getElementById('unified-context-menu');
+    
+    contextMenu.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+    contextMenu.style.opacity = '0';
+    contextMenu.style.transform = 'scale(0.9)';
+    
+    setTimeout(() => {
+        contextMenu.style.display = 'none';
+        contextMenu.style.transition = '';
+        contextMenu.style.opacity = '';
+        contextMenu.style.transform = '';
+    }, 150);
+    
+    resumeAutoRefresh();
+}
+
+window.handleCardContextMenu = function (event, accountId, platform) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    const cardId = account?.card_id || accountId;
+    
+    showUnifiedContextMenuWithFlip(event, accountId, platform, cardId);
+}
+
+function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
+    event.preventDefault();
+    event.stopPropagation();
+    currentContextAccountId = accountId;
+    pauseAutoRefresh();
+
+    const contextMenu = document.getElementById('unified-context-menu');
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+
+    if (!account) return;
+
+    const wechatOnlyItems = contextMenu.querySelectorAll('.wechat-only');
+    wechatOnlyItems.forEach(item => {
+        item.style.display = platform === 'wechat' ? 'block' : 'none';
+    });
+
+    const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
+    const phone = account.phone;
+    if (copyPhoneItem) {
+        copyPhoneItem.style.display = phone ? 'block' : 'none';
+    }
+
+    const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
+    if (noticeToggle) {
+        const noticeObj = ensureNoticeParsed(account.notice);
+        const hasNotice = !!(noticeObj && noticeObj.enabled);
+        noticeToggle.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
+        noticeToggle.innerHTML = hasNotice
+            ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
+            : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
+    }
+        
+    const currentStatus = account.status;
+    const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
+    const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
+
+    if (currentStatus === 'disabled') {
+        statusNormalItems.forEach(item => item.style.display = 'none');
+        statusRescueItems.forEach(item => item.style.display = 'block');
+    } else {
+        statusNormalItems.forEach(item => item.style.display = 'block');
+        statusRescueItems.forEach(item => item.style.display = 'none');
+    }
+
+    // ===== FLIP CARD INTEGRATION: Tạo submenu "Tài khoản" =====
+    const accountsSubmenu = contextMenu.querySelector('#accounts-submenu');
+    if (accountsSubmenu) {
+        const state = _getCardState(cardId);
+        
+        accountsSubmenu.innerHTML = '';
+        
+        state.accounts.forEach((acc, index) => {
+            const isActive = acc.id === state.activeId;
+            const item = document.createElement('div');
+            item.className = 'menu-item';
+            item.dataset.ctx = 'switchAccount';
+            item.dataset.cardId = cardId;
+            item.dataset.accountId = acc.id;
+            item.innerHTML = `
+                <i class="bi bi-person me-2"></i> 
+                ${acc.account_name || `Tài khoản ${index + 1}`}${isActive ? ' ✓' : ''}
+            `;
+            accountsSubmenu.appendChild(item);
+        });
+        
+        const addItem = document.createElement('div');
+        addItem.className = 'menu-item';
+        addItem.dataset.ctx = 'addAccount';
+        addItem.dataset.cardId = cardId;
+        addItem.innerHTML = '<i class="bi bi-plus-circle me-2"></i> Thêm Tài Khoản';
+        accountsSubmenu.appendChild(addItem);
+    }
+        
+    const menuWidth = 200;
+    const menuHeight = 300;
+    const buffer = 50;
+    
+    const mouseX = event.pageX;
+    const mouseY = event.pageY;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    let finalX = mouseX;
+    let finalY = mouseY;
+    
+    if (mouseX < buffer) {
+        finalX = mouseX + 20;
+    } else if (mouseX > windowWidth - menuWidth - buffer) {
+        finalX = mouseX - menuWidth - 20;
+    }
+    
+    if (mouseY < buffer) {
+        finalY = mouseY + 20;
+    } else if (mouseY > windowHeight - menuHeight - buffer) {
+        finalY = mouseY - menuHeight - 20;
+    }
+    
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = finalX + 'px';
+    contextMenu.style.top = finalY + 'px';
+    contextMenu.style.opacity = '0';
+    contextMenu.style.transform = 'scale(0.8)';
+    
+    setTimeout(() => {
+        contextMenu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        contextMenu.style.opacity = '1';
+        contextMenu.style.transform = 'scale(1)';
+    }, 10);
+    
+    setTimeout(() => {
+        document.addEventListener('click', hideUnifiedContextMenu, { once: true });
+    }, 100);
+}
+
+// Event delegation cho context menu items
 document.addEventListener('pointerdown', function(e) {
-    const el = e.target.closest('.menu-item[data-ctx-type]');
+    const el = e.target.closest('[data-ctx]');
     if (!el) return;
 
-    const type = el.dataset.ctxType;
+    const ctx = el.dataset.ctx;
     const cardId = +el.dataset.cardId || 0;
     const accountId = el.dataset.accountId || null;
 
     e.preventDefault();
     e.stopPropagation();
 
-    if (type === 'addAccount') {
+    if (ctx === 'addAccount') {
         MXH.addSubAccount(cardId);
         hideUnifiedContextMenu();
         return;
     }
     
-    if (type === 'switchAccount') {
-        MXH.switchAccount(cardId, accountId);
+    if (ctx === 'switchAccount') {
+        MXH.switchAccount(cardId, +accountId);
         hideUnifiedContextMenu();
         return;
     }
 });
 
 // ===== TOAST NOTIFICATIONS =====
-    function showToast(message, type = 'info') {
-        const toastContainer = document.getElementById('toast-container') || createToastContainer();
-        const toastId = 'toast-' + Date.now();
-        const bgClass = type === 'error' ? 'bg-danger' : (type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-primary'));
-        
-        const toastHTML = `
-            <div id="${toastId}" class="toast align-items-center text-white ${bgClass}" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'error' ? 'bg-danger' : (type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-primary'));
+    
+    const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass}" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-        `;
-        
-        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-        const toastEl = document.getElementById(toastId);
-        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-        toast.show();
-        
-        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-    }
+        </div>
+    `;
     
-    function createToastContainer() {
-        const container = document.createElement('div');
-        container.id = 'toast-container';
-        container.className = 'toast-container position-fixed top-0 end-0 p-3';
-        container.style.zIndex = '9999';
-        document.body.appendChild(container);
-        return container;
-    }
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    const toastEl = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
     
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+
 // ===== CHANGE NUMBER FUNCTIONS =====
 function openChangeNumberModal() {
     const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
@@ -964,10 +1106,9 @@ async function submitChangeNumber() {
             showToast('Đổi số hiệu thành công', 'success');
             bootstrap.Modal.getInstance(document.getElementById('changeNumberModal')).hide();
             
-            // Auto reload trang nhưng giữ vị trí đang xem
             setTimeout(() => {
                 window.location.reload();
-            }, 1000); // Delay 1 giây để user thấy toast
+            }, 1000);
         } else {
             const error = await response.json();
             showToast(error.error || 'Lỗi đổi số hiệu', 'error');
@@ -978,229 +1119,84 @@ async function submitChangeNumber() {
     }
 }
 
-// Global function for modal button
 window.submitChangeNumber = submitChangeNumber;
 
-// ===== INLINE EDITING FUNCTIONS =====
-async function quickUpdateField(accountId, field, value) {
-    try {
-        // INSTANT LOCAL UPDATE - Update UI immediately
-        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-        if (accountIndex !== -1) {
-            mxhAccounts[accountIndex][field] = value;
-        }
+// ===== SUBMENU LOGIC =====
+let currentSubmenu = null;
+let hideTimeout = null;
 
-        // API call in background
-        const response = await fetch(`/mxh/api/accounts/${accountId}/quick-update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                field: field,
-                value: value
-            })
-        });
-
-        if (response.ok) {
-            showToast(`Đã lưu ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
-            return true;
-        } else {
-            // Revert on error
-            const error = await response.json();
-            showToast(error.error || 'Lỗi khi cập nhật!', 'error');
-            await loadMXHData(false); // Reload to get correct data
-            return false;
+function showSubmenu(menuItem) {
+    if (currentSubmenu && currentSubmenu !== menuItem) {
+        const currentSubmenuEl = currentSubmenu.querySelector('.submenu');
+        if (currentSubmenuEl) {
+            currentSubmenuEl.classList.remove('show');
         }
-    } catch (error) {
-        showToast('Lỗi kết nối!', 'error');
-        await loadMXHData(false); // Reload to get correct data
-        return false;
+    }
+    
+    const submenuEl = menuItem.querySelector('.submenu');
+    if (submenuEl) {
+        submenuEl.classList.add('show');
+        currentSubmenu = menuItem;
+    }
+    
+    if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
     }
 }
 
-// Setup contenteditable fields
-function setupEditableFields() {
-    const editableFields = document.querySelectorAll('.editable-field');
-
-    editableFields.forEach(field => {
-        // Store original value
-        field.dataset.originalValue = field.textContent.trim();
-
-        // Handle Enter key - save and blur
-        field.addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                field.blur();
+function hideSubmenu(delay = 300) {
+    if (hideTimeout) {
+        clearTimeout(hideTimeout);
+    }
+    hideTimeout = setTimeout(() => {
+        if (currentSubmenu) {
+            const submenuEl = currentSubmenu.querySelector('.submenu');
+            if (submenuEl) {
+                submenuEl.classList.remove('show');
             }
-        });
-
-        // Handle Escape key - cancel and restore
-        field.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                field.textContent = field.dataset.originalValue;
-                field.blur();
-            }
-        });
-
-        // Handle blur - save changes
-        field.addEventListener('blur', async (e) => {
-            let newValue = e.target.textContent.trim();
-            const accountId = parseInt(e.target.dataset.accountId);
-            const fieldName = e.target.dataset.field;
-
-            // Remove emoji prefix for phone
-            if (fieldName === 'phone') {
-                newValue = newValue.replace(/^📞\s*/, '').trim();
-            }
-            
-            // Check if value is the same or if it's just the placeholder being edited
-            const isNoChange = newValue === field.dataset.originalValue ||
-                                (newValue === '' && field.dataset.originalValue === '.') ||
-                                (newValue === 'Click để nhập' && field.dataset.originalValue === '');
-                                
-            if (isNoChange) {
-                // Restore the visual placeholder if needed
-                if (fieldName === 'phone') {
-                    e.target.textContent = field.dataset.originalValue ? `📞 ${field.dataset.originalValue}` : '📞 Click để nhập';
-                } else {
-                    e.target.textContent = field.dataset.originalValue || 'Click để nhập';
-                }
-                return;
-            }
-            
-            // If the value is a placeholder 'Click để nhập', treat as empty string '.'
-            if (newValue === 'Click để nhập') {
-                newValue = '.'; // Use '.' as the internal empty value marker
-            }
-
-            // Save to backend
-            const success = await quickUpdateField(accountId, fieldName, newValue);
-
-            if (success) {
-                field.dataset.originalValue = newValue;
-                // Update display with emoji if phone
-                if (fieldName === 'phone') {
-                    e.target.textContent = `📞 ${newValue}`;
-                }
-            } else {
-                // Restore original value on failure
-                if (fieldName === 'phone') {
-                    e.target.textContent = field.dataset.originalValue ? `📞 ${field.dataset.originalValue}` : '📞 Click để nhập';
-                } else {
-                    e.target.textContent = field.dataset.originalValue || 'Click để nhập';
-                }
-            }
-        });
-
-        // Select all text on focus
-        field.addEventListener('focus', (e) => {
-            // Remove emoji prefix for easier editing
-            if (e.target.dataset.field === 'phone') {
-                const phone = e.target.textContent.replace(/^📞\s*/, '').replace('Click để nhập', '').trim();
-                e.target.textContent = phone;
-            } else if (e.target.textContent.trim() === 'Click để nhập') {
-                e.target.textContent = '';
-            }
-
-            // Select all text
-            setTimeout(() => {
-                const range = document.createRange();
-                range.selectNodeContents(e.target);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }, 0);
-        });
-    });
+            currentSubmenu = null;
+        }
+    }, delay);
 }
-    
-    // ===== SUBMENU LOGIC (from MXH_Old) =====
-    let currentSubmenu = null;
-    let hideTimeout = null;
-    
-    // Function to show submenu
-    function showSubmenu(menuItem) {
-        // Hide current submenu if different
-        if (currentSubmenu && currentSubmenu !== menuItem) {
-            const currentSubmenuEl = currentSubmenu.querySelector('.submenu');
-            if (currentSubmenuEl) {
-                currentSubmenuEl.classList.remove('show');
-            }
-        }
-        
-        // Show new submenu
-        const submenuEl = menuItem.querySelector('.submenu');
-        if (submenuEl) {
-            submenuEl.classList.add('show');
-            currentSubmenu = menuItem;
-        }
-        
-        // Clear any pending hide timeout
-        if (hideTimeout) {
-            clearTimeout(hideTimeout);
-            hideTimeout = null;
-        }
-    }
-    
-    // Function to hide submenu with delay
-    function hideSubmenu(delay = 300) {
-        if (hideTimeout) {
-            clearTimeout(hideTimeout);
-        }
-        hideTimeout = setTimeout(() => {
-            if (currentSubmenu) {
-                const submenuEl = currentSubmenu.querySelector('.submenu');
-                if (submenuEl) {
-                    submenuEl.classList.remove('show');
-                }
-                currentSubmenu = null;
-            }
-        }, delay);
-    }
-    
-    // Enhanced submenu hover handling
-    document.addEventListener('mouseover', function(event) {
-        const menuItem = event.target.closest('.menu-item.has-submenu');
-        const submenu = event.target.closest('.submenu');
-        
-        if (menuItem) {
-            showSubmenu(menuItem);
-        } else if (submenu) {
-            // Keep submenu open when hovering over submenu
-            if (currentSubmenu) {
-                const submenuEl = currentSubmenu.querySelector('.submenu');
-                if (submenuEl) {
-                    submenuEl.classList.add('show');
-                }
-                if (hideTimeout) {
-                    clearTimeout(hideTimeout);
-                    hideTimeout = null;
-                }
-            }
-        }
-    });
-    
-    document.addEventListener('mouseout', function(event) {
-        const menuItem = event.target.closest('.menu-item.has-submenu');
-        const submenu = event.target.closest('.submenu');
-        
-        if (!menuItem && !submenu) {
-            // Hide submenu when leaving all related elements
-            hideSubmenu();
-        }
-    });
 
-    // ===== EVENT LISTENERS =====
+document.addEventListener('mouseover', function(event) {
+    const menuItem = event.target.closest('.menu-item.has-submenu');
+    const submenu = event.target.closest('.submenu');
+    
+    if (menuItem) {
+        showSubmenu(menuItem);
+    } else if (submenu) {
+        if (currentSubmenu) {
+            const submenuEl = currentSubmenu.querySelector('.submenu');
+            if (submenuEl) {
+                submenuEl.classList.add('show');
+            }
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+            }
+        }
+    }
+});
+
+document.addEventListener('mouseout', function(event) {
+    const menuItem = event.target.closest('.menu-item.has-submenu');
+    const submenu = event.target.closest('.submenu');
+    
+    if (!menuItem && !submenu) {
+        hideSubmenu();
+    }
+});
+
+// ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
-  // Khởi tạo và áp dụng ngay Chế Độ Xem
-  initializeViewMode();
-  applyViewMode(localStorage.getItem('mxh_cards_per_row') || 12);
+    initializeViewMode();
+    applyViewMode(localStorage.getItem('mxh_cards_per_row') || 12);
 
-  // Tải dữ liệu và bắt đầu auto-refresh
-  loadMXHData(true);
-  startAutoRefresh();
+    loadMXHData(true);
+    startAutoRefresh();
 
-    // Unified context menu event listener
     document.getElementById('unified-context-menu').addEventListener('click', async (e) => {
         const menuItem = e.target.closest('.menu-item');
         if (!menuItem) return;
@@ -1213,7 +1209,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         switch (action) {
             case 'edit':
-                // GỌI HÀM MỚI TẠI ĐÂY
                 openAccountModalForEdit(currentContextAccountId);
                 break;
             case 'status-available':
@@ -1252,11 +1247,7 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'reset-scan':
                 resetScanCount(e);
                 break;
-            case 'change-number':
-                changeCardNumber(e);
-                break;
             case 'delete':
-                // Lấy card_id từ account hiện tại
                 const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
                 if (account && account.card_id) {
                     handleDeleteCard(account.card_id);
@@ -1264,20 +1255,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast('Không tìm thấy card để xóa', 'error');
                 }
                 break;
-            case 'switch-account':
-                const accountIndex = parseInt(menuItem.dataset.accountIndex);
-                switchToAccount(accountIndex);
-                break;
-            case 'add-new-account':
-                addNewAccount();
-                break;
         }
 
-        // Hide menu after action
         hideUnifiedContextMenu();
     });
 
-    // Add Account Modal - Create new card with primary account
     document.getElementById('mxh-save-account-btn').addEventListener('click', async () => {
         const username = document.getElementById('mxh-username').value;
         const platform = document.getElementById('mxh-platform').value;
@@ -1294,43 +1276,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            // Ensure platform group exists
             const groupId = await ensurePlatformGroup(platform);
-            
-            // Get next card name for the specific group (THIS IS THE FIX)
             const nextCardName = String(await getNextCardNumber(groupId));
             
-            // Auto-fill "." for empty fields (except URL)
             const autoFillValue = (value, isUrl = false) => {
-                if (isUrl) return value || ""; // URL can be empty
-                return value || "."; // Other fields get "." if empty
+                if (isUrl) return value || "";
+                return value || ".";
             };
             
-            // Create card with primary account
             const response = await fetch('/mxh/api/cards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-          card_name: nextCardName,
+                    card_name: nextCardName,
                     group_id: groupId,
-          platform: platform,
+                    platform: platform,
                     username: autoFillValue(username),
                     phone: autoFillValue(phone),
-                    url: autoFillValue(url, true), // URL can be empty
+                    url: autoFillValue(url, true),
                     login_username: autoFillValue(username),
                     login_password: autoFillValue(password),
-          wechat_created_day: day,
-          wechat_created_month: month,
-          wechat_created_year: year
+                    wechat_created_day: day,
+                    wechat_created_month: month,
+                    wechat_created_year: year
                 })
             });
             
             if (response.ok) {
                 showToast('Tạo tài khoản thành công', 'success');
-        await loadMXHData(true);
+                await loadMXHData(true);
                 bootstrap.Modal.getInstance(document.getElementById('mxh-addAccountModal')).hide();
                 document.getElementById('mxh-add-card-form').reset();
-      } else {
+            } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi tạo tài khoản', 'error');
             }
@@ -1340,7 +1317,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Auto-fill date when opening add account modal
     document.getElementById('mxh-addAccountModal').addEventListener('shown.bs.modal', function () {
         const today = new Date();
         const day = today.getDate();
@@ -1352,7 +1328,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mxh-year').value = year;
     });
     
-    // === THÊM EVENT LISTENER CHO NÚT RESET TRONG MODAL THÔNG TIN ===
     const resetBtn = document.getElementById('wechat-reset-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', async () => {
@@ -1382,88 +1357,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // === THÊM EVENT LISTENER CHO NÚT APPLY TRONG MODAL THÔNG TIN ===
     const applyBtn = document.getElementById('wechat-apply-btn');
     if (applyBtn) {
         applyBtn.addEventListener('click', async () => {
-        if (!currentContextAccountId) {
-            showToast('Lỗi: Không có tài khoản được chọn!', 'error');
-            return;
-        }
-
-        const modalEl = document.getElementById('wechat-account-modal');
-        const originalAccount = mxhAccounts.find(acc => acc.id === currentContextAccountId);
-        if (!originalAccount) {
-            showToast('Lỗi: Không tìm thấy tài khoản để cập nhật!', 'error');
-            return;
-        }
-
-        const selectedStatus = modalEl.querySelector('#wechat-status').value;
-
-        // Thu thập dữ liệu từ modal
-        const newCardName = modalEl.querySelector('#wechat-card-name').value;
-        const payload = {
-            card_name: newCardName,
-            username: modalEl.querySelector('#wechat-username').value,
-            phone: modalEl.querySelector('#wechat-phone').value,
-            wechat_created_day: parseInt(modalEl.querySelector('#wechat-day').value) || null,
-            wechat_created_month: parseInt(modalEl.querySelector('#wechat-month').value) || null,
-            wechat_created_year: parseInt(modalEl.querySelector('#wechat-year').value) || null,
-        };
-        
-        // Kiểm tra nếu có thay đổi số card
-        const cardNameChanged = originalAccount.card_name !== newCardName;
-
-        // Xử lý logic trạng thái phức tạp giống hệt file MXH_Old
-        if (selectedStatus === 'muted') {
-            const muteUntilDate = new Date();
-            muteUntilDate.setDate(muteUntilDate.getDate() + 30);
-            payload.muted_until = muteUntilDate.toISOString();
-            payload.status = originalAccount.status; // Giữ status cũ khi mute
-            payload.wechat_status = originalAccount.wechat_status; // Giữ wechat_status cũ khi mute
-        } else {
-            payload.muted_until = null; // Gỡ mute
-            // Mapping status
-            // Đồng bộ hóa 'status' và 'wechat_status' một cách nhất quán
-            if (selectedStatus === 'available') {
-                payload.status = 'active'; // Ánh xạ 'available' của UI thành 'active' của DB
-            } else {
-                payload.status = selectedStatus; // Sử dụng trực tiếp các giá trị khác: 'die', 'disabled', 'muted'
+            if (!currentContextAccountId) {
+                showToast('Lỗi: Không có tài khoản được chọn!', 'error');
+                return;
             }
-            payload.wechat_status = selectedStatus;
-        }
 
-        try {
-            const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const modalEl = document.getElementById('wechat-account-modal');
+            const originalAccount = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+            if (!originalAccount) {
+                showToast('Lỗi: Không tìm thấy tài khoản để cập nhật!', 'error');
+                return;
+            }
 
-            if (response.ok) {
-                showToast('Cập nhật thông tin thành công!', 'success');
-                bootstrap.Modal.getInstance(modalEl).hide();
-                
-                // Nếu có thay đổi số card thì auto reload trang
-                if (cardNameChanged) {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000); // Delay 1 giây để user thấy toast
+            const selectedStatus = modalEl.querySelector('#wechat-status').value;
+
+            const newCardName = modalEl.querySelector('#wechat-card-name').value;
+            const payload = {
+                card_name: newCardName,
+                username: modalEl.querySelector('#wechat-username').value,
+                phone: modalEl.querySelector('#wechat-phone').value,
+                wechat_created_day: parseInt(modalEl.querySelector('#wechat-day').value) || null,
+                wechat_created_month: parseInt(modalEl.querySelector('#wechat-month').value) || null,
+                wechat_created_year: parseInt(modalEl.querySelector('#wechat-year').value) || null,
+            };
+            
+            const cardNameChanged = originalAccount.card_name !== newCardName;
+
+            if (selectedStatus === 'muted') {
+                const muteUntilDate = new Date();
+                muteUntilDate.setDate(muteUntilDate.getDate() + 30);
+                payload.muted_until = muteUntilDate.toISOString();
+                payload.status = originalAccount.status;
+                payload.wechat_status = originalAccount.wechat_status;
+            } else {
+                payload.muted_until = null;
+                if (selectedStatus === 'available') {
+                    payload.status = 'active';
                 } else {
-                    await loadMXHData(true); // Tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
+                    payload.status = selectedStatus;
                 }
-            } else {
-                const error = await response.json();
-                showToast(error.error || 'Lỗi khi cập nhật!', 'error');
+                payload.wechat_status = selectedStatus;
             }
-        } catch (error) {
-            console.error('Update error:', error);
-            showToast('Lỗi kết nối khi cập nhật!', 'error');
-        }
+
+            try {
+                const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    showToast('Cập nhật thông tin thành công!', 'success');
+                    bootstrap.Modal.getInstance(modalEl).hide();
+                    
+                    if (cardNameChanged) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        await loadMXHData(true);
+                    }
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Lỗi khi cập nhật!', 'error');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('Lỗi kết nối khi cập nhật!', 'error');
+            }
         });
     }
     
-    // Hide all context menus on regular click
     document.addEventListener('click', function (event) {
         if (!event.target.closest('.custom-context-menu')) {
             document.querySelectorAll('.custom-context-menu').forEach(menu => {
@@ -1476,12 +1443,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== BORDER STATE FUNCTIONS =====
 function parseDateAny(v) {
     if (!v) return null;
-    if (typeof v === 'number') return new Date(v > 1e12 ? v : v * 1000); // ms hoặc s
+    if (typeof v === 'number') return new Date(v > 1e12 ? v : v * 1000);
     if (typeof v === 'string') {
         const s = v.trim();
-        // Ưu tiên ISO (YYYY-MM-DD hoặc có time)
         if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(s)) return new Date(s.replace(/-/g, '/'));
-        // dd/mm/yyyy hoặc dd-mm-yyyy
         const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
         if (m) { const d = +m[1], mo = +m[2] - 1, y = (+m[3] < 100 ? 2000 + +m[3] : +m[3]); return new Date(y, mo, d); }
         const t = Date.parse(s); if (!isNaN(t)) return new Date(t);
@@ -1491,11 +1456,23 @@ function parseDateAny(v) {
 
 function resolveState(acc) {
     const s = String(acc?.status ?? acc?.state ?? '').toLowerCase();
-    const isDie = s === 'die' || s === 'dead' || s === 'banned' || acc?.is_die === true;
+    const isDie = s === 'die' || s === 'dead' || s === 'banned' || acc?.is_die === true || !!acc?.die_date;
     const isDisabled = ['disabled', 'inactive', 'deactivated', 'locked', 'suspended'].includes(s) || acc?.is_disabled === true;
-    const created = acc?.created_at ?? acc?.account_created_at ?? acc?.wechat_created_at;
-    const dt = created ? new Date(created) : null;
-    const gt1y = dt ? (Date.now() - dt.getTime()) >= 365 * 24 * 60 * 60 * 1000 : false;
+    
+    // Tính tuổi tài khoản từ wechat_created_year hoặc created_at
+    let gt1y = false;
+    if (acc?.wechat_created_year) {
+        const createdDate = new Date(
+            acc.wechat_created_year,
+            (acc.wechat_created_month || 1) - 1,
+            acc.wechat_created_day || 1
+        );
+        gt1y = (Date.now() - createdDate.getTime()) >= 365 * 24 * 60 * 60 * 1000;
+    } else {
+        const created = acc?.created_at ?? acc?.account_created_at;
+        const dt = created ? new Date(created) : null;
+        gt1y = dt ? (Date.now() - dt.getTime()) >= 365 * 24 * 60 * 60 * 1000 : false;
+    }
     
     if (isDie) return 'die';
     if (isDisabled) return 'disabled';
@@ -1505,11 +1482,13 @@ function resolveState(acc) {
 
 function paintRing(gridCellEl, acc) {
     const map = { die: '#FF3B30', disabled: '#FF8F00', '1y': '#07C160', default: '#D1D5DB' };
-    gridCellEl.style.setProperty('--mxh-ring', map[resolveState(acc)]);
+    const state = resolveState(acc);
+    const color = map[state];
+    gridCellEl.style.setProperty('--mxh-ring', color);
 }
 
 function onAccountUpdated(account) {
-    const cell = document.querySelector(`.mxh-item[data-account-id="${account.id}"]`);
+    const cell = document.querySelector(`.mxh-item[data-card-id="${account.card_id}"]`);
     if (cell) paintRing(cell, account);
 }
 
@@ -1531,22 +1510,20 @@ async function updateAccountStatus(status) {
             const result = await response.json();
             showToast(result.message, 'success');
             
-            // Cập nhật ring ngay lập tức
             const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
             if (account) {
-                // Đồng bộ logic mapping với modal
                 if (status === 'available') {
-                    account.status = 'active'; // Ánh xạ 'available' của UI thành 'active' của DB
+                    account.status = 'active';
                 } else {
-                    account.status = status; // Sử dụng trực tiếp: 'die', 'disabled', 'muted'
+                    account.status = status;
                 }
-                const cell = document.querySelector(`.mxh-item[data-account-id="${currentContextAccountId}"]`);
+                const cell = document.querySelector(`.mxh-item[data-card-id="${account.card_id}"]`);
                 if (cell) {
                     paintRing(cell, account);
                 }
             }
             
-            await loadMXHData(true); // Reload data to reflect changes
+            await loadMXHData(true);
             hideUnifiedContextMenu();
         } else {
             const error = await response.json();
@@ -1574,7 +1551,7 @@ async function rescueAccountUnified(result) {
         if (response.ok) {
             const data = await response.json();
             showToast(data.message, 'success');
-            await loadMXHData(true); // Reload data to reflect changes
+            await loadMXHData(true);
             hideUnifiedContextMenu();
         } else {
             const error = await response.json();
@@ -1611,29 +1588,8 @@ async function markAccountAsScanned(e) {
     }
 }
 
-    // ===== NOTICE MANAGEMENT (from MXH_Old) =====
+// ===== NOTICE MANAGEMENT =====
 let noticeTargetId = null;
-
-// Helper functions
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function ensureNoticeParsed(notice) {
-    let n = (typeof notice === 'string') ? (() => { try { return JSON.parse(notice) } catch { return {} } })() : (notice || {});
-    if (n && n.start_at) n.start_at = normalizeISOForJS(n.start_at);
-    return n;
-}
-
-function normalizeISOForJS(iso) {
-    let s = iso;
-    if (s.includes('+')) s = s.split('+')[0];
-    if (s.includes('Z')) s = s.replace('Z', '');
-    s = s.replace(/(\.\d{3})\d+/, '$1');
-    return s;
-}
 
 function openNoticeModal(e) {
     if (e) {
@@ -1675,7 +1631,6 @@ async function submitNotice() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('noticeModal'));
             modal.hide();
 
-            // Update local data immediately
             const account = mxhAccounts.find(a => a.id === noticeTargetId);
             if (account) {
                 account.notice = {
@@ -1708,7 +1663,6 @@ async function clearNotice(e) {
         if (response.ok) {
             showToast('✅ Đã hủy thông báo!', 'success');
             
-            // Update local data immediately
             const account = mxhAccounts.find(a => a.id === currentContextAccountId);
             if (account) {
                 account.notice = null;
@@ -1724,7 +1678,6 @@ async function clearNotice(e) {
         showToast('Lỗi kết nối!', 'error');
     }
 }
-
 
 function copyPhoneNumber(e) {
     if (e) {
@@ -1775,44 +1728,23 @@ async function resetScanCount(e) {
     }
 }
 
-function changeCardNumber(e) {
-    showToast('Chức năng đang phát triển', 'info');
-}
-
-function showDeleteConfirm(e) {
-    // Function này không còn được sử dụng, logic đã chuyển vào case 'delete'
-    showToast('Chức năng đang phát triển', 'info');
-}
-
-function switchToAccount(accountIndex) {
-    showToast('Chức năng đang phát triển', 'info');
-}
-
-function addNewAccount() {
-    showToast('Chức năng đang phát triển', 'info');
-}
-
 // ===== CARD DELETE FUNCTIONALITY =====
-
-// API helpers
 async function apiGetAccountCount(cardId) {
     const res = await fetch(`/mxh/api/cards/${cardId}/account-count`, { credentials: "same-origin" });
     if (!res.ok) throw new Error(await res.text());
-    return res.json(); // { card_id, account_count }
+    return res.json();
 }
 
 async function apiDeleteCard(cardId, force = false) {
     const url = `/mxh/api/cards/${cardId}` + (force ? `?force=true` : ``);
     const res = await fetch(url, { method: "DELETE", credentials: "same-origin" });
     if (res.status === 409) {
-        return { requires_confirmation: true, ...(await res.json()) }; // {requires_confirmation, account_count, message}
+        return { requires_confirmation: true, ...(await res.json()) };
     }
     if (!res.ok) throw new Error(await res.text());
-    return res.json(); // {deleted_card_id, deleted_accounts, ok:true}
+    return res.json();
 }
 
-// Reusable Dashboard Confirm Modal
-// Trả về Promise<boolean> => true khi OK, false khi Cancel
 function showConfirmModal({ title = "Xác nhận", html = "", okText = "OK", cancelText = "Cancel" } = {}) {
     return new Promise((resolve) => {
         const modalEl = document.getElementById("confirmModal");
@@ -1842,56 +1774,44 @@ function showConfirmModal({ title = "Xác nhận", html = "", okText = "OK", can
     });
 }
 
-// UI helper: xóa card khỏi DOM
 function removeCardFromDOM(cardId) {
     const card = document.getElementById(`card-${cardId}`);
-    // card có thể nằm trong .mxh-item
     const container = card?.closest(".mxh-item") || card;
     if (container) container.remove();
 }
 
-// Toast helpers (chỉ dùng toast system có sẵn, không fallback alert)
 function toastSuccess(msg){
     if (typeof showToast === 'function') {
         showToast(msg, 'success');
     }
-    // Không fallback alert để tránh browser popup
 }
 function toastError(msg){
     if (typeof showToast === 'function') {
         showToast(msg, 'error');
     }
-    // Không fallback alert để tránh browser popup
 }
 
-// Action: Delete Card flow
-let _deleteBusy = new Set(); // tránh double click
+let _deleteBusy = new Set();
 async function handleDeleteCard(cardId) {
     if (_deleteBusy.has(cardId)) return;
     _deleteBusy.add(cardId);
 
     try {
-        // 1) Hỏi BE số lượng account để hiển thị modal phù hợp
         const { account_count } = await apiGetAccountCount(cardId);
 
-        // 2) Tạo nội dung modal
         const title = "Xóa Card";
         const html = (account_count > 1)
             ? `Card này đang có: <b>${account_count}</b> tài khoản phụ.<br>Bạn chắc chắn muốn xóa?`
             : `Bạn chắc chắn muốn xóa card này?`;
 
-        // 3) Hiện modal xác nhận
         const ok = await showConfirmModal({ title, html, okText: "Xóa", cancelText: "Hủy" });
         if (!ok) return;
 
-        // 4) Gọi API xóa (force=true để bỏ qua confirm phía BE)
         const res = await apiDeleteCard(cardId, true);
 
-        // 5) Cập nhật UI
         removeCardFromDOM(cardId);
         toastSuccess(`Đã xóa card #${cardId}` + (res.deleted_accounts ? ` cùng ${res.deleted_accounts} tài khoản` : ""));
         
-        // 6) Đóng modal sau khi xóa thành công
         const modalEl = document.getElementById("confirmModal");
         if (modalEl) {
             const bsModal = bootstrap.Modal.getInstance(modalEl);
@@ -1907,8 +1827,6 @@ async function handleDeleteCard(cardId) {
     }
 }
 
-// Event delegation: nút xóa card
-// Thêm attribute data-action="delete-card" data-card-id="..."
 document.addEventListener("click", (ev) => {
     const btn = ev.target.closest("[data-action='delete-card']");
     if (!btn) return;
@@ -1920,191 +1838,6 @@ document.addEventListener("click", (ev) => {
     handleDeleteCard(cardId);
 });
 
-// Export functions for global access
 window.handleDeleteCard = handleDeleteCard;
 window.showConfirmModal = showConfirmModal;
-
-// ====== FLIP 3D CARD LOGIC - MULTIPLE ACCOUNTS ======
-
-// ===== Flip core, LITE & LAZY =====
-window.MXH = window.MXH || {};
-MXH.cards = MXH.cards || new Map(); // Map<cardId,{accounts:[{id,label,createdAt,fields}],activeId}>
-
-const _uuid = ()=>crypto?.randomUUID?.()||('acc_'+Math.random().toString(36).slice(2));
-const _nowISO = ()=>new Date().toISOString();
-const _fmtVN  = iso=>new Date(iso).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
-
-const _SEL = {
-  username: ['[data-field="username"]','.mxh-username','.username','.user'],
-  phone:    ['[data-field="phone"]','.mxh-phone','.phone','.tel'],
-  created:  ['[data-field="createdAt"]','.mxh-created','.created-at']
-};
-const _q = (root, sels)=>sels.map(s=>root.querySelector(s)).find(Boolean)||null;
-
-function _getCard(cardId){ if(!MXH.cards.has(cardId)) MXH.cards.set(cardId,{accounts:[],activeId:null}); return MXH.cards.get(cardId); }
-function _active(st){ return st.accounts.find(a=>a.id===st.activeId)||null; }
-
-// Lấy TK1 từ DOM, NHƯNG chỉ khi cần
-function _readPrimaryFromDOM(cardId){
-  const st=_getCard(cardId);
-  if (st.accounts.length) return st;
-  const root=document.getElementById(`card-${cardId}`); if(!root) return st;
-  const uEl=_q(root,_SEL.username), pEl=_q(root,_SEL.phone);
-  const acc1={ id:_uuid(), label:'Tài Khoản 1', createdAt:_nowISO(), fields:{username:uEl?.textContent?.trim()||'', phone:pEl?.textContent?.trim()||''}};
-  st.accounts=[acc1]; st.activeId=acc1.id;
-  return st;
-}
-
-// Chỉ tạo skeleton khi THÊM/SWITCH
-function _ensureFlipSkeleton(cardId){
-  const cardEl=document.getElementById(`card-${cardId}`); if(!cardEl) return null;
-  if (cardEl.querySelector('.mxh-card-inner')) return cardEl;        // đã có
-  const body=cardEl.querySelector('.card-body')||cardEl;
-
-  // Khóa chiều cao hiện tại để tránh kéo dài
-  const h=Math.max(120, Math.round(body.getBoundingClientRect().height));
-  const inner=document.createElement('div'); inner.className='mxh-card-inner'; inner.style.height=`${h}px`;
-
-  // Mặt A = giữ NGUYÊN giao diện hiện có
-  const faceA=document.createElement('div'); faceA.className='mxh-card-face face-a';
-  while (body.firstChild) faceA.appendChild(body.firstChild);
-
-  // Mặt B = clone cấu trúc A để có cùng vị trí field
-  const faceB=document.createElement('div'); faceB.className='mxh-card-face face-b';
-  faceB.innerHTML=faceA.innerHTML; faceB.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-
-  inner.append(faceA,faceB); body.appendChild(inner);
-  cardEl.dataset.front='a';
-  return cardEl;
-}
-function _face(cardId,which){ const el=document.getElementById(`card-${cardId}`); return el?.querySelector(`.mxh-card-face.face-${which}`)||null; }
-function _setFields(faceEl, acc){
-  if(!faceEl||!acc) return;
-  const u=_q(faceEl,_SEL.username), p=_q(faceEl,_SEL.phone), c=_q(faceEl,_SEL.created);
-  if(u) u.textContent = acc.fields?.username ?? '.';
-  if(p) p.textContent = acc.fields?.phone ?? '.';
-  if(c) c.textContent = `Ngày tạo: ${_fmtVN(acc.createdAt)}`;
-}
-function _flipTo(cardId, acc){
-  const cardEl=_ensureFlipSkeleton(cardId); if(!cardEl) return;
-  const front=(cardEl.dataset.front==='b')?'b':'a';
-  const back =(front==='a')?'b':'a';
-  _setFields(_face(cardId, back), acc);
-  if (back==='b') cardEl.classList.add('is-flipped'); else cardEl.classList.remove('is-flipped');
-  cardEl.dataset.front=back;
-  _getCard(cardId).activeId=acc.id;
-}
-
-// === API Helper ===
-async function postJSON(url, payload) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(payload ?? {})
-  });
-  let data = null;
-  try { data = await res.json(); } catch (_) {}
-  if (!res.ok) {
-    const msg = (data && (data.message || data.error)) || `HTTP ${res.status}`;
-    throw new Error(msg);
-  }
-  return data;
-}
-
-async function createSubAccount(cardId) {
-  const res = await fetch(`/mxh/api/cards/${cardId}/accounts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      account_name: ".",  // ✅ Bổ sung field bắt buộc
-      platform: "wechat",
-      username: ".",   // <- yêu cầu Sếp
-      phone: "."       // <- yêu cầu Sếp
-    })
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
-  return data;
-}
-
-function setActiveAccount(cardId, accountId) {
-  const cardEl = document.getElementById(`card-${cardId}`);
-  if (cardEl) {
-    cardEl.dataset.activeAccountId = accountId;
-  }
-  // Cập nhật state
-  const st = _getCard(cardId);
-  st.activeId = accountId;
-}
-
-// === Actions ===
-MXH.addSubAccount = async (cardId)=>{
-  const st=_readPrimaryFromDOM(cardId);
-  
-  try {
-    const response = await createSubAccount(cardId);
-    
-    // Tạo account object từ response
-    const accountObj = {
-      id: String(response.id),
-      label: response.account_name || 'Tài khoản phụ',
-      createdAt: response.created_at,
-      fields: {
-        username: response.username || '.',
-        phone: response.phone || '.'
-      }
-    };
-    
-    st.accounts.push(accountObj);
-    setActiveAccount(cardId, accountObj.id);
-    _flipTo(cardId, accountObj);
-    
-    // Cập nhật lại context menu
-    generateAccountsSubmenu(cardId);
-    
-    window.showToast?.('Đã tạo tài khoản phụ','success');
-  } catch (err) {
-    if (err instanceof TypeError) {
-      // network/offline
-      window.showToast?.('API không phản hồi (mất kết nối)','warning');
-    } else {
-      // lỗi hợp lệ từ server (400/422/500...)
-      window.showToast?.(`Tạo tài khoản phụ thất bại: ${err.message}`,'error');
-    }
-  }
-};
-
-MXH.switchAccount = (cardId, accountId)=>{
-  const st=_readPrimaryFromDOM(cardId);
-  const acc=st.accounts.find(a=>a.id==accountId); if(!acc) return;
-  _flipTo(cardId, acc);
-};
-
-// Submenu không "nuốt click", không separator "trống"
-window.generateAccountsSubmenu = (cardId)=>{
-  const st=_readPrimaryFromDOM(cardId);
-  const items = st.accounts.map(a=>({
-    type:'item',
-    label:`${a.label}${a.id===st.activeId?' ✓':''}`,
-    // để renderer đổ ra: data-ctx="switchAccount" data-card-id=".." data-account-id=".."
-    data:{ctx:'switchAccount', cardId, accountId:a.id}
-  }));
-  items.push({ type:'item', label:'Thêm Tài Khoản', data:{ctx:'addAccount', cardId} });
-  return items;
-};
-
-// Bắt 1 lần – an toàn trên mọi renderer
-document.addEventListener('pointerdown', (e)=>{
-  const n=e.target.closest('[data-ctx]'); if(!n) return;
-  const {ctx, cardId, accountId}=n.dataset;
-  if (ctx==='addAccount'){
-    e.preventDefault();
-    MXH.addSubAccount(+cardId);
-    window.hideContextMenu?.();
-  }
-  if (ctx==='switchAccount'){
-    e.preventDefault();
-    MXH.switchAccount(+cardId, accountId);
-    window.hideContextMenu?.();
-  }
-});
+window.submitNotice = submitNotice;
