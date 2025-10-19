@@ -18,39 +18,48 @@ let activeGroupId = null;
 let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
 // ===== VIEW MODE CONFIGURATION =====
-function initializeViewMode() {
-    // Initialize cards per row setting
-    const savedCardsPerRow = localStorage.getItem('mxh_cards_per_row') || 6; // Default to 6 instead of 12
-    const cardsPerRowInput = document.getElementById('mxh-cards-per-row');
-    if (cardsPerRowInput) {
-        cardsPerRowInput.value = savedCardsPerRow;
-    }
-    
-    // Apply saved setting
-    applyViewMode(savedCardsPerRow);
-    
-    // Add event listener for apply button
-    const applyBtn = document.getElementById('mxh-apply-view-mode-btn');
-    if (applyBtn) {
-        applyBtn.addEventListener('click', () => {
-            const cardsPerRow = document.getElementById('mxh-cards-per-row').value;
-            localStorage.setItem('mxh_cards_per_row', cardsPerRow);
-            applyViewMode(cardsPerRow);
-            showToast(`Đã áp dụng ${cardsPerRow} cards/hàng!`, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('mxh-view-mode-modal')).hide();
-        });
-    }
+function applyViewMode(value) {
+  var n = Math.max(1, Number(value || localStorage.getItem('mxh_cards_per_row') || 6));
+  localStorage.setItem('mxh_cards_per_row', n);
+
+  // đặt CSS var cho container và :root (phòng khi CSS ăn var từ 2 nơi)
+  var container = document.getElementById('mxh-accounts-container');
+  if (container) container.style.setProperty('--cardsPerRow', n);
+  document.documentElement.style.setProperty('--cardsPerRow', n);
 }
 
-function applyViewMode(cardsPerRow) {
-    // Set CSS variable on the root element
-    document.documentElement.style.setProperty('--cardsPerRow', cardsPerRow);
-    
-    // Also apply directly to the grid container for immediate effect
-    const grid = document.getElementById('mxh-cards-grid');
-    if (grid) {
-        grid.style.setProperty('--cardsPerRow', cardsPerRow);
-    }
+function initializeViewMode() {
+  var input = document.getElementById('mxh-cards-per-row');
+  var btn = document.getElementById('mxh-apply-view-mode-btn');
+  var saved = Number(localStorage.getItem('mxh_cards_per_row') || 6);
+
+  if (input) input.value = saved;
+  applyViewMode(saved); // áp dụng khi load trang
+
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var val = Number((input && input.value) || 6);
+      if (!Number.isFinite(val) || val < 1) val = 1;
+      applyViewMode(val);
+
+      // đóng modal đúng chuẩn Bootstrap, tránh lỗi focus/ARIA
+      if (typeof bootstrap !== 'undefined') {
+        var modalEl = document.getElementById('mxh-view-mode-modal');
+        if (modalEl) {
+          var inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          // TRƯỚC khi hide, blur phần tử đang focus để khỏi warning aria-hidden
+          if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+          }
+          inst.hide();
+        }
+      }
+
+      if (typeof showToast === 'function') {
+        showToast('Đã áp dụng số cards mỗi hàng: ' + val, 'success');
+      }
+    });
+  }
 }
 
 // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
@@ -547,6 +556,14 @@ window.selectGroup = function(groupId) {
     // Setup inline editing after render
     setupEditableFields();
 
+    // Sau khi render xong:
+    try {
+      var saved = Number(localStorage.getItem('mxh_cards_per_row') || 6);
+      applyViewMode(saved);
+    } catch (e) {
+      console.warn('applyViewMode after render failed:', e);
+    }
+
     isRendering = false;
     if (pendingUpdates) {
         pendingUpdates = false;
@@ -806,14 +823,11 @@ function setupEditableFields() {
     
     // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize view mode
-    initializeViewMode();
-    
-    // Initialize data loading
-    loadMXHData(true);
-    
-    // Start auto-refresh
-    startAutoRefresh();
+  initializeViewMode();
+
+  // sau đó mới load dữ liệu v.v...
+  loadMXHData && loadMXHData(true);
+  startAutoRefresh && startAutoRefresh();
 
     // Unified context menu event listener
     document.getElementById('unified-context-menu').addEventListener('click', async (e) => {

@@ -1200,11 +1200,6 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     gap: 12px;
 }
 
-#mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    min-width: 200px; /* Ensure minimum card width */
-}
 
 
 /* Blink animation for anniversary cards without Hong Kong number */
@@ -1594,11 +1589,6 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     gap: 12px;
 }
 
-#mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    min-width: 200px; /* Ensure minimum card width */
-}
 
 /* Notice system styling */
 .notice-line {
@@ -2884,11 +2874,6 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     gap: 12px;
 }
 
-#mxh-cards-grid > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    max-width: calc(100% / var(--cardsPerRow, 6)); /* Use CSS variable with fallback */
-    min-width: 200px; /* Ensure minimum card width */
-}
 
 
 /* Blink animation for anniversary cards without Hong Kong number */

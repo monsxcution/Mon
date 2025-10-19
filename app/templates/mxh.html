@@ -4,6 +4,7 @@
 
 {% block head %}
     {{ super() }}
+    <!-- MXH CSS (đặt SAU Bootstrap để override) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mxh.css') }}">
 {% endblock %}
 
@@ -27,7 +28,7 @@
         </div>
     </div>
 
-    <div id="mxh-accounts-container">
+    <div id="mxh-accounts-container" style="--cardsPerRow: 6;">
         <!-- MXH accounts will be rendered here -->
         <div class="card">
             <div class="card-body text-center text-muted">
@@ -39,27 +40,28 @@
 </div>
 
 <!-- MXH View Mode Modal -->
-<div class="modal fade" id="mxh-view-mode-modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="mxh-cards-per-row" class="form-label">Số Cards Mỗi Hàng</label>
-                    <input type="number" class="form-control" id="mxh-cards-per-row"
-                        placeholder="Nhập số cards mỗi hàng..." min="1" max="20" value="6">
-                    <div class="form-text">Nhập số từ 1 đến 20. Ví dụ: 12 = 12 cards mỗi hàng</div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="mxh-apply-view-mode-btn">Áp Dụng</button>
-            </div>
+<div class="modal fade" id="mxh-view-mode-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="mxh-cards-per-row" class="form-label">Số Cards Mỗi Hàng</label>
+          <input type="number" class="form-control" id="mxh-cards-per-row" min="1" max="50" value="6">
+          <div class="form-text">Ví dụ: 6 = 6 cards trên một hàng.</div>
         </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        <button type="button" class="btn btn-primary" id="mxh-apply-view-mode-btn">Áp dụng</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- MXH Add Account Modal -->

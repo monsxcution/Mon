@@ -1,14 +1,11 @@
-/* ===== MXH MODULE STYLES ===== */
-
-/* * RULE TO CONTROL CARDS PER ROW
- * This is the primary rule for the view mode functionality.
- * It targets the columns directly inside the main accounts container.
- * It uses the `--cardsPerRow` CSS variable, which is set by JavaScript.
- * The `!important` flag ensures this rule overrides any conflicting generic Bootstrap styles.
-*/
-#mxh-accounts-container .row > .col {
-    flex: 0 0 calc(100% / var(--cardsPerRow, 6)) !important;
-    max-width: calc(100% / var(--cardsPerRow, 6)) !important;
+/* === MXH layout: CHỈ điều khiển số cards mỗi hàng === */
+#mxh-accounts-container .col {
+  flex: 0 0 calc(100% / var(--cardsPerRow, 6)) !important;
+  max-width: calc(100% / var(--cardsPerRow, 6)) !important;
+  border: 2px solid red !important; /* DEBUG: Remove this line */
 }
 
-/* Add other MXH-specific styles below this line as needed */
+/* Card full-width trong cột */
+.mxh-card {
+  width: 100%;
+}
