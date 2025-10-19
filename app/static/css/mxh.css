@@ -548,3 +548,12 @@ body #mxh-accounts-container .tool-card.mxh-card.mxh-border-red {
     box-shadow: 0 0 0 2px rgba(255,77,79,.6), 0 0 20px rgba(255,77,79,.8) !important;
 }
 
+/* ===== FLIP 3D CHO 1 CARD = NHIỀU MẶT (MỖI MẶT = 1 ACCOUNT) ===== */
+.mxh-card{position:relative;overflow:hidden;perspective:1200px}
+.mxh-card .card-body{position:relative}
+.mxh-card-inner{position:relative;width:100%;transform-style:preserve-3d;transition:transform .5s}
+/* chiều cao nội dung cố định tại thời điểm tạo skeleton (set inline từ JS) */
+.mxh-card-face{position:absolute;inset:0;backface-visibility:hidden}
+.mxh-card-face.face-b{transform:rotateY(180deg)}
+.mxh-card.is-flipped .mxh-card-inner{transform:rotateY(180deg)}
+

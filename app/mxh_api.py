@@ -206,17 +206,10 @@ def create_account(card_id):
         if not data:
             return jsonify({"error": "Request body is required"}), 400
         
-        # Validate required fields
-        account_name = data.get("account_name")
-        username = data.get("username")
-        phone = data.get("phone")
-        
-        if not account_name:
-            return jsonify({"error": "account_name is required", "field": "account_name"}), 400
-        if not username:
-            return jsonify({"error": "username is required", "field": "username"}), 400
-        if not phone:
-            return jsonify({"error": "phone is required", "field": "phone"}), 400
+        # Get fields with defaults
+        account_name = data.get("account_name", ".").strip() or "."
+        username = data.get("username", ".").strip() or "."
+        phone = data.get("phone", ".").strip() or "."
         
         # Check if card exists
         card = conn.execute("SELECT id FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
@@ -678,25 +671,82 @@ def reset_account_stats(account_id):
         conn.close()
 
 
-@mxh_api_bp.route("/cards/<int:card_id>", methods=["DELETE"])
-def delete_card(card_id):
+# ===== CARD DELETE ENDPOINTS =====
+
+@mxh_api_bp.route("/cards/<int:card_id>/account-count", methods=["GET"])
+def get_card_account_count(card_id):
     """
-    DELETE /mxh/api/cards/<card_id>
-    Delete a card and all its associated accounts (due to ON DELETE CASCADE).
+    GET /mxh/api/cards/<card_id>/account-count
+    Trả về số lượng tài khoản trong card.
     """
     conn = get_db_connection()
     try:
-        # The ON DELETE CASCADE constraint will handle deleting associated accounts.
-        cursor = conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
+        # Kiểm tra card có tồn tại
+        card_exists = conn.execute("SELECT 1 FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
+        if not card_exists:
+            return jsonify({"error": "Card not found"}), 404
+        
+        # Đếm số tài khoản
+        result = conn.execute("SELECT COUNT(*) FROM mxh_accounts WHERE card_id = ?", (card_id,)).fetchone()
+        account_count = result[0] if result else 0
+        
+        return jsonify({
+            "card_id": card_id,
+            "account_count": account_count
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_api_bp.route("/cards/<int:card_id>", methods=["DELETE"])
+def delete_card(card_id):
+    """
+    DELETE /mxh/api/cards/<card_id>?force=true
+    Xóa card và toàn bộ accounts. Nếu không force và số tài khoản >1, trả về 409.
+    """
+    conn = get_db_connection()
+    try:
+        force = request.args.get("force", "false").lower() in ("1", "true", "yes")
+        
+        # Kiểm tra card có tồn tại
+        card_exists = conn.execute("SELECT 1 FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
+        if not card_exists:
+            return jsonify({"error": "Card not found"}), 404
+        
+        # Đếm số tài khoản
+        result = conn.execute("SELECT COUNT(*) FROM mxh_accounts WHERE card_id = ?", (card_id,)).fetchone()
+        account_count = result[0] if result else 0
+        
+        # Nếu có nhiều hơn 1 tài khoản và không force, yêu cầu xác nhận
+        if account_count > 1 and not force:
+            return jsonify({
+                "requires_confirmation": True,
+                "account_count": account_count,
+                "message": f"Card đang có {account_count} tài khoản phụ, cần xác nhận xóa."
+            }), 409
+        
+        # Bắt đầu transaction
+        conn.execute("BEGIN")
+        
+        # Xóa accounts trước (CASCADE sẽ tự động xóa, nhưng để chắc chắn)
+        conn.execute("DELETE FROM mxh_accounts WHERE card_id = ?", (card_id,))
+        
+        # Xóa card
+        conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
+        
         conn.commit()
         
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Card not found"}), 404
-            
-        return jsonify({"success": True, "message": "Card and associated accounts deleted successfully"})
+        return jsonify({
+            "deleted_card_id": card_id,
+            "deleted_accounts": account_count,
+            "ok": True
+        })
         
     except Exception as e:
         conn.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Delete failed: {str(e)}"}), 500
     finally:
         conn.close()

@@ -904,12 +904,176 @@ function hideUnifiedContextMenu() {
     resumeAutoRefresh();
 }
 
-// Handle Card Context Menu - Use Unified Menu
+// Handle Card Context Menu - Use Unified Menu with Flip Card Integration
 window.handleCardContextMenu = function (event, accountId, platform) {
     event.preventDefault();
     event.stopPropagation();
-    showUnifiedContextMenu(event, accountId, platform);
+    
+    // Lấy card_id từ account để sử dụng cho flip logic
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+    const cardId = account?.card_id || accountId; // fallback to accountId if no card_id
+    
+    // Tích hợp flip card logic vào context menu
+    showUnifiedContextMenuWithFlip(event, accountId, platform, cardId);
 }
+
+// Enhanced context menu with flip card integration
+function showUnifiedContextMenuWithFlip(event, accountId, platform, cardId) {
+    event.preventDefault();
+    event.stopPropagation();
+    currentContextAccountId = accountId;
+    pauseAutoRefresh();
+
+    const contextMenu = document.getElementById('unified-context-menu');
+    const account = mxhAccounts.find(acc => acc.id === accountId);
+
+    if (!account) return;
+
+    // Show/hide WeChat-specific items
+    const wechatOnlyItems = contextMenu.querySelectorAll('.wechat-only');
+    wechatOnlyItems.forEach(item => {
+        item.style.display = platform === 'wechat' ? 'block' : 'none';
+    });
+
+    // Show/hide phone item if phone exists
+    const copyPhoneItem = contextMenu.querySelector('#copy-phone-item');
+    const phone = account.phone;
+    if (copyPhoneItem) {
+        copyPhoneItem.style.display = phone ? 'block' : 'none';
+    }
+
+    // Configure notice toggle
+    const noticeToggle = contextMenu.querySelector('#unified-notice-toggle');
+    if (noticeToggle) {
+        const noticeObj = ensureNoticeParsed(account.notice);
+        const hasNotice = !!(noticeObj && noticeObj.enabled);
+        noticeToggle.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
+        noticeToggle.innerHTML = hasNotice
+            ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
+            : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
+    }
+        
+    // Configure status submenu based on current status (giống 100% MXH_Old)
+    const currentStatus = account.status;
+    const statusNormalItems = contextMenu.querySelectorAll('.status-normal');
+    const statusRescueItems = contextMenu.querySelectorAll('.status-rescue');
+
+    if (currentStatus === 'disabled') {
+        // Khi disabled: Ẩn Available/Die/Vô hiệu hóa, hiện Được Cứu/Cứu Thất Bại
+        statusNormalItems.forEach(item => item.style.display = 'none');
+        statusRescueItems.forEach(item => item.style.display = 'block');
+    } else {
+        // Khi không disabled: Hiện Available/Die/Vô hiệu hóa, ẩn Được Cứu/Cứu Thất Bại
+        statusNormalItems.forEach(item => item.style.display = 'block');
+        statusRescueItems.forEach(item => item.style.display = 'none');
+    }
+
+    // ===== FLIP CARD INTEGRATION =====
+    // Tạo submenu "Tài khoản" với flip logic
+    const accountsSubmenu = contextMenu.querySelector('#accounts-submenu');
+    if (accountsSubmenu) {
+        // Khởi tạo flip skeleton nếu chưa có
+        const st = _readPrimaryFromDOM(cardId);
+        
+        // Xóa nội dung cũ
+        accountsSubmenu.innerHTML = '';
+        
+        // Thêm các tài khoản hiện có
+        st.accounts.forEach(acc => {
+            const isActive = acc.id === st.activeId;
+            const item = document.createElement('div');
+            item.className = 'menu-item';
+            item.dataset.ctx = 'switchAccount';
+            item.dataset.cardId = cardId;
+            item.dataset.accountId = acc.id;
+            item.innerHTML = `
+                <i class="bi bi-person me-2"></i> 
+                ${acc.label}${isActive ? ' ✓' : ''}
+            `;
+            accountsSubmenu.appendChild(item);
+        });
+        
+        // Bỏ separator để tránh khoảng trống "ảo" trong dark theme
+        
+        // Thêm nút "Thêm Tài Khoản"
+        const addItem = document.createElement('div');
+        addItem.className = 'menu-item';
+        addItem.dataset.ctx = 'addAccount';
+        addItem.dataset.cardId = cardId;
+        addItem.innerHTML = '<i class="bi bi-plus-circle me-2"></i> Thêm Tài Khoản';
+        accountsSubmenu.appendChild(addItem);
+    }
+        
+    // Smart positioning logic
+    const menuWidth = 200;
+    const menuHeight = 300;
+    const buffer = 50;
+    
+    const mouseX = event.pageX;
+    const mouseY = event.pageY;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    let finalX = mouseX;
+    let finalY = mouseY;
+    
+    // Smart X positioning
+    if (mouseX < buffer) {
+        finalX = mouseX + 20; // Show to the right
+    } else if (mouseX > windowWidth - menuWidth - buffer) {
+        finalX = mouseX - menuWidth - 20; // Show to the left
+    }
+    
+    // Smart Y positioning
+    if (mouseY < buffer) {
+        finalY = mouseY + 20; // Show below
+    } else if (mouseY > windowHeight - menuHeight - buffer) {
+        finalY = mouseY - menuHeight - 20; // Show above
+    }
+    
+    // Position and show menu with smooth animation
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = finalX + 'px';
+    contextMenu.style.top = finalY + 'px';
+    contextMenu.style.opacity = '0';
+    contextMenu.style.transform = 'scale(0.8)';
+    
+    // Smooth fade in animation
+    setTimeout(() => {
+        contextMenu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        contextMenu.style.opacity = '1';
+        contextMenu.style.transform = 'scale(1)';
+    }, 10);
+    
+    setTimeout(() => {
+        document.addEventListener('click', hideUnifiedContextMenu, { once: true });
+    }, 100);
+}
+
+// Event delegation cho context menu items (cũ - giữ để tương thích)
+document.addEventListener('pointerdown', function(e) {
+    const el = e.target.closest('.menu-item[data-ctx-type]');
+    if (!el) return;
+
+    const type = el.dataset.ctxType;
+    const cardId = +el.dataset.cardId || 0;
+    const accountId = el.dataset.accountId || null;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (type === 'addAccount') {
+        MXH.addSubAccount(cardId);
+        hideUnifiedContextMenu();
+        return;
+    }
+    
+    if (type === 'switchAccount') {
+        MXH.switchAccount(cardId, accountId);
+        hideUnifiedContextMenu();
+        return;
+    }
+});
 
 // ===== TOAST NOTIFICATIONS =====
     function showToast(message, type = 'info') {
@@ -1265,7 +1429,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 changeCardNumber(e);
                 break;
             case 'delete':
-                showDeleteConfirm(e);
+                // Lấy card_id từ account hiện tại
+                const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+                if (account && account.card_id) {
+                    handleDeleteCard(account.card_id);
+                } else {
+                    showToast('Không tìm thấy card để xóa', 'error');
+                }
                 break;
             case 'switch-account':
                 const accountIndex = parseInt(menuItem.dataset.accountIndex);
@@ -1474,44 +1644,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-
-    // Event listener for the delete confirmation button
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', async function() {
-            const cardId = this.dataset.cardId;
-            if (!cardId) return;
-
-            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
-            if (modal) {
-                modal.hide();
-            }
-
-            // Cập nhật giao diện ngay lập tức (Optimistic Update)
-            const cardIdInt = parseInt(cardId, 10);
-            mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== cardIdInt);
-            renderMXHAccounts();
-
-            try {
-                const response = await fetch(`/mxh/api/cards/${cardId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    showToast('✅ Đã xóa card thành công!', 'success');
-                    await loadMXHData(false); // Tải lại những thay đổi nhỏ (nếu có)
-                } else {
-                    const error = await response.json();
-                    showToast(error.error || 'Lỗi khi xóa card!', 'error');
-                    await loadMXHData(true); // Tải lại toàn bộ dữ liệu nếu có lỗi
-                }
-            } catch (error) {
-                console.error("Delete Error:", error);
-                showToast('Lỗi kết nối khi xóa card!', 'error');
-                await loadMXHData(true); // Tải lại toàn bộ dữ liệu nếu có lỗi
-            }
-        });
-    }
 });
 
 // ===== BORDER STATE FUNCTIONS =====
@@ -1821,28 +1953,8 @@ function changeCardNumber(e) {
 }
 
 function showDeleteConfirm(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    if (!currentContextAccountId) return;
-
-    // Tìm card_id từ account đang được chọn
-    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
-    if (!account || !account.card_id) {
-        showToast('Lỗi: Không tìm thấy thông tin card.', 'error');
-        return;
-    }
-    const cardIdToDelete = account.card_id;
-
-    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    
-    // Gán card_id vào nút xác nhận trong modal
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    confirmBtn.dataset.cardId = cardIdToDelete;
-
-    modal.show();
-    hideUnifiedContextMenu();
+    // Function này không còn được sử dụng, logic đã chuyển vào case 'delete'
+    showToast('Chức năng đang phát triển', 'info');
 }
 
 function switchToAccount(accountIndex) {
@@ -1852,3 +1964,319 @@ function switchToAccount(accountIndex) {
 function addNewAccount() {
     showToast('Chức năng đang phát triển', 'info');
 }
+
+// ===== CARD DELETE FUNCTIONALITY =====
+
+// API helpers
+async function apiGetAccountCount(cardId) {
+    const res = await fetch(`/mxh/api/cards/${cardId}/account-count`, { credentials: "same-origin" });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json(); // { card_id, account_count }
+}
+
+async function apiDeleteCard(cardId, force = false) {
+    const url = `/mxh/api/cards/${cardId}` + (force ? `?force=true` : ``);
+    const res = await fetch(url, { method: "DELETE", credentials: "same-origin" });
+    if (res.status === 409) {
+        return { requires_confirmation: true, ...(await res.json()) }; // {requires_confirmation, account_count, message}
+    }
+    if (!res.ok) throw new Error(await res.text());
+    return res.json(); // {deleted_card_id, deleted_accounts, ok:true}
+}
+
+// Reusable Dashboard Confirm Modal
+// Trả về Promise<boolean> => true khi OK, false khi Cancel
+function showConfirmModal({ title = "Xác nhận", html = "", okText = "OK", cancelText = "Cancel" } = {}) {
+    return new Promise((resolve) => {
+        const modalEl = document.getElementById("confirmModal");
+        const titleEl = document.getElementById("confirmModalTitle");
+        const bodyEl  = document.getElementById("confirmModalBody");
+        const okBtn   = document.getElementById("confirmModalOk");
+        const cancelBtn = document.getElementById("confirmModalCancel");
+
+        titleEl.textContent = title;
+        bodyEl.innerHTML = html;
+        okBtn.textContent = okText;
+        cancelBtn.textContent = cancelText;
+
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: false });
+
+        const onOk = () => { cleanup(); resolve(true); };
+        const onCancel = () => { cleanup(); resolve(false); };
+        function cleanup() {
+            okBtn.removeEventListener("click", onOk);
+            modalEl.removeEventListener("hidden.bs.modal", onCancel);
+        }
+
+        okBtn.addEventListener("click", onOk, { once: true });
+        modalEl.addEventListener("hidden.bs.modal", onCancel, { once: true });
+
+        bsModal.show();
+    });
+}
+
+// UI helper: xóa card khỏi DOM
+function removeCardFromDOM(cardId) {
+    const card = document.getElementById(`card-${cardId}`);
+    // card có thể nằm trong .mxh-item
+    const container = card?.closest(".mxh-item") || card;
+    if (container) container.remove();
+}
+
+// Toast helpers (chỉ dùng toast system có sẵn, không fallback alert)
+function toastSuccess(msg){ 
+    if (typeof showToast === 'function') {
+        showToast(msg, 'success');
+    }
+    // Không fallback alert để tránh browser popup
+}
+function toastError(msg){ 
+    if (typeof showToast === 'function') {
+        showToast(msg, 'error');
+    }
+    // Không fallback alert để tránh browser popup
+}
+
+// Action: Delete Card flow
+let _deleteBusy = new Set(); // tránh double click
+async function handleDeleteCard(cardId) {
+    if (_deleteBusy.has(cardId)) return;
+    _deleteBusy.add(cardId);
+
+    try {
+        // 1) Hỏi BE số lượng account để hiển thị modal phù hợp
+        const { account_count } = await apiGetAccountCount(cardId);
+
+        // 2) Tạo nội dung modal
+        const title = "Xóa Card";
+        const html = (account_count > 1)
+            ? `Card này đang có: <b>${account_count}</b> tài khoản phụ.<br>Bạn chắc chắn muốn xóa?`
+            : `Bạn chắc chắn muốn xóa card này?`;
+
+        // 3) Hiện modal xác nhận
+        const ok = await showConfirmModal({ title, html, okText: "Xóa", cancelText: "Hủy" });
+        if (!ok) return;
+
+        // 4) Gọi API xóa (force=true để bỏ qua confirm phía BE)
+        const res = await apiDeleteCard(cardId, true);
+
+        // 5) Cập nhật UI
+        removeCardFromDOM(cardId);
+        toastSuccess(`Đã xóa card #${cardId}` + (res.deleted_accounts ? ` cùng ${res.deleted_accounts} tài khoản` : ""));
+        
+        // 6) Đóng modal sau khi xóa thành công
+        const modalEl = document.getElementById("confirmModal");
+        if (modalEl) {
+            const bsModal = bootstrap.Modal.getInstance(modalEl);
+            if (bsModal) {
+                bsModal.hide();
+            }
+        }
+
+    } catch (err) {
+        toastError(`Xóa thất bại: ${err.message || err}`);
+    } finally {
+        _deleteBusy.delete(cardId);
+    }
+}
+
+// Event delegation: nút xóa card
+// Thêm attribute data-action="delete-card" data-card-id="..."
+document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-action='delete-card']");
+    if (!btn) return;
+    const cardId = parseInt(btn.getAttribute("data-card-id"), 10);
+    if (!Number.isFinite(cardId)) {
+        toastError("Thiếu cardId hợp lệ.");
+        return;
+    }
+    handleDeleteCard(cardId);
+});
+
+// Export functions for global access
+window.handleDeleteCard = handleDeleteCard;
+window.showConfirmModal = showConfirmModal;
+
+// ====== FLIP 3D CARD LOGIC - MULTIPLE ACCOUNTS ======
+
+// ===== Flip core, LITE & LAZY =====
+window.MXH = window.MXH || {};
+MXH.cards = MXH.cards || new Map(); // Map<cardId,{accounts:[{id,label,createdAt,fields}],activeId}>
+
+const _uuid = ()=>crypto?.randomUUID?.()||('acc_'+Math.random().toString(36).slice(2));
+const _nowISO = ()=>new Date().toISOString();
+const _fmtVN  = iso=>new Date(iso).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+const _SEL = {
+  username: ['[data-field="username"]','.mxh-username','.username','.user'],
+  phone:    ['[data-field="phone"]','.mxh-phone','.phone','.tel'],
+  created:  ['[data-field="createdAt"]','.mxh-created','.created-at']
+};
+const _q = (root, sels)=>sels.map(s=>root.querySelector(s)).find(Boolean)||null;
+
+function _getCard(cardId){ if(!MXH.cards.has(cardId)) MXH.cards.set(cardId,{accounts:[],activeId:null}); return MXH.cards.get(cardId); }
+function _active(st){ return st.accounts.find(a=>a.id===st.activeId)||null; }
+
+// Lấy TK1 từ DOM, NHƯNG chỉ khi cần
+function _readPrimaryFromDOM(cardId){
+  const st=_getCard(cardId);
+  if (st.accounts.length) return st;
+  const root=document.getElementById(`card-${cardId}`); if(!root) return st;
+  const uEl=_q(root,_SEL.username), pEl=_q(root,_SEL.phone);
+  const acc1={ id:_uuid(), label:'Tài Khoản 1', createdAt:_nowISO(), fields:{username:uEl?.textContent?.trim()||'', phone:pEl?.textContent?.trim()||''}};
+  st.accounts=[acc1]; st.activeId=acc1.id;
+  return st;
+}
+
+// Chỉ tạo skeleton khi THÊM/SWITCH
+function _ensureFlipSkeleton(cardId){
+  const cardEl=document.getElementById(`card-${cardId}`); if(!cardEl) return null;
+  if (cardEl.querySelector('.mxh-card-inner')) return cardEl;        // đã có
+  const body=cardEl.querySelector('.card-body')||cardEl;
+
+  // Khóa chiều cao hiện tại để tránh kéo dài
+  const h=Math.max(120, Math.round(body.getBoundingClientRect().height));
+  const inner=document.createElement('div'); inner.className='mxh-card-inner'; inner.style.height=`${h}px`;
+
+  // Mặt A = giữ NGUYÊN giao diện hiện có
+  const faceA=document.createElement('div'); faceA.className='mxh-card-face face-a';
+  while (body.firstChild) faceA.appendChild(body.firstChild);
+
+  // Mặt B = clone cấu trúc A để có cùng vị trí field
+  const faceB=document.createElement('div'); faceB.className='mxh-card-face face-b';
+  faceB.innerHTML=faceA.innerHTML; faceB.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+
+  inner.append(faceA,faceB); body.appendChild(inner);
+  cardEl.dataset.front='a';
+  return cardEl;
+}
+function _face(cardId,which){ const el=document.getElementById(`card-${cardId}`); return el?.querySelector(`.mxh-card-face.face-${which}`)||null; }
+function _setFields(faceEl, acc){
+  if(!faceEl||!acc) return;
+  const u=_q(faceEl,_SEL.username), p=_q(faceEl,_SEL.phone), c=_q(faceEl,_SEL.created);
+  if(u) u.textContent = acc.fields?.username ?? '.';
+  if(p) p.textContent = acc.fields?.phone ?? '.';
+  if(c) c.textContent = `Ngày tạo: ${_fmtVN(acc.createdAt)}`;
+}
+function _flipTo(cardId, acc){
+  const cardEl=_ensureFlipSkeleton(cardId); if(!cardEl) return;
+  const front=(cardEl.dataset.front==='b')?'b':'a';
+  const back =(front==='a')?'b':'a';
+  _setFields(_face(cardId, back), acc);
+  if (back==='b') cardEl.classList.add('is-flipped'); else cardEl.classList.remove('is-flipped');
+  cardEl.dataset.front=back;
+  _getCard(cardId).activeId=acc.id;
+}
+
+// === API Helper ===
+async function postJSON(url, payload) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload ?? {})
+  });
+  let data = null;
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) {
+    const msg = (data && (data.message || data.error)) || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function createSubAccount(cardId) {
+  const res = await fetch(`/mxh/api/cards/${cardId}/accounts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      platform: "wechat",
+      username: ".",   // <- yêu cầu Sếp
+      phone: "."       // <- yêu cầu Sếp
+    })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+  return data.account;
+}
+
+function setActiveAccount(cardId, accountId) {
+  const cardEl = document.getElementById(`card-${cardId}`);
+  if (cardEl) {
+    cardEl.dataset.activeAccountId = accountId;
+  }
+  // Cập nhật state
+  const st = _getCard(cardId);
+  st.activeId = accountId;
+}
+
+// === Actions ===
+MXH.addSubAccount = async (cardId)=>{
+  const st=_readPrimaryFromDOM(cardId);
+  
+  try {
+    const acc = await createSubAccount(cardId);
+    
+    // Tạo account object từ response
+    const accountObj = {
+      id: String(acc.id),
+      label: acc.label,
+      createdAt: acc.created_at,
+      fields: { 
+        username: acc.username || '.', 
+        phone: acc.phone || '.' 
+      }
+    };
+    
+    st.accounts.push(accountObj);
+    setActiveAccount(cardId, accountObj.id);
+    _flipTo(cardId, accountObj);
+    
+    // Cập nhật lại context menu
+    generateAccountsSubmenu(cardId);
+    
+    window.showToast?.('Đã tạo tài khoản phụ','success');
+  } catch (err) {
+    if (err instanceof TypeError) {
+      // network/offline
+      window.showToast?.('API không phản hồi (mất kết nối)','warning');
+    } else {
+      // lỗi hợp lệ từ server (400/422/500...)
+      window.showToast?.(`Tạo tài khoản phụ thất bại: ${err.message}`,'error');
+    }
+  }
+};
+
+MXH.switchAccount = (cardId, accountId)=>{
+  const st=_readPrimaryFromDOM(cardId);
+  const acc=st.accounts.find(a=>a.id==accountId); if(!acc) return;
+  _flipTo(cardId, acc);
+};
+
+// Submenu không "nuốt click", không separator "trống"
+window.generateAccountsSubmenu = (cardId)=>{
+  const st=_readPrimaryFromDOM(cardId);
+  const items = st.accounts.map(a=>({
+    type:'item',
+    label:`${a.label}${a.id===st.activeId?' ✓':''}`,
+    // để renderer đổ ra: data-ctx="switchAccount" data-card-id=".." data-account-id=".."
+    data:{ctx:'switchAccount', cardId, accountId:a.id}
+  }));
+  items.push({ type:'item', label:'Thêm Tài Khoản', data:{ctx:'addAccount', cardId} });
+  return items;
+};
+
+// Bắt 1 lần – an toàn trên mọi renderer
+document.addEventListener('pointerdown', (e)=>{
+  const n=e.target.closest('[data-ctx]'); if(!n) return;
+  const {ctx, cardId, accountId}=n.dataset;
+  if (ctx==='addAccount'){ 
+    e.preventDefault(); 
+    MXH.addSubAccount(+cardId); 
+    window.hideContextMenu?.(); 
+  }
+  if (ctx==='switchAccount'){ 
+    e.preventDefault(); 
+    MXH.switchAccount(+cardId, accountId); 
+    window.hideContextMenu?.(); 
+  }
+});
