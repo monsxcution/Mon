@@ -219,6 +219,29 @@ document.body.classList.add('mxh-page');
     </div>
 </div>
 
+<!-- Change Number Modal -->
+<div class="modal fade" id="changeNumberModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-123 me-2"></i>Đổi Số Hiệu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newCardNumber" class="form-label">Số hiệu mới</label>
+                    <input type="number" class="form-control" id="newCardNumber" min="1" step="1" placeholder="Nhập số hiệu mới">
+                    <div class="form-text">Có thể sử dụng số trùng (ví dụ: 1,2,3,4,4,5,6,7)</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitChangeNumber()">Đổi Số</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Notice Modal -->
 <div class="modal fade" id="noticeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -259,50 +282,48 @@ document.body.classList.add('mxh-page');
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Hàng 1: Số Card và Trạng Thái -->
-                <div class="row mb-2">
-                    <div class="col-auto">
-                        <label class="form-label mb-1">Số Card</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" style="width: 48px;" required>
-                    </div>
-                    <div class="col-auto">
-                        <label class="form-label mb-1">Trạng Thái</label>
-                        <select class="form-select form-select-sm" id="wechat-status" style="width: 84px;" required>
-                            <option value="available">Available</option>
-                            <option value="disabled">Vô hiệu hóa</option>
-                            <option value="die">Die</option>
-                            <option value="muted">Muted</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Hàng 2: Tên Người Dùng -->
-                <div class="row mb-2">
-                    <div class="col-auto">
-                        <label class="form-label mb-1">Tên Người Dùng</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-username" style="width: 150px;" required>
-                    </div>
-                </div>
-                
-                <!-- Hàng 3: Số Điện Thoại -->
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label class="form-label mb-1">Số Điện Thoại</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13" style="width: 150px;">
-                    </div>
-                </div>
-                
-                <!-- Hàng 4: Ngày Tạo -->
-                <div class="row mb-2">
-                    <div class="col-auto">
-                        <label class="form-label mb-1">Ngày Tạo</label>
-                        <div class="d-flex gap-1">
-                            <input type="text" class="form-control form-control-sm" id="wechat-day" placeholder="Ngày" maxlength="2" style="width:38px" required>
-                            <input type="text" class="form-control form-control-sm" id="wechat-month" placeholder="Tháng" maxlength="2" style="width:38px" required>
-                            <input type="text" class="form-control form-control-sm" id="wechat-year" placeholder="Năm" maxlength="4" style="width:53px" required>
+                <form id="wechat-account-form">
+                    <!-- Hàng 1: Số Card và Trạng Thái -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Số Card</label>
+                            <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Trạng Thái</label>
+                            <select class="form-select form-select-sm" id="wechat-status" required>
+                                <option value="available">Available</option>
+                                <option value="disabled">Vô hiệu hóa</option>
+                                <option value="die">Die</option>
+                                <option value="muted">Muted</option>
+                            </select>
                         </div>
                     </div>
-                </div>
+                    
+                    <!-- Hàng 2: Tên Người Dùng -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Tên Người Dùng</label>
+                            <input type="text" class="form-control form-control-sm" id="wechat-username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Số Điện Thoại</label>
+                            <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13">
+                        </div>
+                    </div>
+                    
+                    <!-- Hàng 3: Ngày Tạo -->
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Ngày Tạo</label>
+                            <div class="d-flex gap-1">
+                                <input type="text" class="form-control form-control-sm" id="wechat-day" placeholder="Ngày" maxlength="2" style="width:38px" required>
+                                <input type="text" class="form-control form-control-sm" id="wechat-month" placeholder="Tháng" maxlength="2" style="width:38px" required>
+                                <input type="text" class="form-control form-control-sm" id="wechat-year" placeholder="Năm" maxlength="4" style="width:53px" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger btn-sm" id="wechat-reset-btn">Reset</button>

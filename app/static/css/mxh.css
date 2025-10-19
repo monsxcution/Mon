@@ -76,8 +76,8 @@
 }
 
 /* Nếu card con (vd .tool-card/.card) tự có viền/shadow xám, dập nó luôn trong phạm vi grid item */
-.mxh-item .tool-card,
-.mxh-item .card {
+#mxh-accounts-container .mxh-item .tool-card,
+#mxh-accounts-container .mxh-item .card {
   border: none !important;
   box-shadow: none !important;
   background-clip: padding-box; /* tránh tràn nền đè ring */
@@ -100,11 +100,11 @@
 
 .tool-card.mxh-card.mxh-border-red {
     border: 2px solid #ff4d4f !important;
-    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 14px rgba(255,77,79,.5), 0 0 28px rgba(255,77,79,.3) !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.4), 0 0 12px rgba(255,77,79,.5) !important;
 }
 .tool-card.mxh-card.mxh-border-red:hover {
     border-color: #ff4d4f !important;
-    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 18px rgba(255,77,79,.6), 0 0 34px rgba(255,77,79,.35) !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.5), 0 0 16px rgba(255,77,79,.6) !important;
 }
 .tool-card.mxh-card.mxh-border-red::before {
     background: radial-gradient(circle, rgba(255,77,79,.18) 0%, rgba(255,77,79,0) 80%);
@@ -416,5 +416,135 @@
     left: 50% !important;
     top: -8px !important;
     transform: translate(-50%, -100%) !important;
+}
+
+/* ===== FORCE BORDER STYLES - MAXIMUM SPECIFICITY ===== */
+#mxh-accounts-container .tool-card.mxh-card.mxh-border-red {
+    border: 2px solid #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.3), 0 0 8px rgba(255,77,79,.4) !important;
+}
+
+#mxh-accounts-container .tool-card.mxh-card.mxh-border-red:hover {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.4), 0 0 12px rgba(255,77,79,.5) !important;
+}
+
+/* ===== ULTRA HIGH SPECIFICITY FOR ALL BORDERS ===== */
+html body #mxh-accounts-container .tool-card.mxh-card.mxh-border-red {
+    border: 1.4px solid #ff4d4f !important;
+    box-shadow: 0 0 0 0.7px rgba(255,77,79,.3), 0 0 5.6px rgba(255,77,79,.4) !important;
+}
+
+html body #mxh-accounts-container .tool-card.mxh-card.mxh-border-orange {
+    border: 1.4px solid #ffa500 !important;
+    box-shadow: 0 0 0 0.7px rgba(255,165,0,.3), 0 0 5.6px rgba(255,165,0,.4) !important;
+}
+
+html body #mxh-accounts-container .tool-card.mxh-card.mxh-border-green {
+    border: 1.4px solid #2fe56a !important;
+    box-shadow: 0 0 0 0.7px rgba(47,229,106,.3), 0 0 5.6px rgba(47,229,106,.4) !important;
+}
+
+html body #mxh-accounts-container .tool-card.mxh-card.mxh-border-white {
+    border: 1.4px solid #fff !important;
+    box-shadow: 0 0 0 0.7px rgba(255,255,255,.3), 0 0 5.6px rgba(255,255,255,.4) !important;
+}
+
+/* ===== ANNIVERSARY BLINK ANIMATION ===== */
+@keyframes anniversary-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.anniversary-blink {
+    animation: anniversary-blink 1s infinite;
+}
+
+/* ===== SMART CONTEXT MENU STYLES ===== */
+#unified-context-menu {
+    position: fixed;
+    z-index: 10000;
+    background: #2c3340;
+    border: 1px solid #444a59;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    min-width: 200px;
+    max-width: 250px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+#unified-context-menu .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    color: #e6e6e6;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+#unified-context-menu .menu-item:hover {
+    background-color: rgba(0, 224, 255, 0.15);
+    color: #00e0ff;
+    transform: translateX(2px);
+}
+
+#unified-context-menu .menu-item:active {
+    transform: scale(0.98);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #unified-context-menu {
+        min-width: 180px;
+        max-width: 220px;
+    }
+    
+    #unified-context-menu .menu-item {
+        padding: 12px 16px;
+        font-size: 1rem;
+        min-height: 44px; /* iOS touch target minimum */
+    }
+}
+
+/* Smooth animations */
+#unified-context-menu {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#unified-context-menu.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#mxh-accounts-container .tool-card.mxh-card.mxh-border-orange {
+    border: 2px solid #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 14px rgba(255,165,0,.5), 0 0 28px rgba(255,165,0,.3) !important;
+}
+
+#mxh-accounts-container .tool-card.mxh-card.mxh-border-green {
+    border: 2px solid #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 14px rgba(47,229,106,.45), 0 0 28px rgba(47,229,106,.25) !important;
+}
+
+#mxh-accounts-container .tool-card.mxh-card.mxh-border-white {
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 14px rgba(255,255,255,.35), 0 0 28px rgba(255,255,255,.2) !important;
+}
+
+/* ===== ULTRA HIGH SPECIFICITY FOR RED BORDER ===== */
+body #mxh-accounts-container .tool-card.mxh-card.mxh-border-red {
+    border: 3px solid #ff4d4f !important;
+    box-shadow: 0 0 0 2px rgba(255,77,79,.6), 0 0 20px rgba(255,77,79,.8) !important;
 }
 

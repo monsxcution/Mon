@@ -337,8 +337,13 @@ window.selectGroup = function(groupId) {
             return;
         }
 
-        filteredAccounts.sort((a, b) => (parseInt(a.card_name, 10) || Infinity) - (parseInt(b.card_name, 10) || Infinity));
-        
+        // Sort accounts by card_name numerically (allow duplicates)
+        filteredAccounts.sort((a, b) => {
+            const numA = parseInt(a.card_name) || 0;
+            const numB = parseInt(b.card_name) || 0;
+            return numA === numB ? (b.id - a.id) : (numA - numB);
+        });
+
         const cardsHtml = filteredAccounts.map(account => {
             // --- LOGIC XÁC ĐỊNH VIỀN MÀU ---
             let borderClass = '';
@@ -360,6 +365,7 @@ window.selectGroup = function(groupId) {
             const ageDays = isFinite(new Date(y, m, d)) ? Math.floor((Date.now() - new Date(y, m, d).getTime()) / 86400000) : 0;
 
             // ==== Gán class viền theo ưu tiên: Đỏ > Cam > Xanh > Trắng ====
+            let blinkClass = '';
             if (isDie) {
                 borderClass = 'mxh-border-red';
                 console.log(`Account ${account.id} (${account.card_name}): DIE -> RED border`);
@@ -371,11 +377,28 @@ window.selectGroup = function(groupId) {
                 console.log(`Account ${account.id} (${account.card_name}): WECHAT HK ANNIVERSARY -> GREEN border`);
             } else if (isWechat && ageDays >= 365 && !isHK) {
                 borderClass = 'mxh-border-white';
-                console.log(`Account ${account.id} (${account.card_name}): WECHAT ANNIVERSARY -> WHITE border`);
+                blinkClass = 'anniversary-blink';
+                console.log(`Account ${account.id} (${account.card_name}): WECHAT ANNIVERSARY -> WHITE border + BLINK`);
             }
             
             // Debug: Log status and border class
-            console.log(`Account ${account.id}: status=${account.status}, isDie=${isDie}, hasNotice=${hasNotice}, borderClass=${borderClass}`);
+            console.log(`Account ${account.id}: status=${account.status}, isDie=${isDie}, hasNotice=${hasNotice}, borderClass="${borderClass}"`);
+            
+            // FORCE BORDER STYLES FOR TESTING (30% thinner)
+            let inlineStyle = '';
+            if (borderClass === 'mxh-border-red') {
+                inlineStyle = 'border: 1.4px solid #ff4d4f !important;';
+                console.log(`FORCE: Setting red border for account ${account.id}`);
+            } else if (borderClass === 'mxh-border-orange') {
+                inlineStyle = 'border: 1.4px solid #ffa500 !important;';
+                console.log(`FORCE: Setting orange border for account ${account.id}`);
+            } else if (borderClass === 'mxh-border-green') {
+                inlineStyle = 'border: 1.4px solid #2fe56a !important;';
+                console.log(`FORCE: Setting green border for account ${account.id}`);
+            } else if (borderClass === 'mxh-border-white') {
+                inlineStyle = 'border: 1.4px solid #fff !important;';
+                console.log(`FORCE: Setting white border for account ${account.id}`);
+            }
             
             // --- KẾT THÚC LOGIC VIỀN MÀU ---
 
@@ -537,7 +560,7 @@ window.selectGroup = function(groupId) {
 
             return `
                 <div class="col mxh-item" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px" data-account-id="${account.id}">
-                    <div class="card tool-card mxh-card ${extraClass}" id="card-${account.id}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative;">
+                    <div class="card tool-card mxh-card ${borderClass} ${extraClass} ${blinkClass}" id="card-${account.id}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;" style="position:relative; ${inlineStyle}">
                         ${noticeIndicator}
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -579,8 +602,14 @@ window.selectGroup = function(groupId) {
                                 <div class="mt-auto">
                                     ${isDie ?
                                         `<div class="d-flex align-items-center justify-content-between">
-                                            <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
-                                            <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                                            <div class="text-center">
+                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày:</small>
+                                                <div class="text-danger" style="font-size: 0.77rem; font-weight: 600;">${account.die_date ? Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <small style="font-size: 0.77rem;">Lượt cứu:</small>
+                                                <div style="font-size: 0.77rem; font-weight: 600;"><span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></div>
+                                            </div>
                                         </div>` :
                                         `<div class="text-center mt-1">
                                             ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
@@ -810,10 +839,46 @@ function showUnifiedContextMenu(event, accountId, platform) {
         statusRescueItems.forEach(item => item.style.display = 'none');
     }
         
-        // Position and show menu
+        // Smart positioning logic
+        const menuWidth = 200;
+        const menuHeight = 300;
+        const buffer = 50;
+        
+        const mouseX = event.pageX;
+        const mouseY = event.pageY;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        let finalX = mouseX;
+        let finalY = mouseY;
+        
+        // Smart X positioning
+        if (mouseX < buffer) {
+            finalX = mouseX + 20; // Show to the right
+        } else if (mouseX > windowWidth - menuWidth - buffer) {
+            finalX = mouseX - menuWidth - 20; // Show to the left
+        }
+        
+        // Smart Y positioning
+        if (mouseY < buffer) {
+            finalY = mouseY + 20; // Show below
+        } else if (mouseY > windowHeight - menuHeight - buffer) {
+            finalY = mouseY - menuHeight - 20; // Show above
+        }
+        
+        // Position and show menu with smooth animation
         contextMenu.style.display = 'block';
-    contextMenu.style.left = event.pageX + 'px';
-    contextMenu.style.top = event.pageY + 'px';
+        contextMenu.style.left = finalX + 'px';
+        contextMenu.style.top = finalY + 'px';
+        contextMenu.style.opacity = '0';
+        contextMenu.style.transform = 'scale(0.8)';
+        
+        // Smooth fade in animation
+        setTimeout(() => {
+            contextMenu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            contextMenu.style.opacity = '1';
+            contextMenu.style.transform = 'scale(1)';
+        }, 10);
         
         setTimeout(() => {
         document.addEventListener('click', hideUnifiedContextMenu, { once: true });
@@ -821,7 +886,21 @@ function showUnifiedContextMenu(event, accountId, platform) {
 }
 
 function hideUnifiedContextMenu() {
-    document.getElementById('unified-context-menu').style.display = 'none';
+    const contextMenu = document.getElementById('unified-context-menu');
+    
+    // Smooth fade out animation
+    contextMenu.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+    contextMenu.style.opacity = '0';
+    contextMenu.style.transform = 'scale(0.9)';
+    
+    // Hide after animation completes
+    setTimeout(() => {
+        contextMenu.style.display = 'none';
+        contextMenu.style.transition = '';
+        contextMenu.style.opacity = '';
+        contextMenu.style.transform = '';
+    }, 150);
+    
     resumeAutoRefresh();
 }
 
@@ -864,6 +943,53 @@ window.handleCardContextMenu = function (event, accountId, platform) {
         return container;
     }
     
+// ===== CHANGE NUMBER FUNCTIONS =====
+function openChangeNumberModal() {
+    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+    if (!account) return;
+    
+    document.getElementById('newCardNumber').value = account.card_name;
+    const modal = new bootstrap.Modal(document.getElementById('changeNumberModal'));
+    modal.show();
+}
+
+async function submitChangeNumber() {
+    const newNumber = document.getElementById('newCardNumber').value;
+    if (!newNumber || newNumber < 1) {
+        showToast('Vui lòng nhập số hiệu hợp lệ', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                card_name: newNumber
+            })
+        });
+        
+        if (response.ok) {
+            showToast('Đổi số hiệu thành công', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('changeNumberModal')).hide();
+            
+            // Auto reload trang nhưng giữ vị trí đang xem
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Delay 1 giây để user thấy toast
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Lỗi đổi số hiệu', 'error');
+        }
+    } catch (error) {
+        console.error('Error changing number:', error);
+        showToast('Lỗi kết nối', 'error');
+    }
+}
+
+// Global function for modal button
+window.submitChangeNumber = submitChangeNumber;
+
 // ===== INLINE EDITING FUNCTIONS =====
 async function quickUpdateField(accountId, field, value) {
     try {
@@ -1123,6 +1249,9 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'clear-notice':
                 clearNotice(e);
                 break;
+            case 'change-number':
+                openChangeNumberModal();
+                break;
             case 'copy-phone':
                 copyPhoneNumber(e);
                 break;
@@ -1226,6 +1355,36 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mxh-year').value = year;
     });
     
+    // === THÊM EVENT LISTENER CHO NÚT RESET TRONG MODAL THÔNG TIN ===
+    const resetBtn = document.getElementById('wechat-reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+            if (!currentContextAccountId) {
+                showToast('Lỗi: Không có tài khoản được chọn!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    showToast('Reset thống kê thành công!', 'success');
+                    await loadMXHData(true);
+                    bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Lỗi khi reset!', 'error');
+                }
+            } catch (error) {
+                console.error('Reset error:', error);
+                showToast('Lỗi kết nối khi reset!', 'error');
+            }
+        });
+    }
+
     // === THÊM EVENT LISTENER CHO NÚT APPLY TRONG MODAL THÔNG TIN ===
     const applyBtn = document.getElementById('wechat-apply-btn');
     if (applyBtn) {
@@ -1245,14 +1404,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedStatus = modalEl.querySelector('#wechat-status').value;
 
         // Thu thập dữ liệu từ modal
+        const newCardName = modalEl.querySelector('#wechat-card-name').value;
         const payload = {
-            card_name: modalEl.querySelector('#wechat-card-name').value,
+            card_name: newCardName,
             username: modalEl.querySelector('#wechat-username').value,
             phone: modalEl.querySelector('#wechat-phone').value,
             wechat_created_day: parseInt(modalEl.querySelector('#wechat-day').value) || null,
             wechat_created_month: parseInt(modalEl.querySelector('#wechat-month').value) || null,
             wechat_created_year: parseInt(modalEl.querySelector('#wechat-year').value) || null,
         };
+        
+        // Kiểm tra nếu có thay đổi số card
+        const cardNameChanged = originalAccount.card_name !== newCardName;
 
         // Xử lý logic trạng thái phức tạp giống hệt file MXH_Old
         if (selectedStatus === 'muted') {
@@ -1283,7 +1446,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 showToast('Cập nhật thông tin thành công!', 'success');
                 bootstrap.Modal.getInstance(modalEl).hide();
-                await loadMXHData(true); // Tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
+                
+                // Nếu có thay đổi số card thì auto reload trang
+                if (cardNameChanged) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000); // Delay 1 giây để user thấy toast
+                } else {
+                    await loadMXHData(true); // Tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
+                }
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi khi cập nhật!', 'error');

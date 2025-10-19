@@ -648,3 +648,31 @@ def rescue_account(account_id):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+
+@mxh_api_bp.route('/accounts/<int:account_id>/reset', methods=['POST'])
+def reset_account_stats(account_id):
+    """Reset thống kê tài khoản: số lượt quét, số lần bị vô hiệu hóa, die"""
+    conn = get_db_connection()
+    try:
+        now = datetime.now().isoformat()
+        
+        # Reset các thống kê nhưng giữ nguyên thông tin cơ bản
+        conn.execute("""
+            UPDATE mxh_accounts 
+            SET wechat_scan_count = 0,
+                wechat_last_scan_date = NULL,
+                rescue_count = 0,
+                rescue_success_count = 0,
+                die_date = NULL,
+                updated_at = ?
+            WHERE id = ?
+        """, (now, account_id))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": "Reset thống kê thành công"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
