@@ -80,3 +80,16 @@
 .mxh-card.mxh-border-white::before {
     display: none !important;
 }
+
+/* ===== INLINE EDITING STYLES ===== */
+.editable-field {
+    cursor: text;
+    transition: background-color 0.2s;
+    padding: 2px 4px;
+    border-radius: 4px;
+    display: inline-block; /* Quan trọng để hover đúng kích thước chữ */
+}
+
+.editable-field:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}

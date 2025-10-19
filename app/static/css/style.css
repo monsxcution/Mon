@@ -257,3 +257,62 @@ body {
 #utilitiesModal .form-check-label {
     user-select: none;
 }
+
+/* ===== GENERAL CONTEXT MENU STYLES ===== */
+.custom-context-menu {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 220px;
+    font-size: 0.9rem;
+}
+
+.custom-context-menu .menu-item {
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.custom-context-menu .menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+.custom-context-menu .menu-item.has-submenu {
+    justify-content: space-between;
+}
+
+.custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid #444a59;
+    z-index: 10001;
+}
+
+.custom-context-menu .submenu.submenu-left {
+    left: auto;
+    right: 100%;
+}
+
+.custom-context-menu .submenu.show {
+    display: block;
+}
+
+.custom-context-menu .submenu .menu-item {
+    padding: 8px 12px;
+}

@@ -376,8 +376,12 @@ window.selectGroup = function(groupId) {
                         
                         <div class="card-body d-flex flex-column justify-content-center text-center">
                             <h5 class="card-title mb-1">${account.card_name}</h5>
-                            <p class="card-text text-truncate mb-1">${account.username || '...'}</p>
-                            <small class="text-muted">📞 ${account.phone || '...'}</small>
+                            <div class="text-truncate mb-1">
+                                <span class="editable-field" contenteditable="true" data-account-id="${account.id}" data-field="username">${account.username || '...'}</span>
+                            </div>
+                            <small class="text-muted">
+                                <span class="editable-field" contenteditable="true" data-account-id="${account.id}" data-field="phone">📞 ${account.phone || '...'}</span>
+                            </small>
                             <div class="text-danger small mt-1" style="height: 1.2em;">${isDie ? 'DIE' : ''}</div>
                         </div>
                     </div>
@@ -387,6 +391,10 @@ window.selectGroup = function(groupId) {
 
         container.innerHTML = cardsHtml;
         window.scrollTo(0, scrollY);
+        
+        // GỌI HÀM SETUP SAU KHI RENDER XONG
+        setupEditableFields();
+
         isRendering = false;
 
         if (pendingUpdates) {
@@ -400,6 +408,80 @@ function ensureNoticeParsed(notice) {
     let n = (typeof notice === 'string') ? (() => { try { return JSON.parse(notice) } catch { return {} } })() : (notice || {});
     if (n && n.start_at) n.start_at = normalizeISOForJS(n.start_at);
     return n;
+}
+
+/**
+ * Gán sự kiện cho các trường có thể chỉnh sửa trực tiếp trên card.
+ */
+function setupEditableFields() {
+    const editableFields = document.querySelectorAll('.editable-field');
+
+    editableFields.forEach(field => {
+        field.addEventListener('blur', async (e) => {
+            const accountId = parseInt(e.target.dataset.accountId);
+            const fieldName = e.target.dataset.field;
+            let newValue = e.target.textContent.trim();
+
+            if (fieldName === 'phone') {
+                newValue = newValue.replace(/^📞\s*/, '').trim();
+            }
+
+            const originalAccount = mxhAccounts.find(acc => acc.id === accountId);
+            if (originalAccount && originalAccount[fieldName] !== newValue) {
+                await quickUpdateField(accountId, fieldName, newValue);
+            }
+        });
+
+        field.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur(); // Trigger blur event to save
+            }
+        });
+        
+        field.addEventListener('focus', (e) => {
+             // Select all text on focus
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }, 0);
+        });
+    });
+}
+
+/**
+ * Gửi yêu cầu cập nhật nhanh một trường dữ liệu đến server.
+ * @param {number} accountId ID của tài khoản
+ * @param {string} field Tên trường (e.g., 'username', 'phone')
+ * @param {string} value Giá trị mới
+ */
+async function quickUpdateField(accountId, field, value) {
+    try {
+        const response = await fetch(`/mxh/api/accounts/${accountId}/quick-update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ field, value })
+        });
+
+        if (response.ok) {
+            showToast(`Đã cập nhật ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
+            // Cập nhật lại dữ liệu local để giao diện đồng bộ
+            const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+            if (accountIndex !== -1) {
+                mxhAccounts[accountIndex][field] = value;
+            }
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Lỗi khi cập nhật!', 'error');
+            await loadMXHData(true); // Tải lại toàn bộ nếu lỗi
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối!', 'error');
+        await loadMXHData(true);
+    }
 }
 
 /**
