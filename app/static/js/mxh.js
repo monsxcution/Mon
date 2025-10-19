@@ -26,10 +26,9 @@ let lastUpdateTime = null; // NEW: Store the timestamp of the last successful da
 function applyViewMode(value) {
     const n = Math.max(1, parseInt(value, 10) || 12);
     localStorage.setItem('mxh_cards_per_row', n);
-    
-    // Gán giá trị vào biến CSS --cardsPerRow
-    // CSS sẽ tự động tính toán lại layout
     document.documentElement.style.setProperty('--cardsPerRow', n);
+    const c = document.getElementById('mxh-accounts-container');
+    if (c) c.style.setProperty('--cardsPerRow', n);
 }
 
 /**
@@ -370,7 +369,7 @@ window.selectGroup = function(groupId) {
             // --- KẾT THÚC LOGIC VIỀN MÀU ---
 
             return `
-                <div class="col">
+                <div class="col" style="flex:0 0 calc(100% / var(--cardsPerRow, 12));max-width:calc(100% / var(--cardsPerRow, 12));padding:4px">
                     <div class="card tool-card mxh-card ${borderClass}" 
                          data-account-id="${account.id}"
                          oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
@@ -687,7 +686,7 @@ function setupEditableFields() {
     
     // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
-  // Khởi tạo Chế Độ Xem
+  // Khởi tạo và áp dụng ngay Chế Độ Xem
   initializeViewMode();
   applyViewMode(localStorage.getItem('mxh_cards_per_row') || 12);
 
@@ -838,8 +837,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mxh-year').value = year;
     });
     
-    // === EVENT LISTENER MỚI CHO NÚT APPLY TRONG MODAL THÔNG TIN ===
-    document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
+    // === THÊM EVENT LISTENER CHO NÚT APPLY TRONG MODAL THÔNG TIN ===
+    const applyBtn = document.getElementById('wechat-apply-btn');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', async () => {
         if (!currentContextAccountId) {
             showToast('Lỗi: Không có tài khoản được chọn!', 'error');
             return;
@@ -897,7 +898,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Update error:', error);
             showToast('Lỗi kết nối khi cập nhật!', 'error');
         }
-    });
+        });
+    }
     
     // Hide all context menus on regular click
     document.addEventListener('click', function (event) {
