@@ -1487,8 +1487,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.hide();
             }
 
-            // Optimistic UI update
-            mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== parseInt(cardId));
+            // Cập nhật giao diện ngay lập tức (Optimistic Update)
+            const cardIdInt = parseInt(cardId, 10);
+            mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== cardIdInt);
             renderMXHAccounts();
 
             try {
@@ -1498,18 +1499,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     showToast('✅ Đã xóa card thành công!', 'success');
-                    // Data is already updated locally, but a full reload ensures consistency
-                    await loadMXHData(true); 
+                    await loadMXHData(false); // Tải lại những thay đổi nhỏ (nếu có)
                 } else {
                     const error = await response.json();
                     showToast(error.error || 'Lỗi khi xóa card!', 'error');
-                    // Revert UI on error
-                    await loadMXHData(true);
+                    await loadMXHData(true); // Tải lại toàn bộ dữ liệu nếu có lỗi
                 }
             } catch (error) {
+                console.error("Delete Error:", error);
                 showToast('Lỗi kết nối khi xóa card!', 'error');
-                // Revert UI on error
-                await loadMXHData(true);
+                await loadMXHData(true); // Tải lại toàn bộ dữ liệu nếu có lỗi
             }
         });
     }
@@ -1828,18 +1827,19 @@ function showDeleteConfirm(e) {
     }
     if (!currentContextAccountId) return;
 
-    // Find the card_id from the current account context
+    // Tìm card_id từ account đang được chọn
     const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
     if (!account || !account.card_id) {
-        showToast('Lỗi: Không tìm thấy thông tin thẻ.', 'error');
+        showToast('Lỗi: Không tìm thấy thông tin card.', 'error');
         return;
     }
+    const cardIdToDelete = account.card_id;
 
     const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     
-    // Pass the card_id to the confirmation button
+    // Gán card_id vào nút xác nhận trong modal
     const confirmBtn = document.getElementById('confirmDeleteBtn');
-    confirmBtn.dataset.cardId = account.card_id;
+    confirmBtn.dataset.cardId = cardIdToDelete;
 
     modal.show();
     hideUnifiedContextMenu();
