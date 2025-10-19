@@ -93,3 +93,98 @@
 .editable-field:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
+
+/* ===== HIDE NUMBER INPUT SPINNERS ===== */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+
+/* ===== WECHAT MODAL LAYOUT FIXES ===== */
+#wechat-account-modal .modal-dialog {
+    max-width: 700px;
+}
+
+/* Giảm chiều cao modal và các phần tử */
+#wechat-account-modal .modal-content {
+    padding: 0.5rem;
+}
+
+#wechat-account-modal .modal-header {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#wechat-account-modal .modal-body {
+    padding: 0.75rem 1rem;
+}
+
+#wechat-account-modal .modal-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Giảm chiều cao title */
+#wechat-account-modal .modal-title {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Giảm chiều cao các ô nhập */
+#wechat-account-modal .form-control,
+#wechat-account-modal .form-select {
+    height: 1.5rem;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Giảm chiều cao labels */
+#wechat-account-modal .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Layout cho hàng đầu tiên (Số Card và Trạng Thái) */
+#wechat-account-modal .modal-body .row:first-child {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-end !important;
+    gap: 15px !important;
+}
+
+#wechat-account-modal .modal-body .row:first-child .col-auto {
+    flex-shrink: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Đảm bảo các ô nhập ngày/tháng/năm không có spinner và có kích thước chính xác */
+#wechat-day, #wechat-month, #wechat-year {
+    -webkit-appearance: none !important;
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+    text-align: center;
+    padding: 0.25rem 0.125rem;
+    margin-right: 2px;
+}
+
+/* Giảm khoảng cách giữa các ô nhập ngày/tháng/năm */
+#wechat-account-modal .d-flex.gap-1 {
+    gap: 2px !important;
+}
+
+#wechat-day::-webkit-outer-spin-button,
+#wechat-day::-webkit-inner-spin-button,
+#wechat-month::-webkit-outer-spin-button,
+#wechat-month::-webkit-inner-spin-button,
+#wechat-year::-webkit-outer-spin-button,
+#wechat-year::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
