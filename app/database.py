@@ -53,9 +53,9 @@ def init_database():
         )
     """)
     
-    # Bảng thẻ MXH (cha) - exact table name as requested
+    # Bảng thẻ MXH (cha) - corrected table name
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS mxh_card (
+        CREATE TABLE IF NOT EXISTS mxh_cards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             card_name TEXT NOT NULL,
             group_id INTEGER,
@@ -91,15 +91,15 @@ def init_database():
             notice TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
-            FOREIGN KEY(card_id) REFERENCES mxh_card(id) ON DELETE CASCADE
+            FOREIGN KEY(card_id) REFERENCES mxh_cards(id) ON DELETE CASCADE
         )
     """)
 
     # --- TẠO INDEX ĐỂ TĂNG TỐC ĐỘ TRUY VẤN ---
     # Exact index names as requested
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_acc_card ON mxh_accounts(card_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_card_group ON mxh_card(group_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_card_platform ON mxh_card(platform)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_cards_group ON mxh_cards(group_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_cards_platform ON mxh_cards(platform)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_acc_status ON mxh_accounts(wechat_status, status)")
     
     conn.commit()

@@ -33,7 +33,7 @@ def create_card():
         
         # Check if card_name is unique within the same group_id
         existing_card = conn.execute(
-            "SELECT id FROM mxh_card WHERE card_name = ? AND group_id = ?",
+            "SELECT id FROM mxh_cards WHERE card_name = ? AND group_id = ?",
             (card_name, group_id)
         ).fetchone()
         
@@ -46,7 +46,7 @@ def create_card():
         # Create the card
         now = datetime.now(timezone.utc).astimezone().isoformat()
         cursor = conn.execute(
-            "INSERT INTO mxh_card (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO mxh_cards (card_name, group_id, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
             (card_name, group_id, platform, now, now)
         )
         card_id = cursor.lastrowid
@@ -54,7 +54,7 @@ def create_card():
         conn.commit()
         
         # Return the created card
-        new_card = conn.execute("SELECT * FROM mxh_card WHERE id = ?", (card_id,)).fetchone()
+        new_card = conn.execute("SELECT * FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
         card_dict = dict(new_card)
         card_dict["accounts"] = []  # Empty accounts array as specified
         
@@ -82,7 +82,7 @@ def get_cards():
         platform = request.args.get("platform")
         
         # Build query with optional filters
-        query = "SELECT * FROM mxh_card WHERE 1=1"
+        query = "SELECT * FROM mxh_cards WHERE 1=1"
         params = []
         
         if group_id:
@@ -97,16 +97,20 @@ def get_cards():
         
         cards = conn.execute(query, params).fetchall()
         
-        # Convert to list of dictionaries with accounts_summary
-        result = []
-        for card in cards:
-            card_dict = dict(card)
-            # Static accounts_summary as specified
-            card_dict["accounts_summary"] = {
-                "count": 0,
-                "primary_account_id": None
-            }
-            result.append(card_dict)
+        # Convert to list of dictionaries with nested sub_accounts
+        result = [dict(card) for card in cards]
+        card_ids = [c["id"] for c in result]
+
+        if card_ids:
+            placeholders = ",".join("?" for _ in card_ids)
+            sub_accounts = conn.execute(
+                f"SELECT * FROM mxh_accounts WHERE card_id IN ({placeholders}) ORDER BY is_primary DESC, id ASC",
+                card_ids,
+            ).fetchall()
+            for card in result:
+                card["sub_accounts"] = [
+                    dict(sa) for sa in sub_accounts if sa["card_id"] == card["id"]
+                ]
         
         return jsonify(result)
         
@@ -141,7 +145,7 @@ def create_account(card_id):
             return jsonify({"error": "phone is required", "field": "phone"}), 400
         
         # Check if card exists
-        card = conn.execute("SELECT id FROM mxh_card WHERE id = ?", (card_id,)).fetchone()
+        card = conn.execute("SELECT id FROM mxh_cards WHERE id = ?", (card_id,)).fetchone()
         if not card:
             return jsonify({"error": "Card not found"}), 404
         
@@ -193,6 +197,22 @@ def create_account(card_id):
         return jsonify({"error": f"Database constraint violation: {str(e)}"}), 400
     except Exception as e:
         conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_api_bp.route("/groups", methods=["GET"])
+def get_groups():
+    """
+    GET /mxh/api/groups
+    Return a list of groups.
+    """
+    conn = get_db_connection()
+    try:
+        groups = conn.execute("SELECT * FROM mxh_groups ORDER BY name").fetchall()
+        return jsonify([dict(group) for group in groups])
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
