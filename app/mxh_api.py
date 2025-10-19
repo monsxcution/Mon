@@ -676,3 +676,27 @@ def reset_account_stats(account_id):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+
+@mxh_api_bp.route("/cards/<int:card_id>", methods=["DELETE"])
+def delete_card(card_id):
+    """
+    DELETE /mxh/api/cards/<card_id>
+    Delete a card and all its associated accounts (due to ON DELETE CASCADE).
+    """
+    conn = get_db_connection()
+    try:
+        # The ON DELETE CASCADE constraint will handle deleting associated accounts.
+        cursor = conn.execute("DELETE FROM mxh_cards WHERE id = ?", (card_id,))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Card not found"}), 404
+            
+        return jsonify({"success": True, "message": "Card and associated accounts deleted successfully"})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

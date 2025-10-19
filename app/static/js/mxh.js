@@ -1474,6 +1474,45 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Event listener for the delete confirmation button
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async function() {
+            const cardId = this.dataset.cardId;
+            if (!cardId) return;
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+            if (modal) {
+                modal.hide();
+            }
+
+            // Optimistic UI update
+            mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== parseInt(cardId));
+            renderMXHAccounts();
+
+            try {
+                const response = await fetch(`/mxh/api/cards/${cardId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('✅ Đã xóa card thành công!', 'success');
+                    // Data is already updated locally, but a full reload ensures consistency
+                    await loadMXHData(true); 
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Lỗi khi xóa card!', 'error');
+                    // Revert UI on error
+                    await loadMXHData(true);
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối khi xóa card!', 'error');
+                // Revert UI on error
+                await loadMXHData(true);
+            }
+        });
+    }
 });
 
 // ===== BORDER STATE FUNCTIONS =====
@@ -1783,7 +1822,27 @@ function changeCardNumber(e) {
 }
 
 function showDeleteConfirm(e) {
-    showToast('Chức năng đang phát triển', 'info');
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    if (!currentContextAccountId) return;
+
+    // Find the card_id from the current account context
+    const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+    if (!account || !account.card_id) {
+        showToast('Lỗi: Không tìm thấy thông tin thẻ.', 'error');
+        return;
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    
+    // Pass the card_id to the confirmation button
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.dataset.cardId = account.card_id;
+
+    modal.show();
+    hideUnifiedContextMenu();
 }
 
 function switchToAccount(accountIndex) {
