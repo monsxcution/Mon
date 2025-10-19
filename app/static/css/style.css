@@ -1680,3 +1680,1398 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 /* ===== END: MXH MODULE STYLES ===== */
 
+/* Custom styles for Kcal Calculator Header */
+#healthy-v-pills-kcal .card-header {
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+}
+#kcal-totals-header {
+    font-size: 1.25rem; /* Match h5 font-size */
+}
+
+/* Decrease height of food category headers */
+#kcal-container .card-header {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+:root {
+      --dark-bg: #1a1d21;
+      --card-bg: #2c303a;
+      --border-color: #444a59;
+      --text-color: #e6e6e6;
+      --primary-color: #0d6efd;
+      --hover-color: #3d4453;
+}
+
+body {
+      background-color: var(--dark-bg);
+      color: var(--text-color);
+      padding: 1rem;
+      font-family: 'Roboto', sans-serif;
+}
+
+.main-nav .nav-link {
+    font-weight: 500;
+    color: var(--text-color);
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+.main-nav .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+.tab-content {
+      border: 1px solid var(--border-color);
+      border-top: none;
+      padding: 0;
+      border-radius: 0 0 0.375rem 0.375rem;
+      background-color: var(--card-bg);
+}
+
+.tool-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 1.5rem;
+      transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+      cursor: pointer;
+      height: 100%;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: visible;
+}
+
+.tool-card:hover {
+      transform: translateY(-12px) scale(1.03);
+      box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+      border-color: #00e0ff;
+}
+
+.tool-card::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 0;
+}
+
+.tool-card:hover::before {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.1);
+}
+
+.tool-card .card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 1rem auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00e0ff 0%, #3a7bd5 100%);
+      box-shadow: 0 4px 16px rgba(0, 224, 255, 0.18);
+      font-size: 2.5rem;
+      color: #fff;
+      position: relative;
+      z-index: 1;
+}
+
+/* Blinking Animation for Filtered Cards */
+@keyframes blink-border {
+    0%, 100% { border-color: #ffc107; box-shadow: 0 0 10px #ffc107; }
+    50% { border-color: #00e0ff; box-shadow: 0 0 20px #00e0ff; }
+}
+.card-blinking {
+    animation: blink-border 1.5s infinite !important;
+}
+
+.table {
+      --bs-table-bg: #2d2d2d;
+      --bs-table-border-color: #404040;
+      vertical-align: middle;
+}
+
+.table .badge {
+      background-color: #6c757d;
+      color: white;
+}
+
+.table thead th {
+      color: #ffffff !important;
+      background-color: #374151;
+      font-weight: bold;
+}
+
+.table tbody td {
+      color: #f8f9fa !important;
+}
+
+#password-tool-pane .table th:nth-child(3),
+#password-tool-pane .table td:nth-child(3) {
+      width: 260px;
+      max-width: 260px;
+}
+
+.password-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+}
+
+.password-text {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-text-security: disc;
+      transition: -webkit-text-security 0.2s;
+}
+
+.form-control,
+.form-select {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: var(--text-color);
+}
+
+.modal-content {
+      background-color: var(--card-bg);
+      border-color: var(--border-color);
+}
+
+#telegram-tool-pane .sticky-top {
+      top: 0;
+      z-index: 1020;
+      background-color: var(--card-bg) !important;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+}
+
+#telegram-tool-pane .main-tool-container .tab-content,
+#telegram-tool-pane .main-tool-container .nav-pills {
+      background: none;
+      border: none;
+      padding: 0;
+}
+
+#image-editor-tool-pane .nav-pills .nav-link,
+#telegram-tool-pane .nav-pills .nav-link {
+      color: var(--text-color);
+}
+
+#image-editor-tool-pane .nav-pills .nav-link.active,
+#telegram-tool-pane .nav-pills .nav-link.active {
+      background-color: var(--primary-color);
+      color: #fff;
+}
+
+#image-editor-tool-pane #ie-options-panel {
+      background-color: var(--card-bg);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      height: 100%;
+}
+
+
+#tg-session-tables-container .table-responsive {
+      max-height: 75vh;
+      overflow-y: auto;
+}
+
+.stat-card {
+      border: 1px solid #4b5563;
+      padding: 0.75rem 1.25rem;
+      min-width: 320px;
+}
+
+/* --- Floating Nav Card Styles --- */
+.main-nav.nav-tabs {
+    border-bottom: none;
+    padding: 5px 0;
+}
+.main-nav .nav-link {
+    border: none;
+    background-color: transparent;
+    border-radius: 10px;
+    margin: 0 5px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    box-shadow: none;
+}
+.nav-tabs .nav-link {
+    margin-bottom: 0;
+    border-bottom-color: transparent;
+}
+.main-nav .nav-link:not(.active):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    border-color: transparent;
+    background-color: rgba(0, 224, 255, 0.1);
+}
+.main-nav .nav-link.active {
+    transform: translateY(-2px);
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(13, 110, 253, 0.5), 0 4px 10px rgba(13, 110, 253, 0.3);
+    border-color: transparent;
+    background-color: var(--primary-color) !important;
+}
+.main-nav .nav-link {
+    display: flex;
+    align-items: center;
+}
+.nav-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+}
+#home-tab .nav-card-icon {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+}
+#notes-tool-tab .nav-card-icon, .nav-link[href*="notes"] .nav-card-icon {
+    background: linear-gradient(135deg, #66BB6A, #26A69A);
+}
+
+/* Center the notes search bar */
+.notes-layout-container .notes-search-container {
+    margin: 0 auto;
+    width: 50%;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-list-wrapper.shrunk .notes-search-container {
+    width: 100%;
+}
+
+/* Hide all context menus by default */
+.custom-context-menu {
+    display: none;
+    position: fixed;
+    position: fixed;
+    z-index: 10000;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 220px;
+    font-size: 0.9rem;
+}
+
+.custom-context-menu .menu-item {
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.custom-context-menu .menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+.custom-context-menu .color-palette {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    background: #2c3340;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 150px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.custom-context-menu .menu-item:hover>.color-palette {
+    display: grid;
+}
+
+.custom-context-menu .color-palette span {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #555;
+    transition: transform 0.2s;
+}
+
+.custom-context-menu .color-palette span:hover {
+    transform: scale(1.15);
+}
+
+/* Submenu styles for context menu */
+.custom-context-menu .menu-item.has-submenu {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid #444a59;
+    animation: fadeInMenu 0.1s;
+    z-index: 10001; /* Đảm bảo submenu hiển thị trên menu chính */
+}
+
+/* Submenu hiển thị bên trái khi menu ở rìa phải */
+.custom-context-menu .submenu.submenu-left {
+    left: auto;
+    right: 100%;
+}
+
+/* Bridge element để tránh flickering */
+.submenu-bridge {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+/* Bridge cho submenu bên trái */
+.submenu.submenu-left .submenu-bridge {
+    left: -5px;
+    right: auto;
+}
+
+/* Submenu hiển thị qua JavaScript, không dùng CSS hover */
+.custom-context-menu .submenu.show {
+    display: block;
+}
+
+/* WeChat modal tidy */
+#wechat-account-modal .modal-body .form-label { 
+    margin-bottom: .25rem; 
+}
+#wechat-account-modal .form-control, 
+#wechat-account-modal .form-select { 
+    height: 38px; 
+}
+
+/* WeChat icon color - đảm bảo màu xanh lá đúng */
+.bi-wechat {
+    color: #07c160 !important;
+}
+
+/* Remove focus outline for all modals */
+.form-control:focus,
+.form-select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #ced4da !important;
+}
+
+/* Reduce padding for card number input */
+#wechat-card-name {
+    padding: 0.25rem !important;
+    text-align: center;
+}
+
+/* Reduce padding for date inputs in all modals */
+#wechat-day, #wechat-month, #wechat-year,
+#mxh-day, #mxh-month, #mxh-year {
+    padding: 0.25rem !important;
+    text-align: center;
+}
+
+
+.custom-context-menu .submenu .menu-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.custom-context-menu .submenu .menu-item i.bi-check-circle-fill {
+    color: #00e0ff;
+}
+
+.custom-context-menu .submenu-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+/* Profile span context menu specific styles */
+.context-menu-header {
+    padding: 8px 22px;
+    font-weight: 600;
+    color: #00e0ff;
+    border-bottom: 1px solid #333a4a;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 8px 22px;
+    margin-bottom: 8px;
+}
+
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    border-color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-divider {
+    height: 1px;
+    background: #333a4a;
+    margin: 8px 0;
+}
+
+#profile-span-context-menu .submenu {
+    padding: 8px;
+    width: 170px;
+}
+
+#profile-span-context-menu .color-grid {
+    padding: 0;
+    margin: 0;
+}
+
+/* Utilities Modal Styles */
+#utilitiesModal .modal-dialog {
+    max-width: 550px;
+}
+
+#utilitiesModal .form-check-label {
+    user-select: none;
+}
+
+/* MXH Card Container - 3D Flip Support */
+.mxh-card-container {
+    perspective: 1000px;
+    width: 100%;
+    height: 160px;
+    cursor: pointer;
+}
+
+.mxh-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.mxh-card-container.flipped .mxh-card-inner {
+    transform: rotateY(180deg);
+}
+
+/* Chặn click vào mặt đang ẩn để ngừa auto-focus/auto-click */
+.mxh-card-front, .mxh-card-back { pointer-events: none; }
+.mxh-card-container:not(.flipped) .mxh-card-front { pointer-events: auto; }
+.mxh-card-container.flipped .mxh-card-back { pointer-events: auto; }
+
+.mxh-card-front,
+.mxh-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.mxh-card-back {
+    transform: rotateY(180deg);
+}
+
+/* MXH Card Styles - Matching temp_index.html exactly */
+.mxh-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+    cursor: pointer;
+    height: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: visible;
+    margin: 0;
+}
+
+.mxh-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: #00e0ff;
+}
+
+.mxh-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 0;
+}
+
+.mxh-card:hover::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Blink animation for anniversary cards */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+/* Blink animation for Reg Available text (blue color pulse) */
+@keyframes blink-blue {
+    0%, 50% { 
+        opacity: 1; 
+        color: #0dcaf0; 
+    }
+    51%, 100% { 
+        opacity: 0.4; 
+        color: #0088cc; 
+    }
+}
+
+.reg-available-blink {
+    animation: blink-blue 1s infinite;
+    font-weight: 600;
+}
+
+.mxh-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.mxh-card .card-body {
+    padding: 0.6rem;
+    min-height: 128px;
+    position: relative;
+    z-index: 1;
+}
+
+.mxh-card .card-title {
+    font-size: 1.26rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Remove Bootstrap grid spacing */
+#mxh-accounts-container .row > .col {
+    padding: 2px !important;
+}
+
+
+/* Notes Card View Styles */
+
+/* New Layout System with Animation */
+.notes-layout-container {
+      display: flex;
+      gap: 1rem;
+}
+
+#notes-list-wrapper {
+      flex-grow: 1;
+      width: 100%;
+      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper {
+      flex-shrink: 0;
+      width: 0;
+      transform: translateX(30px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+#notes-detail-wrapper.visible {
+      width: 66.666667%;
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+}
+#notes-list-wrapper.shrunk {
+      width: 33.333333%;
+}
+#notes-container.notes-grid-view .note-card-wrapper {
+      flex: 0 0 33.333333%;
+      max-width: 33.333333%;
+      padding: 0 !important;
+}
+#notes-container.notes-grid-view .card {
+      height: 120px;
+}
+#notes-container.notes-list-view .note-card-wrapper {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding: 0 !important;
+}
+#notes-container.notes-list-view .card {
+      height: 70px;
+}
+#notes-container.notes-list-view .card .card-title {
+      font-size: 1.14rem;
+      margin-bottom: 0.2rem;
+}
+#notes-container.notes-list-view .card .card-note-body {
+      font-size: 0.75rem;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+}
+#notes-container.notes-list-view .card .card-body {
+      padding: 0.5rem;
+}
+#notes-container {
+      max-width: 100%;
+      margin: 0;
+}
+
+/* REFACTORED NOTES CARD STYLES (GRID & LIST VIEW) */
+#notes-container .card {
+      border-left: 4px solid var(--bs-card-border-color);
+      border-radius: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+}
+#notes-container .card-body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0.75rem;
+      overflow: hidden;
+}
+#notes-container .card-note-body {
+      flex-grow: 1;
+      margin-right: 8px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+}
+#notes-container .card-body .mt-auto {
+      margin-top: auto !important;
+}
+
+/* Card Height Modifiers */
+#notes-container.h-minus-2 .card {
+      --note-card-height: 80px;
+}
+
+#notes-container.h-minus-4 .card {
+      --note-card-height: 65px;
+}
+
+#notes-container.h-minus-4 .card .card-note-body {
+      display: none;
+}
+
+#notes-container.h-minus-4 .card .card-title {
+      font-size: 0.9rem;
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+}
+
+#notes-container.h-minus-2 .card .card-title {
+      font-size: 0.9rem;
+}
+
+#notes-container.h-minus-2 .card .card-note-body {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      font-size: 0.8rem;
+}
+
+/* Notes Search Bar Styles */
+.notes-search-container {
+      background-color: transparent;
+      border: none;
+}
+#notes-search-input {
+      background-color: var(--card-bg) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-color) !important;
+}
+
+/* Notes Detail Panel Styles */
+#notes-detail-panel {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      height: 100%;
+      min-height: 75vh;
+}
+#notes-detail-panel .card-header {
+      background-color: var(--hover-color);
+      border-bottom: 1px solid var(--border-color);
+}
+.note-card-active {
+      transform: scale(1.02);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3) !important;
+      border: 2px solid var(--primary-color) !important;
+      transition: all 0.3s ease;
+}
+.card {
+      transition: all 0.3s ease;
+}
+
+/* Inline Editor Styles */
+#detail-editable-full {
+      outline: none;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+      min-height: 150px;
+}
+#detail-editable-full:hover,
+#detail-editable-full:focus {
+      background-color: var(--hover-color);
+}
+#detail-editable-full:empty:before {
+      content: attr(data-placeholder);
+      color: #6c757d;
+}
+#detail-editable-full * {
+      background-color: transparent !important;
+      border: none !important;
+}
+#detail-editable-full a {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      background-color: transparent !important;
+      color: #69b3ff;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+#detail-editable-full a:hover {
+      color: #00e0ff;
+      text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+/* Animation cho thẻ Ghi chú mới */
+@keyframes noteCardEnterAnimation {
+    0% {
+        opacity: 0;
+        transform: translateY(25px) scale(0.95);
+        box-shadow: 0 0 15px rgba(0, 224, 255, 0.4);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(0) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 224, 255, 0.25);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: none;
+    }
+}
+.note-card-enter .card {
+    animation: noteCardEnterAnimation 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+#notes-container .card {
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                box-shadow 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                border-color 0.2s ease-in-out;
+}
+#notes-container .card:hover {
+    transform: translateY(-10px);
+    border-color: #00e0ff;
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.2), 
+                0 12px 30px rgba(0, 0, 0, 0.4);
+}
+#notes-title-input:empty:before {
+    content: attr(placeholder);
+    color: #6c757d;
+    pointer-events: none;
+    display: block;
+}
+
+/* Adjust search input width when panel is shrunk */
+.notes-search-container {
+    transition: width 0.3s ease;
+}
+
+/* List view: Search bar matches card width when panel is shrunk */
+#notes-list-wrapper.shrunk .notes-search-container {
+    width: 100% !important;
+}
+
+/* Profile highlight styles */
+.has-profile {
+    color: #00e0ff !important;
+    border-bottom: 1px dashed #00e0ff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.has-profile:hover {
+    background-color: rgba(0, 224, 255, 0.15);
+    text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+@keyframes profile-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-10px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-5px);
+    }
+}
+
+.profile-highlight {
+    display: inline-block;
+    animation: profile-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ==== COLLAGE CORE – FIX 60/40 & LOCKED DRAG ==== */
+#collage-tiles {
+    display: flex;
+    gap: var(--gutter, 8px);
+    height: var(--canvas-h, 720px);     /* thay bằng chiều cao canvas mặc định */
+}
+
+/* Mỗi tile phải chiếm phần bằng nhau (50/50 với 2 ảnh) */
+#collage-tiles .tile {
+    flex: 1 0 0 !important;              /* khóa 50/50 thật sự */
+    min-width: 0;                        /* ngăn nội dung đẩy tràn */
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius, 10px);
+    border: var(--stroke, 0px) solid var(--stroke-color, #ff3b30);
+    box-sizing: border-box;              /* border không làm "to" hơn ô */
+}
+
+/* Ảnh luôn phủ kín ô; kéo = đổi object-position, không translate */
+#collage-tiles .tile > img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;                   /* luôn phủ, không méo */
+    object-position: 50% 50%;            /* tâm mặc định */
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    cursor: grab;
+}
+
+#collage-tiles .tile > img:active {
+    cursor: grabbing;
+}
+
+/* Mọi overlay/trang trí/pseudo không được chặn chuột */
+#collage-tiles .tile::before,
+#collage-tiles .tile::after,
+#collage-tiles .overlay,
+#collage-tiles .mask,
+#collage-tiles .border-layer {
+    pointer-events: none;
+}
+/* Blemish Tool Custom Cursor */
+#singleImageCanvas.blemish-cursor {
+    cursor: crosshair !important;
+}
+
+/* Custom circle cursor for blemish tool */
+#singleImageCanvas.blemish-cursor:hover {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="12" fill="none" stroke="lime" stroke-width="2"/></svg>') 15 15, crosshair !important;
+}
+
+/* === MXH Notice System CSS === */
+.notice-line {
+    margin-top: 6px;
+    font-weight: 600;
+    color: #ff8c00;
+    font-size: 0.72rem;
+    text-align: center;
+}
+
+.notice-line.expired {
+    color: #ff4d4f;
+}
+
+.notice-expired-blink {
+    animation: border-blink 1s linear infinite;
+    border: 2px solid #ff4d4f !important;
+    border-radius: 10px;
+}
+
+@keyframes border-blink {
+    50% {
+        border-color: transparent;
+    }
+}
+
+
+/* Smart positioning for tooltip */
+.notice-tooltip.tooltip-left {
+    right: auto;
+    left: 8px;
+}
+
+.notice-tooltip.tooltip-right {
+    right: 8px;
+    left: auto;
+}
+
+.notice-tooltip.tooltip-center {
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(-100%) !important;
+}
+
+.notice-tooltip.show {
+    display: block;
+}
+
+
+
+/* === Account Status Styling === */
+/* Available: White (default) */
+.account-status-available {
+    color: #fff !important;
+}
+
+/* Die: Red with X icon */
+.account-status-die {
+    color: #dc3545 !important;
+}
+
+/* Disabled: Orange with slash-circle icon */
+.account-status-disabled {
+    color: #ff8c00 !important;
+}
+
+.status-icon {
+    margin-left: 4px;
+    font-size: 0.8rem;
+}
+
+/* === Compact date inputs & remove spinners (áp dụng cho mọi modal) === */
+.row.g-0 > [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+input[id$="-day"],
+input[id$="-month"] {
+    max-width: 50px !important;
+}
+
+input[id$="-year"] {
+    max-width: 70px !important;
+}
+
+/* Bỏ nút + - (Chrome/Edge) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Bỏ nút + - (Firefox & chuẩn chung) */
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Bo góc liền mạch 3 ô */
+.row.g-0 input[id$="-day"] {
+    border-radius: 0.25rem 0 0 0.25rem !important;
+}
+
+.row.g-0 input[id$="-month"] {
+    border-radius: 0 !important;
+}
+
+.row.g-0 input[id$="-year"] {
+    border-radius: 0 0.25rem 0.25rem 0 !important;
+}
+
+/* === Badge Styles for Group Tabs === */
+.group-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    padding: 0 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+/* Badge for main MXH tab */
+.nav-link {
+    position: relative;
+}
+
+.nav-badge-container {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+}
+
+.nav-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* === OVERRIDE: Flush 3 ô Ngày-Tháng-Năm trong mọi modal MXH === */
+.row.g-0 .col-4 > input.form-control[id$="-day"],
+.row.g-0 .col-4 > input.form-control[id$="-month"],
+.row.g-0 .col-4 > input.form-control[id$="-year"] {
+  width: 100% !important;     /* lấp đầy cột */
+  max-width: none !important; /* hủy 50px/70px cũ */
+}
+
+/* Giữ bo góc liền mạch 3 ô */
+.row.g-0 input[id$="-day"]   { border-radius: .25rem 0 0 .25rem !important; }
+.row.g-0 input[id$="-month"] { border-radius: 0 !important; }
+.row.g-0 input[id$="-year"]  { border-radius: 0 .25rem .25rem 0 !important; }
+
+/* Ẩn nút +/- của input number (đã có thì giữ nguyên) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+/* Card number icon styling */
+.card-number i {
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+/* === MXH state borders (match selected style, keep color on hover) === */
+.mxh-card.mxh-border-green{border:2px solid #2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 14px rgba(47,229,106,.45),0 0 28px rgba(47,229,106,.25)!important}
+.mxh-card.mxh-border-green:hover{border-color:#2fe56a!important;box-shadow:0 0 0 1px rgba(47,229,106,.35),0 0 18px rgba(47,229,106,.55),0 0 34px rgba(47,229,106,.35)!important}
+.mxh-card.mxh-border-green::before{background:radial-gradient(circle,rgba(47,229,106,.18) 0%,rgba(47,229,106,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-red{border:2px solid #ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 14px rgba(255,77,79,.5),0 0 28px rgba(255,77,79,.3)!important}
+.mxh-card.mxh-border-red:hover{border-color:#ff4d4f!important;box-shadow:0 0 0 1px rgba(255,77,79,.35),0 0 18px rgba(255,77,79,.6),0 0 34px rgba(255,77,79,.35)!important}
+.mxh-card.mxh-border-red::before{background:radial-gradient(circle,rgba(255,77,79,.18) 0%,rgba(255,77,79,0) 80%);opacity:1}
+
+.mxh-card.mxh-border-orange{border:2px solid #ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 14px rgba(255,165,0,.5),0 0 28px rgba(255,165,0,.3)!important}
+.mxh-card.mxh-border-orange:hover{border-color:#ffa500!important;box-shadow:0 0 0 1px rgba(255,165,0,.35),0 0 18px rgba(255,165,0,.6),0 0 34px rgba(255,165,0,.35)!important}
+.mxh-card.mxh-border-orange::before{background:radial-gradient(circle,rgba(255,165,0,.18) 0%,rgba(255,165,0,0) 80%);opacity:1}
+
+/* Trắng sáng (không animation) */
+.mxh-card.mxh-border-white{border:2px solid #fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 0 14px rgba(255,255,255,.35),0 0 28px rgba(255,255,255,.2)!important}
+.mxh-card.mxh-border-white:hover{border-color:#fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.3),0 0 18px rgba(255,255,255,.45),0 0 34px rgba(255,255,255,.28)!important}
+.mxh-card.mxh-border-white::before{background:radial-gradient(circle,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 80%);opacity:1}
+
+/* Ưu tiên màu: đỏ > cam > xanh > trắng */
+.mxh-card.mxh-border-red{z-index:1}
+.mxh-card.mxh-border-orange:not(.mxh-border-red){z-index:1}
+.mxh-card.mxh-border-green:not(.mxh-border-red):not(.mxh-border-orange){z-index:1}
+.mxh-card.mxh-border-red.mxh-border-orange{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-red.mxh-border-green{border-color:#ff4d4f!important}
+.mxh-card.mxh-border-orange.mxh-border-green{border-color:#ffa500!important}
+
+/* Border classes for platform-based status */
+.mxh-card.mxh-border-red {
+    border-left: 4px solid #ff4d4f !important;
+}
+
+.mxh-card.mxh-border-orange {
+    border-left: 4px solid #ffa500 !important;
+}
+
+.mxh-card.mxh-border-green {
+    border-left: 4px solid #52c41a !important;
+}
+
+.mxh-card.mxh-border-white {
+    border-left: 4px solid #f0f0f0 !important;
+    background-color: #fafafa !important;
+}
+
+/* Grid layout for MXH cards */
+#mxh-cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#mxh-cards-grid > .col {
+    flex: 0 0 calc(100% / var(--cardsPerRow, 12));
+    max-width: calc(100% / var(--cardsPerRow, 12));
+}
+
+
+/* Blink animation for anniversary cards without Hong Kong number */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+/* Editable field styling */
+.editable-field {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.editable-field:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    padding: 2px 4px;
+}
+
+/* Notice system styling */
+.notice-line {
+    background-color: #fd7e14;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    text-align: center;
+    margin: 2px 0;
+}
+
+.notice-line.expired {
+    background-color: #dc3545;
+}
+
+
+
+
+.notice-expired-blink {
+    animation: notice-blink 1s infinite;
+}
+
+@keyframes notice-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+/* ===== START: RESTORED MXH NEON BORDERS & HOVER EFFECTS ===== */
+
+/* Base hover effect for all cards, bringing back the neon glow */
+.tool-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: #00e0ff;
+}
+
+.tool-card::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 80%; height: 80%;
+    background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 0;
+}
+
+.tool-card:hover::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Specific Neon Border Styles for MXH Cards */
+.mxh-card.mxh-border-green {
+    border: 2px solid #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 14px rgba(47,229,106,.45), 0 0 28px rgba(47,229,106,.25) !important;
+}
+.mxh-card.mxh-border-green:hover {
+    border-color: #2fe56a !important;
+    box-shadow: 0 0 0 1px rgba(47,229,106,.35), 0 0 18px rgba(47,229,106,.55), 0 0 34px rgba(47,229,106,.35) !important;
+}
+.mxh-card.mxh-border-green::before {
+    background: radial-gradient(circle, rgba(47,229,106,.18) 0%, rgba(47,229,106,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-red {
+    border: 2px solid #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 14px rgba(255,77,79,.5), 0 0 28px rgba(255,77,79,.3) !important;
+}
+.mxh-card.mxh-border-red:hover {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 1px rgba(255,77,79,.35), 0 0 18px rgba(255,77,79,.6), 0 0 34px rgba(255,77,79,.35) !important;
+}
+.mxh-card.mxh-border-red::before {
+    background: radial-gradient(circle, rgba(255,77,79,.18) 0%, rgba(255,77,79,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-orange {
+    border: 2px solid #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 14px rgba(255,165,0,.5), 0 0 28px rgba(255,165,0,.3) !important;
+}
+.mxh-card.mxh-border-orange:hover {
+    border-color: #ffa500 !important;
+    box-shadow: 0 0 0 1px rgba(255,165,0,.35), 0 0 18px rgba(255,165,0,.6), 0 0 34px rgba(255,165,0,.35) !important;
+}
+.mxh-card.mxh-border-orange::before {
+    background: radial-gradient(circle, rgba(255,165,0,.18) 0%, rgba(255,165,0,0) 80%);
+    opacity: 1;
+}
+
+.mxh-card.mxh-border-white {
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 14px rgba(255,255,255,.35), 0 0 28px rgba(255,255,255,.2) !important;
+}
+.mxh-card.mxh-border-white:hover {
+    border-color: #fff !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.3), 0 0 18px rgba(255,255,255,.45), 0 0 34px rgba(255,255,255,.28) !important;
+}
+.mxh-card.mxh-border-white::before {
+    background: radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,0) 80%);
+    opacity: 1;
+}
+/* ===== END: RESTORED MXH STYLES ===== */
+
+.card-number { letter-spacing: .2px; }
+
+.mxh-card.mxh-border-white{background-color:var(--card-bg)!important;border-left:none!important}
+
+/* MXH notice preview – ghim ở đáy card */
+.mxh-card .card-body{ position:relative }
+.notice-line:hover + .notice-tooltip{ display:block }
+
+.notice-tooltip.tooltip-center{right:auto!important;left:50%!important;top:-8px!important;transform:translate(-50%,-100%)!important}
+
+/* Phone row */
+.mxh-card .phone-line{display:flex;align-items:center;justify-content:center;gap:.35rem;line-height:1}
+.mxh-card .phone-line .bi-telephone-fill{font-size:.9rem;color:#ff4d6d} /* đỏ tươi hơn */
+
+/* Centered QR */
+/* QR row – căn giữa theo hàng */
+.qr-row{display:flex;align-items:center;justify-content:center;gap:.35rem;margin-top:.15rem}
+.qr-row i{font-size:.95rem}
+.qr-ready i, .qr-ready .qr-text { color:#07c160; }   /* xanh */
+.qr-cool  i, .qr-cool  .qr-text { color:#ff8c00; }   /* cam + countdown */
+.qr-exhausted i, .qr-exhausted .qr-text { color:#ff4d4f; } /* đỏ khi 3/3 */
+
+.mxh-card .card-body { position: relative; }
+
+/* Tooltip gọn, theo nội dung - CSS duy nhất */
+.notice-tooltip{
+  position:absolute; top:-8px; left:50%;
+  transform:translate(-50%,-100%);
+  background:#0f0f0f; border:1px solid rgba(255,255,255,.12);
+  border-radius:8px; padding:.25rem .4rem; font-size:.74rem;
+  width:auto; max-width:70%; display:none; pointer-events:none;
+  box-shadow:0 6px 18px rgba(0,0,0,.45); text-align:center;
+  min-height: auto; /* Cho phép tự động điều chỉnh chiều cao */
+  line-height: 1.2;
+}
+/* Title: chỉ 1 dòng, không margin */
+.notice-tooltip-title{ 
+  white-space:nowrap; 
+  overflow:hidden; 
+  text-overflow:ellipsis;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+}
+/* Note: hiển thị khi có nội dung, ẩn khi rỗng */
+.notice-tooltip-note{ 
+  font-size: 0.7rem;
+  line-height: 1.3;
+  margin: 0.2rem 0 0 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ccc;
+}
+.notice-tooltip-note:empty{ 
+  display:none !important; 
+}
+.notice-line:hover + .notice-tooltip{ display:block; }
+

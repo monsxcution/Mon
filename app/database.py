@@ -53,14 +53,7 @@ def init_database():
         )
     """)
     
-    # Insert default group if none exists
-    cursor.execute("SELECT COUNT(*) FROM mxh_groups")
-    group_count = cursor.fetchone()[0]
-    if group_count == 0:
-        cursor.execute(
-            "INSERT INTO mxh_groups (name, color, icon, created_at) VALUES (?, ?, ?, ?)",
-            ("Default", "#007bff", "bi-share-fill", datetime.now().isoformat())
-        )
+    # Groups will be created dynamically by the frontend for each platform
     
     # Bảng thẻ MXH (cha) - corrected table name
     cursor.execute("""
