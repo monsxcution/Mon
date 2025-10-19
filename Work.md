@@ -46,9 +46,9 @@ Mỗi giai đoạn là một đơn vị công việc hoàn chỉnh và có thể
 **THAY ĐỔI YÊU CẦU:**
 1. Lấy tất cả các card từ `mxh_cards`
 2. Lấy **TẤT CẢ** các tài khoản từ `mxh_accounts`
-3. Với mỗi card, tạo một khóa (key) mới là `sub_accounts` có giá trị là một mảng (array)
-4. Đưa các đối tượng tài khoản thuộc về card đó vào mảng `sub_accounts` tương ứng
-5. Phản hồi JSON cuối cùng phải là một mảng các đối tượng card, mỗi đối tượng chứa danh sách `sub_accounts` của nó
+3. Với mỗi card, tạo một khóa (key) mới là `accounts` có giá trị là một mảng (array)
+4. Đưa các đối tượng tài khoản thuộc về card đó vào mảng `accounts` tương ứng
+5. Phản hồi JSON cuối cùng phải là một mảng các đối tượng card, mỗi đối tượng chứa danh sách `accounts` của nó
 
 **TÀI LIỆU THAM KHẢO:** Sử dụng logic từ file cũ `MXH_Old/mxh_routes.py.txt` (hàm `mxh_cards_and_sub_accounts`).
 
@@ -78,7 +78,7 @@ Mỗi giai đoạn là một đơn vị công việc hoàn chỉnh và có thể
    - Sau khi fetch xong, gọi `renderMXHAccounts()`
 4. **Hàm `renderMXHAccounts()`**:
    - Lặp qua `mxhCards`
-   - Với mỗi card, tìm tài khoản chính (`is_primary: 1`) trong mảng `sub_accounts`
+   - Với mỗi card, tìm tài khoản chính (`is_primary: 1`) trong mảng `accounts`
    - Sử dụng dữ liệu của tài khoản đó để xây dựng HTML cho card
    - Chèn HTML cuối cùng vào phần tử có id là `#mxh-accounts-container`
 
@@ -173,7 +173,7 @@ Khi nhận được phản hồi thành công từ API:
 
 ### **📋 CÁC TÍNH NĂNG TIẾP THEO CẦN TRIỂN KHAI THEO THỨ TỰ:**
 
-- **Tính năng:** Submenu "Tài khoản" (liệt kê tất cả sub_accounts)
+- **Tính năng:** Submenu "Tài khoản" (liệt kê tất cả accounts)
 - **Tính năng:** Submenu "Trạng Thái" (Available, Die, Disabled)  
 - **Tính năng:** Submenu "Quét" (Đánh dấu Đã Quét, Đặt lại Quét)
 - **Tính năng:** "Thông báo" (Đặt/Xóa thông báo)
