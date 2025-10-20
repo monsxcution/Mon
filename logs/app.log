@@ -63,3 +63,495 @@
 [2025-10-20 22:20:50] [INFO] [app] === MonDashboard Starting ===
 [2025-10-20 22:20:50] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
 [2025-10-20 22:20:50] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 00:08:33] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 00:08:33] [INFO] [app] Log Level: INFO
+[2025-10-21 00:08:33] [INFO] [app] App Log: logs\app.log
+[2025-10-21 00:08:33] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 00:08:33] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 00:08:33] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 00:08:33] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 00:30:45] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 00:30:45] [INFO] [app] Log Level: INFO
+[2025-10-21 00:30:45] [INFO] [app] App Log: logs\app.log
+[2025-10-21 00:30:45] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 00:30:45] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 00:30:45] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 00:30:45] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 00:31:27] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 00:31:27] [INFO] [app] Log Level: INFO
+[2025-10-21 00:31:27] [INFO] [app] App Log: logs\app.log
+[2025-10-21 00:31:27] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 00:31:27] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 00:31:28] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 00:31:28] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 00:50:02] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 00:50:02] [INFO] [app] Log Level: INFO
+[2025-10-21 00:50:02] [INFO] [app] App Log: logs\app.log
+[2025-10-21 00:50:02] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 00:50:02] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 00:50:02] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 00:50:02] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 00:51:30] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 00:51:30] [INFO] [app] Log Level: INFO
+[2025-10-21 00:51:30] [INFO] [app] App Log: logs\app.log
+[2025-10-21 00:51:30] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 00:51:30] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 00:51:30] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 00:51:30] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 02:07:46] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 02:07:46] [INFO] [app] Log Level: INFO
+[2025-10-21 02:07:46] [INFO] [app] App Log: logs\app.log
+[2025-10-21 02:07:46] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 02:07:46] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 02:07:46] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 02:07:46] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 02:28:13] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 02:28:13] [INFO] [app] Log Level: INFO
+[2025-10-21 02:28:13] [INFO] [app] App Log: logs\app.log
+[2025-10-21 02:28:13] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 02:28:13] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 02:28:13] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 02:28:13] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 02:44:17] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 02:44:17] [INFO] [app] Log Level: INFO
+[2025-10-21 02:44:17] [INFO] [app] App Log: logs\app.log
+[2025-10-21 02:44:17] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 02:44:17] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 02:44:17] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 02:44:17] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 03:12:30] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 03:12:30] [INFO] [app] Log Level: INFO
+[2025-10-21 03:12:30] [INFO] [app] App Log: logs\app.log
+[2025-10-21 03:12:30] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 03:12:30] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 03:12:31] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 03:12:31] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 03:38:35] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 03:38:35] [INFO] [app] Log Level: INFO
+[2025-10-21 03:38:35] [INFO] [app] App Log: logs\app.log
+[2025-10-21 03:38:35] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 03:38:35] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 03:38:36] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:38:36] [INFO] [app] [CDP] Bridge started on port 9222
+[2025-10-21 03:38:38] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D414043620>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:38:38] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:38:41] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:38:43] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415D896D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:38:43] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:38:46] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:38:48] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415D8A0D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:38:48] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:38:51] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:38:53] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415D6A650>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:38:53] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:38:56] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:38:58] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415D6AEA0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:38:58] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:01] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:03] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD9130>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:03] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:06] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:08] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2BE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:08] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:11] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:13] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD3460>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:13] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:16] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:18] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD19D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:18] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:21] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:23] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD28B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:23] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:26] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:28] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD27A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:28] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:31] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:33] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2CF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:33] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:36] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:39] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2250>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:39] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:42] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:44] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2360>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:44] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:47] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:49] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:49] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:52] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:54] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1E10>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:54] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:39:57] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:39:59] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:39:59] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:02] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:04] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:04] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:07] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:09] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD17B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:09] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:12] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:14] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD16A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:14] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:17] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:19] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD16A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:19] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:22] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:24] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD17B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:24] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:27] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:29] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:29] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:32] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:34] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:34] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:37] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:39] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD1E10>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:39] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:42] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:44] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001D415DD2030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:44] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:47] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:51] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 03:40:51] [INFO] [app] Log Level: INFO
+[2025-10-21 03:40:51] [INFO] [app] App Log: logs\app.log
+[2025-10-21 03:40:51] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 03:40:51] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 03:40:51] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:51] [INFO] [app] [CDP] Bridge started on port 9222
+[2025-10-21 03:40:53] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CA253620>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:53] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:40:56] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:40:58] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFE0A50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:40:58] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:01] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:03] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFE1590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:03] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:06] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:08] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBF92520>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:08] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:11] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:13] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBF92D70>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:13] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:16] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:18] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CC161490>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:18] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:21] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:23] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:23] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:26] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:28] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:28] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:31] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:33] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDAAD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:33] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:36] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:38] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA250>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:38] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:41] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:43] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:43] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:46] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:48] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:48] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:51] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:53] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:53] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:41:56] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:41:58] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:41:58] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:01] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:03] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:03] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:06] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:09] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:09] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:12] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:14] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:14] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:17] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:19] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD97B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:19] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:22] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:24] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:24] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:27] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:29] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9370>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:29] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:32] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:34] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9150>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:34] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:37] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:39] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:39] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:42] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:44] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8C00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:44] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:47] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:49] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD88D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:49] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:52] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:54] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8C00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:54] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:42:57] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:42:59] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:42:59] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:02] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:04] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9150>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:04] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:07] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:09] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9370>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:09] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:12] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:14] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:14] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:17] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:19] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:19] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:22] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:24] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:24] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:27] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:29] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:29] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:32] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:34] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:34] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:37] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:39] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:39] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:42] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:44] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:44] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:47] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:49] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:49] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:52] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:54] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:54] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:43:57] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:43:59] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA250>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:43:59] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:02] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:04] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDAAD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:04] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:07] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:09] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD89E0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:09] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:12] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:14] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA360>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:14] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:17] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:20] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA580>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:20] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:23] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:25] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA690>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:25] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:28] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:30] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA9C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:30] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:33] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:35] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD99D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:35] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:38] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:40] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9D00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:40] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:43] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:45] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9E10>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:45] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:48] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:50] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA140>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:50] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:53] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:44:55] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD98C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:44:55] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:44:58] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:00] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD97B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:00] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:03] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:05] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9260>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:05] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:08] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:10] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9480>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:10] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:13] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:15] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8F30>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:15] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:18] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:20] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8E20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:20] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:23] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:25] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8D10>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:25] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:28] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:30] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD88D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:30] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:33] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:35] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD87C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:35] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:38] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:40] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8C00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:40] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:43] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:45] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:45] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:48] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:50] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9150>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:50] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:53] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:45:55] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9370>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:45:55] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:45:58] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:00] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:00] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:03] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:05] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:05] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:08] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:10] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:10] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:13] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:16] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:16] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:19] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:21] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:21] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:24] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:26] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:26] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:29] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:31] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:31] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:34] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:36] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:36] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:39] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:41] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:41] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:44] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:46] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA250>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:46] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:49] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:51] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDAAD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:51] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:54] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:46:56] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA250>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:46:56] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:46:59] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:01] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:01] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:04] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:06] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:06] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:09] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:11] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:11] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:14] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:16] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:16] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:19] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:21] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:21] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:24] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:26] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:26] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:29] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:31] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:31] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:34] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:36] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:36] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:39] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:41] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:41] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:44] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:46] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9370>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:46] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:49] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:51] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9150>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:51] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:54] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:47:56] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:47:56] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:47:59] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:02] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8C00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:02] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:05] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:07] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD87C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:07] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:10] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:12] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD87C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:12] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:15] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:17] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD8C00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:17] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:20] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:22] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:22] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:25] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:27] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9150>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:27] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:30] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:32] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9370>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:32] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:35] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:37] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:37] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:40] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:42] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:42] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:45] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:47] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:47] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:50] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:52] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA030>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:52] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:48:55] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:48:57] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:48:57] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:00] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:02] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:02] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:05] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:07] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:07] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:10] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:12] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:12] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:15] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:17] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:17] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:20] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:22] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA470>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:22] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:25] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:27] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA8B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:27] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:30] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:31] [INFO] [app] === Logging System Initialized ===
+[2025-10-21 03:49:31] [INFO] [app] Log Level: INFO
+[2025-10-21 03:49:31] [INFO] [app] App Log: logs\app.log
+[2025-10-21 03:49:31] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-21 03:49:31] [INFO] [app] === MonDashboard Starting ===
+[2025-10-21 03:49:31] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-21 03:49:31] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-21 03:49:32] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFDA7A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:32] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:35] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:37] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9AE0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:37] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:40] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:42] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9BF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:42] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:45] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:47] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9D00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:47] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:50] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:53] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9F20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:53] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:49:56] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:49:58] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD9590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:49:58] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:50:01] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...
+[2025-10-21 03:50:03] [WARNING] [app] [CDP] ⚠️ Failed to connect: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000201CBFD96A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[2025-10-21 03:50:03] [WARNING] [app] [CDP] Make sure Chrome is running with: --remote-debugging-port=9222
+[2025-10-21 03:50:06] [INFO] [app] [CDP] Connecting to Chrome at 127.0.0.1:9222...

@@ -138,7 +138,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h10 class="modal-title"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h10>
+                <h5 class="modal-title"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -150,9 +150,9 @@
                     <div class="col-auto">
                         <label class="form-label mb-1">Ngày Tạo</label>
                         <div class="d-flex gap-1">
-                            <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="19" min="1" max="31" maxlength="2" style="width: 50px" required>
+                            <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="19" min="1" max="31" maxlength="2" style="width:50px" required>
                             <input type="number" class="form-control form-control-sm" id="wechat-month" placeholder="10" min="1" max="12" maxlength="2" style="width:50px" required>
-                            <input type="number" class="form-control form-control-sm" id="wechat-year" placeholder="2025" min="2020" max="9999" maxlength="4" style="width:70px" required>
+                            <input type="number" class="form-control form-control-sm" id="wechat-year" placeholder="2025" min="2020" max="2030" maxlength="4" style="width:70px" required>
                         </div>
                     </div>
                     <div class="col-auto">
@@ -267,7 +267,7 @@
                 <div class="row g-2 align-items-end mb-3">
                     <div class="col-8">
                         <label for="noticeTitle" class="form-label">Tiêu Đề</label>
-                        <input type="text" class="form-control" id="noticeTitle" placeholder="Nhập tiêu đề..." value="Thông báo">
+                        <input type="text" class="form-control" id="noticeTitle" placeholder="Câm" value="Câm">
                     </div>
                     <div class="col-4">
                         <label for="noticeDays" class="form-label">Số ngày</label>
@@ -316,19 +316,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h10 class="modal-title"><i class="bi bi-arrow-clockwise me-2 text-danger"></i>Xác Nhận Reset Card</h10>
+                <h5 class="modal-title"><i class="bi bi-arrow-clockwise me-2 text-danger"></i>Xác Nhận Reset Card</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc chắn muốn reset card này không?</p>
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Lưu ý:</strong> Xóa tất cả thông tin,lịch sử card:
-                    <ul class="mb-10 mt-10">
+                    <strong>Lưu ý:</strong> Hành động này sẽ xóa tất cả thông tin và lịch sử của card:
+                    <ul class="mb-0 mt-2">
                         <li>Thông tin tài khoản chính và phụ</li>
                         <li>Lịch sử quét QR</li>
                         <li>Trạng thái vô hiệu hóa</li>
-                        <li>Lịch sử vi phạm,cứu tài khoản</li>
+                        <li>Lịch sử vi phạm và cứu tài khoản</li>
                         <li>Tất cả dữ liệu khác</li>
                     </ul>
                 </div>
@@ -453,18 +453,6 @@
 .mxh-submenu .mxh-menu-item {
     padding: 6px 10px;
     font-size: 0.9em;
-}
-
-/* Nested submenu (submenu bên trong submenu) */
-.mxh-submenu .mxh-menu-item.has-submenu > .mxh-submenu {
-    position: absolute;
-    left: calc(100% - 2px);
-    top: -4px;
-    display: none;
-}
-
-.mxh-submenu .mxh-menu-item.has-submenu:hover > .mxh-submenu {
-    display: block !important;
 }
 
 /* ========================================
@@ -1021,15 +1009,12 @@
         // ===== Hiển thị khi disabled ======
         let disabledInfo = '';
         const isDisabled = account.status === 'disabled';
-        if (isDisabled && platform === 'wechat') {
-            let disableDays = 0;
-            if (account.die_date) {
-                disableDays = Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24));
-            }
+        if (isDisabled && account.die_date && platform === 'wechat') {
+            const disableDays = Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24));
             disabledInfo = `
                 <div style="font-size: 0.75rem; margin-top: 4px;">
                     <div class="d-flex align-items-center justify-content-between">
-                        <small class="text-warning">Ngày: ${disableDays}</small>
+                        <small class="text-danger">Ngày: ${disableDays}</small>
                         <small>Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
                     </div>
                 </div>
@@ -1208,15 +1193,9 @@
 
     // Helper: Get border class based on account status
     function getAccountBorderClass(account) {
-        const status = String(account.status || '').toLowerCase();
+        const isDie = ['disabled', 'die'].includes(String(account.status || '').toLowerCase()) || !!account.die_date;
         
-        // Disabled = màu cam
-        if (status === 'disabled') {
-            return 'mxh-border-orange';
-        }
-        
-        // Die = màu đỏ
-        if (status === 'die' || !!account.die_date) {
+        if (isDie) {
             return 'mxh-border-red';
         }
 
@@ -1352,16 +1331,14 @@
                 <div class="mxh-menu-item has-submenu wechat-only">
                     <span>Trạng Thái</span>
                     <div class="mxh-submenu">
-                        ${currentStatus === 'disabled' ? `
-                            <!-- Khi đã disabled, chỉ hiển thị 2 option cứu -->
-                            <div class="mxh-menu-item" data-action="rescue-success">Được Cứu</div>
-                            <div class="mxh-menu-item" data-action="rescue-failed">Cứu Thất Bại</div>
-                        ` : `
-                            <!-- Khi chưa disabled, hiển thị 3 trạng thái bình thường -->
-                            <div class="mxh-menu-item" data-action="status-active">${currentStatus === 'active' ? '✓ ' : ''}Active</div>
-                            <div class="mxh-menu-item" data-action="status-disabled">Disabled</div>
-                            <div class="mxh-menu-item" data-action="status-die">${currentStatus === 'die' ? '✓ ' : ''}Die</div>
-                        `}
+                        <div class="mxh-menu-item" data-action="status-active">${currentStatus === 'active' ? '✓ ' : ''}Active</div>
+                        <div class="mxh-menu-item has-submenu" data-action="status-disabled">${currentStatus === 'disabled' ? '✓ ' : ''}Disabled
+                            <div class="mxh-submenu">
+                                <div class="mxh-menu-item" data-action="rescue-success">Được Cứu</div>
+                                <div class="mxh-menu-item" data-action="rescue-failed">Thất Bại</div>
+                            </div>
+                        </div>
+                        <div class="mxh-menu-item" data-action="status-die">${currentStatus === 'die' ? '✓ ' : ''}Die</div>
                     </div>
                 </div>
                 ` : ''}
@@ -2008,29 +1985,6 @@
         }
     }
 
-    // Open modal for editing account (WeChat or Generic)
-    function openAccountModalForEdit(accountId) {
-        currentContextAccountId = accountId;
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        
-        if (!account) return;
-        
-        // Nếu là WeChat → mở WeChat modal, không thì mở generic modal
-        if (account.platform === 'wechat') {
-            openWeChatModal(accountId);
-        } else {
-            // Open generic modal for other platforms
-            document.getElementById('generic-username').value = account.login_username || '';
-            document.getElementById('generic-password').value = account.login_password || '';
-            document.getElementById('generic-display-name').value = account.username || '';
-            document.getElementById('generic-phone').value = account.phone || '';
-            document.getElementById('generic-url').value = account.url || '';
-
-            const modal = new bootstrap.Modal(document.getElementById('generic-account-modal'));
-            modal.show();
-        }
-    }
-
     async function deleteAccount(accountId) {
         // Instant local update - remove from array
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
@@ -2080,7 +2034,8 @@
                 die_date: null,
                 rescue_count: 0,
                 rescue_success_count: 0,
-                notice: null
+                notice: null,
+                muted_until: null
             };
         }
         renderMXHAccounts();
@@ -2172,9 +2127,29 @@
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus),
-            wechat_status: selectedStatus
+            status: selectedStatus === 'muted' ? mxhAccounts.find(a=>a.id === currentContextAccountId).status : (selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus)), // Logic: 'available'->'active', 'die'->'disabled', 'muted' keeps previous status
+            wechat_status: selectedStatus === 'muted' ? mxhAccounts.find(a=>a.id === currentContextAccountId).wechat_status : selectedStatus // Logic: Sets 'wechat_status' to the exact selected value, unless muted (then keep previous wechat_status)
         };
+
+        // Add mute/unmute logic for the API call if status is 'muted'
+        if(selectedStatus === 'muted') {
+            await fetch(`/mxh/api/accounts/${currentContextAccountId}/mute`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}) 
+            });
+        } else {
+            // Unmute if previously muted and new status is not muted
+            const account = mxhAccounts.find(a=>a.id === currentContextAccountId);
+            const isMuted = account.muted_until && new Date(account.muted_until) > new Date();
+            if(isMuted) {
+                await fetch(`/mxh/api/accounts/${currentContextAccountId}/unmute`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) 
+                });
+            }
+        }
 
         bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
         renderMXHAccounts();
@@ -2404,7 +2379,10 @@
         document.getElementById('wechat-month').value = account.wechat_created_month || 1;
         document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
         
-        const primaryStatus = account.status || 'active';
+        let primaryStatus = account.status || 'active';
+        if (account.muted_until && new Date(account.muted_until) > new Date()) {
+            primaryStatus = 'muted';
+        }
         document.getElementById('wechat-status').value = primaryStatus;
         
         const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));

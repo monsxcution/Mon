@@ -417,180 +417,6 @@ def manage_sub_account(sub_account_id):
         conn.close()
 
 
-# Refactored endpoints to target sub-accounts
-@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/scan", methods=["POST"])
-def scan_sub_account(sub_account_id):
-    conn = get_db_connection()
-    try:
-        data = request.get_json() or {}
-        now_iso = datetime.now().isoformat()
-        if data.get("reset"):
-            conn.execute(
-                "UPDATE mxh_accounts SET wechat_scan_count = 0, wechat_last_scan_date = NULL, updated_at = ? WHERE id = ?",
-                (now_iso, sub_account_id),
-            )
-        else:
-            conn.execute(
-                "UPDATE mxh_accounts SET wechat_scan_count = wechat_scan_count + 1, wechat_last_scan_date = ?, updated_at = ? WHERE id = ?",
-                (now_iso, now_iso, sub_account_id),
-            )
-        conn.commit()
-        return jsonify({"message": "Scan status updated"})
-    finally:
-        conn.close()
-
-
-@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/toggle-status", methods=["POST"])
-def toggle_sub_account_status(sub_account_id):
-    conn = get_db_connection()
-    try:
-        now_iso = datetime.now().isoformat()
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        conn.execute(
-            "UPDATE mxh_accounts SET status = CASE WHEN status = 'disabled' THEN 'active' ELSE 'disabled' END, die_date = CASE WHEN status = 'disabled' THEN NULL ELSE ? END, updated_at = ? WHERE id = ?",
-            (now_str, now_iso, sub_account_id),
-        )
-        conn.commit()
-        return jsonify({"message": "Status toggled"})
-    finally:
-        conn.close()
-
-
-@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/rescue", methods=["POST"])
-def rescue_sub_account(sub_account_id):
-    conn = get_db_connection()
-    try:
-        result = request.get_json().get("result")
-        now_iso = datetime.now().isoformat()
-        if result == "success":
-            conn.execute(
-                "UPDATE mxh_accounts SET status = 'active', die_date = NULL, rescue_success_count = rescue_success_count + 1, updated_at = ? WHERE id = ?",
-                (now_iso, sub_account_id),
-            )
-            message = "Rescued successfully"
-        elif result == "failed":
-            conn.execute(
-                "UPDATE mxh_accounts SET rescue_count = rescue_count + 1, updated_at = ? WHERE id = ?",
-                (now_iso, sub_account_id),
-            )
-            message = "Rescue attempt failed"
-        else:
-            return jsonify({"error": "Invalid result"}), 400
-        conn.commit()
-        return jsonify({"message": message})
-    finally:
-        conn.close()
-
-
-@mxh_bp.route("/api/sub_accounts/<int:sub_account_id>/mark-die", methods=["POST"])
-def mark_sub_account_die(sub_account_id):
-    conn = get_db_connection()
-    try:
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_iso = datetime.now().isoformat()
-        conn.execute(
-            "UPDATE mxh_accounts SET status = 'disabled', die_date = ?, rescue_count = 0, updated_at = ? WHERE id = ?",
-            (now_str, now_iso, sub_account_id),
-        )
-        conn.commit()
-        return jsonify({"message": "Marked as died", "die_date": now_str})
-    finally:
-        conn.close()
-
-
-@mxh_bp.route(
-    "/api/sub_accounts/<int:sub_account_id>/notice", methods=["PUT", "DELETE"]
-)
-def notice_sub_account(sub_account_id):
-    conn = get_db_connection()
-    try:
-        if request.method == "PUT":
-            data = request.get_json()
-            notice = json.dumps(
-                {
-                    "enabled": True,
-                    "title": data.get("title"),
-                    "days": data.get("days"),
-                    "note": data.get("note"),
-                    "start_at": datetime.now(timezone.utc)
-                    .isoformat(timespec="milliseconds")
-                    .replace("+00:00", "Z"),
-                }
-            )
-            conn.execute(
-                "UPDATE mxh_accounts SET notice = ?, updated_at = ? WHERE id = ?",
-                (notice, datetime.now().isoformat(), sub_account_id),
-            )
-            return jsonify({"message": "Notice set", "notice": json.loads(notice)})
-        elif request.method == "DELETE":
-            notice = json.dumps(
-                {"enabled": False, "title": "", "days": 0, "note": "", "start_at": None}
-            )
-            conn.execute(
-                "UPDATE mxh_accounts SET notice = ?, updated_at = ? WHERE id = ?",
-                (notice, datetime.now().isoformat(), sub_account_id),
-            )
-            return jsonify({"message": "Notice cleared"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
-
-# Frontend compatibility routes - handle /accounts/<id>/quick-update calls
-@mxh_bp.route("/api/accounts/<int:account_id>/quick-update", methods=["POST"])
-def quick_update_account(account_id):
-    """Handle quick update requests from frontend that calls /accounts/<id>/quick-update"""
-    conn = get_db_connection()
-    try:
-        data = request.get_json() or {}
-        field = data.get("field")
-        value = data.get("value")
-
-        if not field:
-            return jsonify({"error": "field is required"}), 400
-
-        # Allowed fields for quick update
-        allowed_fields = {
-            "username",
-            "phone",
-            "url",
-            "login_username",
-            "login_password",
-            "account_name",
-            "status",
-            "wechat_created_day",
-            "wechat_created_month",
-            "wechat_created_year",
-            "wechat_status",
-            "muted_until",
-        }
-
-        if field not in allowed_fields:
-            return jsonify({"error": f"field '{field}' not allowed"}), 400
-
-        now_iso = datetime.now().isoformat()
-        conn.execute(
-            f"UPDATE mxh_accounts SET {field} = ?, updated_at = ? WHERE id = ?",
-            (value, now_iso, account_id),
-        )
-        conn.commit()
-
-        # Return updated record
-        updated_record = conn.execute(
-            "SELECT * FROM mxh_accounts WHERE id = ?", (account_id,)
-        ).fetchone()
-        if not updated_record:
-            return jsonify({"error": "Account not found"}), 404
-
-        return jsonify(dict(updated_record))
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
-
-
 # Alias cho các thao tác account mới (theo yêu cầu chuẩn hóa API)
 def _now_iso():
     return datetime.now(timezone.utc).astimezone().isoformat()
@@ -677,7 +503,7 @@ def acc_rescue(account_id):
             conn.execute("""
                 UPDATE mxh_accounts
                 SET status = 'active',
-                    rescue_count = COALESCE(rescue_count,0) + 1,
+                    die_date = NULL,
                     rescue_success_count = COALESCE(rescue_success_count,0) + 1,
                     updated_at = ?
                 WHERE id = ?
@@ -692,7 +518,19 @@ def acc_rescue(account_id):
             """, (now_iso, account_id))
             msg = "Rescue attempt recorded"
         conn.commit()
-        return jsonify({"message": msg})
+        
+        # Return updated account data as source of truth
+        updated_account = conn.execute("""
+            SELECT a.*, c.card_name, c.group_id, c.platform 
+            FROM mxh_accounts a 
+            JOIN mxh_cards c ON a.card_id = c.id 
+            WHERE a.id = ?
+        """, (account_id,)).fetchone()
+        
+        if updated_account:
+            return jsonify(dict(updated_account))
+        else:
+            return jsonify({"message": msg})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
