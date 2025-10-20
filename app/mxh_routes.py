@@ -623,19 +623,42 @@ def acc_toggle_status(account_id):
 
 @mxh_bp.route("/api/accounts/<int:account_id>/scan", methods=["POST"])
 def acc_scan(account_id):
-    """POST /mxh/api/accounts/<account_id>/scan - ghi nhận scan"""
+    """POST /mxh/api/accounts/<account_id>/scan - ghi nhận hoặc reset scan"""
     conn = get_db_connection()
     try:
+        # Đọc dữ liệu JSON từ body của request
+        data = request.get_json(silent=True) or {}
         now_iso = _now_iso()
-        conn.execute("""
-            UPDATE mxh_accounts
-            SET wechat_scan_count = COALESCE(wechat_scan_count,0) + 1,
-                wechat_last_scan_date = ?,
-                updated_at = ?
-            WHERE id = ?
-        """, (now_iso, now_iso, account_id))
+
+        if data.get("reset"):
+            # Reset lượt quét
+            conn.execute(
+                """
+                UPDATE mxh_accounts
+                SET wechat_scan_count = 0,
+                    wechat_last_scan_date = NULL,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (now_iso, account_id),
+            )
+            message = "Scan count reset"
+        else:
+            # Tăng lượt quét
+            conn.execute(
+                """
+                UPDATE mxh_accounts
+                SET wechat_scan_count = COALESCE(wechat_scan_count, 0) + 1,
+                    wechat_last_scan_date = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (now_iso, now_iso, account_id),
+            )
+            message = "Scan recorded"
+
         conn.commit()
-        return jsonify({"message": "Scan recorded"})
+        return jsonify({"message": message})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
