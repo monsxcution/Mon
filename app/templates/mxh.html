@@ -123,7 +123,7 @@
         </div>
     </div>
 </div>
-<!-- MXH Background Context Menu -->
+<!-- MXH Background Context Menu -->#wechat-context-menu
 <div id="mxh-background-context-menu" class="custom-context-menu" style="display: none;">
     <div class="menu-item" data-action="view-mode">
         <i class="bi bi-grid-3x3-gap me-2"></i> Chế Độ Xem
@@ -1236,64 +1236,40 @@
     }
 
     // === NEW: Flip Card Function ===
+    /**
+     * Lật thẻ để hiển thị một tài khoản cụ thể với hiệu ứng lật 1 lần duy nhất.
+     * @param {number} cardId - ID của card.
+     * @param {number} accountId - ID của tài khoản cần hiển thị.
+     */
     function flipCardToAccount(cardId, accountId) {
         const state = getCardState(cardId);
         const wrapper = document.getElementById(`card-wrapper-${cardId}`);
-        
-        if (!wrapper) return;
 
-        // Update state immediately (không toggle!)
-        state.isFlipped = true;  // Luôn flip (không toggle)
+        // Nếu đang hiển thị tài khoản này rồi thì không làm gì cả
+        if (!wrapper || state.activeAccountId === accountId) {
+            return;
+        }
+
+        const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+        const targetAccount = accounts.find(acc => acc.id === accountId);
+        if (!targetAccount) return;
+
+        // Xác định mặt nào đang bị ẩn
+        const isCurrentlyFlipped = wrapper.classList.contains('flipped');
+        const hiddenFaceSelector = isCurrentlyFlipped ? '.mxh-card-face.front' : '.mxh-card-face.back';
+        const hiddenFace = wrapper.querySelector(hiddenFaceSelector);
+
+        // 1. Vẽ ngay lập tức nội dung mới vào mặt đang bị ẩn
+        if (hiddenFace) {
+            const sideToRender = isCurrentlyFlipped ? 'front' : 'back';
+            hiddenFace.outerHTML = renderCardFace(targetAccount, accounts, sideToRender);
+        }
+
+        // 2. Cập nhật trạng thái
         state.activeAccountId = accountId;
 
-        // Apply flip class ngay lập tức
-        wrapper.classList.add('flipped');
-
-        // Render mặt sau (back) với account mới **TRƯỚC KHI FLIP**
-        setTimeout(() => {
-            const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
-            const newActiveAccount = accounts.find(acc => acc.id === accountId);
-            
-            if (newActiveAccount) {
-                const cardInner = wrapper.querySelector('.mxh-card-inner');
-                
-                // Xóa mặt sau cũ
-                const oldBack = cardInner.querySelector('.mxh-card-face.back');
-                if (oldBack) oldBack.remove();
-                
-                // Thêm mặt sau mới với account được chọn
-                cardInner.insertAdjacentHTML('beforeend', renderCardFace(newActiveAccount, accounts, 'back'));
-                
-                // Update border color
-                const cardCol = wrapper.closest('[data-card-id]');
-                if (cardCol) {
-                    const newBorderClass = getAccountBorderClass(newActiveAccount);
-                    cardCol.querySelectorAll('.mxh-card').forEach(card => {
-                        card.className = card.className.replace(/mxh-border-\w+/g, '');
-                        if (newBorderClass) card.classList.add(newBorderClass);
-                    });
-                }
-            }
-        }, 150); // Render trước flip animation hoàn thành
-
-        // Sau khi flip animation xong, swap front & back, set isFlipped = false
-        setTimeout(() => {
-            const cardInner = wrapper.querySelector('.mxh-card-inner');
-            const frontFace = cardInner.querySelector('.mxh-card-face.front');
-            const backFace = cardInner.querySelector('.mxh-card-face.back');
-            
-            if (frontFace && backFace) {
-                // Swap classes
-                frontFace.classList.remove('front');
-                frontFace.classList.add('back');
-                backFace.classList.remove('back');
-                backFace.classList.add('front');
-                
-                // Reset flip state
-                state.isFlipped = false;
-                wrapper.classList.remove('flipped');
-            }
-        }, 300); // Wait for flip animation
+        // 3. Lật thẻ để hiển thị mặt vừa được cập nhật
+        wrapper.classList.toggle('flipped');
     }
 
     // === OLD CODE CONTINUES BELOW (for compatibility) ===
