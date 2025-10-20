@@ -1235,42 +1235,46 @@
         return ''; // Default - no special border
     }
 
-    // === NEW: Flip Card Function ===
-    /**
-     * Lật thẻ để hiển thị một tài khoản cụ thể với hiệu ứng lật 1 lần duy nhất.
-     * @param {number} cardId - ID của card.
-     * @param {number} accountId - ID của tài khoản cần hiển thị.
-     */
-    function flipCardToAccount(cardId, accountId) {
-        const state = getCardState(cardId);
-        const wrapper = document.getElementById(`card-wrapper-${cardId}`);
+        // === NEW: Flip Card Function (Single Flip Animation) ===
+        function flipCardToAccount(cardId, accountId) {
+            const state = getCardState(cardId);
+            const wrapper = document.getElementById(`card-wrapper-${cardId}`);
+            const cardInner = wrapper?.querySelector('.mxh-card-inner');
+            if (!wrapper || !cardInner) return;
 
-        // Nếu đang hiển thị tài khoản này rồi thì không làm gì cả
-        if (!wrapper || state.activeAccountId === accountId) {
-            return;
+            // Do nothing if clicking the currently active account
+            if (state.activeAccountId === accountId) {
+                return;
+            }
+
+            // 1. Get the new account data
+            const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+            const newActiveAccount = accounts.find(acc => acc.id === accountId);
+            if (!newActiveAccount) return;
+
+            // 2. Update the state
+            state.activeAccountId = accountId;
+
+            // 3. Start the flip-out animation
+            cardInner.style.transform = 'rotateY(90deg)';
+
+            // 4. After half the animation, swap the content and flip back in
+            setTimeout(() => {
+                // Render the new face directly into the inner container
+                cardInner.innerHTML = renderCardFace(newActiveAccount, accounts, 'front');
+
+                // Prepare for flip-in animation
+                cardInner.style.transform = 'rotateY(-90deg)';
+
+                // Force a reflow to apply the transform before the next animation frame
+                void cardInner.offsetWidth;
+
+                // 5. Flip back in to 0 degrees
+                cardInner.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+                cardInner.style.transform = 'rotateY(0deg)';
+
+            }, 300); // Half of the total 0.6s animation
         }
-
-        const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
-        const targetAccount = accounts.find(acc => acc.id === accountId);
-        if (!targetAccount) return;
-
-        // Xác định mặt nào đang bị ẩn
-        const isCurrentlyFlipped = wrapper.classList.contains('flipped');
-        const hiddenFaceSelector = isCurrentlyFlipped ? '.mxh-card-face.front' : '.mxh-card-face.back';
-        const hiddenFace = wrapper.querySelector(hiddenFaceSelector);
-
-        // 1. Vẽ ngay lập tức nội dung mới vào mặt đang bị ẩn
-        if (hiddenFace) {
-            const sideToRender = isCurrentlyFlipped ? 'front' : 'back';
-            hiddenFace.outerHTML = renderCardFace(targetAccount, accounts, sideToRender);
-        }
-
-        // 2. Cập nhật trạng thái
-        state.activeAccountId = accountId;
-
-        // 3. Lật thẻ để hiển thị mặt vừa được cập nhật
-        wrapper.classList.toggle('flipped');
-    }
 
     // === OLD CODE CONTINUES BELOW (for compatibility) ===
     function renderMXHAccounts_OLD() {

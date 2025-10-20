@@ -35,3 +35,31 @@
 [2025-10-20 21:08:47] [INFO] [app] === MonDashboard Starting ===
 [2025-10-20 21:08:48] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
 [2025-10-20 21:08:48] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-20 21:24:04] [INFO] [app] === Logging System Initialized ===
+[2025-10-20 21:24:04] [INFO] [app] Log Level: INFO
+[2025-10-20 21:24:04] [INFO] [app] App Log: logs\app.log
+[2025-10-20 21:24:04] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-20 21:24:04] [INFO] [app] === MonDashboard Starting ===
+[2025-10-20 21:24:04] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-20 21:24:04] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-20 22:13:05] [INFO] [app] === Logging System Initialized ===
+[2025-10-20 22:13:05] [INFO] [app] Log Level: INFO
+[2025-10-20 22:13:05] [INFO] [app] App Log: logs\app.log
+[2025-10-20 22:13:05] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-20 22:13:05] [INFO] [app] === MonDashboard Starting ===
+[2025-10-20 22:13:06] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-20 22:13:06] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-20 22:20:49] [INFO] [app] === Logging System Initialized ===
+[2025-10-20 22:20:49] [INFO] [app] Log Level: INFO
+[2025-10-20 22:20:49] [INFO] [app] App Log: logs\app.log
+[2025-10-20 22:20:49] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-20 22:20:49] [INFO] [app] === MonDashboard Starting ===
+[2025-10-20 22:20:49] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-20 22:20:49] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
+[2025-10-20 22:20:50] [INFO] [app] === Logging System Initialized ===
+[2025-10-20 22:20:50] [INFO] [app] Log Level: INFO
+[2025-10-20 22:20:50] [INFO] [app] App Log: logs\app.log
+[2025-10-20 22:20:50] [INFO] [app] F12 Log: logs\f12_console.log
+[2025-10-20 22:20:50] [INFO] [app] === MonDashboard Starting ===
+[2025-10-20 22:20:50] [WARNING] [app] [CDP] pychrome not installed. Run: pip install pychrome
+[2025-10-20 22:20:50] [WARNING] [app] [CDP] Bridge failed to start - will fallback to in-page if enabled
