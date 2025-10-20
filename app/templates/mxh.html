@@ -123,7 +123,7 @@
         </div>
     </div>
 </div>
-<!-- MXH Background Context Menu -->#wechat-context-menu
+<!-- MXH Background Context Menu -->
 <div id="mxh-background-context-menu" class="custom-context-menu" style="display: none;">
     <div class="menu-item" data-action="view-mode">
         <i class="bi bi-grid-3x3-gap me-2"></i> Chế Độ Xem
@@ -365,11 +365,6 @@
     transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-/* Khi flipped */
-.mxh-card-wrapper.flipped .mxh-card-inner {
-    transform: rotateY(180deg);
-}
-
 /* Card face - front & back */
 .mxh-card-face {
     position: absolute;
@@ -385,12 +380,6 @@
 .mxh-card-face.front {
     transform: rotateY(0deg);
     z-index: 2;
-}
-
-/* Back face */
-.mxh-card-face.back {
-    transform: rotateY(180deg);
-    z-index: 1;
 }
 
 /* Click vào số card để flip */
@@ -707,13 +696,6 @@
             whatsapp: 'bi-whatsapp'
         }[p]) || 'bi-person-badge';
     }
-
-    // Global flip card function
-    window.flipCard = function (el, event) {
-        if (event) { event.preventDefault(); event.stopPropagation(); }
-        const wrap = el.closest('.mxh-card-container');
-        if (wrap) wrap.classList.toggle('flipped');
-    };
 
     // Get next card number (per platform/group)
     async function getNextCardNumber(groupId) {
@@ -1276,451 +1258,7 @@
             }, 300); // Half of the total 0.6s animation
         }
 
-    // === OLD CODE CONTINUES BELOW (for compatibility) ===
-    function renderMXHAccounts_OLD() {
-        // DEPRECATED - kept for reference
-        // Group accounts by group_id
-        const accountsByGroup = {};
-        mxhAccounts.forEach(account => {
-            const groupId = account.group_id || 'no-group';
-
-            // Filter by active group if one is selected
-            if (activeGroupId !== null && groupId != activeGroupId) {
-                return; // Skip this account
-            }
-
-            if (!accountsByGroup[groupId]) {
-                accountsByGroup[groupId] = [];
-            }
-            accountsByGroup[groupId].push(account);
-        });
-
-        // Use DocumentFragment for better performance
-        const fragment = document.createDocumentFragment();
-        const tempDiv = document.createElement('div');
-        let html = '';
-
-        Object.keys(accountsByGroup).forEach(groupId => {
-            const accounts = accountsByGroup[groupId];
-            const group = mxhGroups.find(g => g.id == groupId);
-
-            // Sort by card_name numerically
-            accounts.sort((a, b) => {
-                const numA = parseInt(a.card_name) || 0;
-                const numB = parseInt(b.card_name) || 0;
-                return numA === numB ? (b.id - a.id) : (numA - numB);
-            });
-
-            if (group) {
-                const cardsContainerId = `cards-${groupId}`;
-
-                // Render cards container (always visible now, filtering done at account level)
-                html += `
-                <div class="mb-4">
-                    <div class="row g-2" id="${cardsContainerId}">
-            `;
-
-                accounts.forEach(account => {
-                    const now = new Date(); // Dùng chung cho mọi platform
-                    const isDisabled = account.status === 'disabled';
-                    let isAnniversary = false;
-
-
-
-                    // Calculate age for WeChat primary with color
-                    let accountAgeDisplay = '';
-                    let ageColor = '#fff';
-                    let scanCountdown = '';
-
-                    if (account.platform === 'wechat' && account.wechat_created_year) {
-                        const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-                        const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-
-                        if (diffDays >= 365) {
-                            const years = Math.floor(diffDays / 365);
-                            const months = Math.floor((diffDays % 365) / 30);
-                            accountAgeDisplay = `${years}năm ${months}th`;
-                            ageColor = '#07c160';
-                            isAnniversary = true;
-                        } else if (diffDays >= 30) {
-                            const months = Math.floor(diffDays / 30);
-                            accountAgeDisplay = `${months}th ${diffDays % 30}d`;
-                        } else {
-                            accountAgeDisplay = `${diffDays}d`;
-                        }
-
-                        // Calculate scan countdown with QR icon
-                        const currentScanCount = account.wechat_scan_count || 0;
-                        const maxScans = 3;
-
-                        if (currentScanCount >= maxScans) {
-                            // Đã hết lượt - QR đỏ
-                            scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
-                        } else if (account.wechat_last_scan_date) {
-                            // Có lịch sử quét - kiểm tra thời gian
-                            const lastScanDate = new Date(account.wechat_last_scan_date);
-                            const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
-                            const remainingDays = 30 - daysSinceScan;
-
-                            if (remainingDays > 0) {
-                                // Còn thời gian chờ - hiển thị countdown
-                                const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
-                                const remainingHours = (30 * 24) - hoursSinceScan;
-
-                                if (remainingHours < 24) {
-                                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
-                                } else {
-                                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
-                                }
-                            } else {
-                                // Đủ điều kiện quét tiếp - QR xanh
-                                scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                            }
-                        } else {
-                            // Chưa quét lần nào
-                            if (diffDays < 90) {
-                                scanCountdown = `Còn ${90 - diffDays} ngày`;
-                            } else {
-                                // Đủ điều kiện quét lần đầu - QR xanh
-                                scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                            }
-                        }
-
-                    }
-
-                    const contextMenuFunction = account.platform === 'wechat' ? 'showWeChatContextMenu' : 'showGenericContextMenu';
-
-                    // Notice countdown logic
-                    let noticeHtml = '';
-                    let extraClass = '';
-                    let tipHtml = '';
-                    const n = ensureNoticeParsed(account.notice);
-
-                    // Debug log
-                    if (account.id === noticeTargetId) {
-                        // console.log('Notice debug for account', account.id, ':', n);
-                    }
-
-                    if (n.enabled && n.start_at && n.days > 0) {
-                        const start = new Date(n.start_at);
-                        const end = new Date(start.getTime() + n.days * 86400000);
-                        const remainMs = end - now;
-                        const remainDays = Math.ceil(remainMs / 86400000);
-
-                        if (remainMs > 0) {
-                            // Format display: hours (h) if less than 1 day, days (d), or months (m)
-                            let timeDisplay;
-                            if (remainMs < 86400000) {
-                                // Less than 24 hours remaining, show hours
-                                const remainHours = Math.ceil(remainMs / (1000 * 60 * 60));
-                                timeDisplay = `${remainHours}h`;
-                            } else if (remainDays >= 30) {
-                                const remainMonths = Math.floor(remainDays / 30);
-                                timeDisplay = `${remainMonths}m`;
-                            } else {
-                                timeDisplay = `${remainDays}d`;
-                            }
-                            noticeHtml = `<div class="notice-line">${escapeHtml(n.title)}: ${timeDisplay}</div>`;
-                        } else {
-                            noticeHtml = `<div class="notice-line expired">${escapeHtml(n.title)}: đã đến hạn</div>`;
-                            extraClass = 'notice-expired-blink';
-                        }
-
-                        // Tooltip also uses short format
-                        let tooltipTime;
-                        if (n.days >= 30) {
-                            const months = Math.floor(n.days / 30);
-                            tooltipTime = `${months}m`;
-                        } else {
-                            tooltipTime = `${n.days}d`;
-                        }
-                        tipHtml = `<div class="notice-tooltip"><div class="notice-tooltip-title">${escapeHtml(n.title)} – ${tooltipTime}</div><div class="notice-tooltip-note">${escapeHtml(n.note || '')}</div></div>`;
-                    }
-
-                    // Determine account status and styling
-                    let statusClass = 'account-status-available';
-                    let statusIcon = '';
-                    let accountStatus = account.status || 'active';
-
-                    if (accountStatus === 'die') {
-                        statusClass = 'account-status-die';
-                        statusIcon = '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>';
-                    } else if (accountStatus === 'disabled') {
-                        statusClass = 'account-status-disabled';
-                        statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
-                    }
-
-
-                    // ==== State flags (áp dụng cho mọi MXH) ====
-                    const isDie = ['disabled', 'die', 'banned', 'blocked']
-                        .includes(String(account.status || '').toLowerCase()) || !!account.die_date;
-
-                    const noticeObj = ensureNoticeParsed(account.notice);
-                    const hasNotice = !!(noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
-
-                    // ==== Logic viền mới cho WeChat ====
-                    const isWechat = String(account.platform || '').toLowerCase() === 'wechat';
-                    const isHK = /^\+?852/.test(account.phone || '');
-                    const y = +account.wechat_created_year || 0;
-                    const m = (+account.wechat_created_month || 1) - 1;
-                    const d = +account.wechat_created_day || 1;
-                    const ageDays = isFinite(new Date(y, m, d)) ? Math.floor((Date.now() - new Date(y, m, d).getTime()) / 86400000) : 0;
-
-                    // ==== Gán class viền theo ưu tiên: Đỏ > Cam > Xanh > Trắng ====
-                    let borderClass = '';
-                    if (isDie) {
-                        borderClass = 'mxh-border-red';
-                    } else if (hasNotice) {
-                        borderClass = 'mxh-border-orange';
-                    } else if (isWechat && ageDays >= 365 && isHK) {
-                        borderClass = 'mxh-border-green';
-                    } else if (isWechat && ageDays >= 365 && !isHK) {
-                        borderClass = 'mxh-border-white';
-                    }
-
-
-                    html += `
-                    <div class="col" style="padding: 2px;" data-account-id="${account.id}">
-                        <div class="card tool-card mxh-card ${borderClass} ${extraClass}" oncontextmenu="handleCardContextMenu(event, ${account.id}, '${account.platform}'); return false;">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <h6 class="card-title mb-0 card-number" style="font-size: 1.26rem; font-weight: 600;">${account.card_name}</h6>
-                                        <i class="bi ${getPlatformIconClass(account.platform)}" title="${account.platform}" style="font-size: 0.9rem; color: ${getPlatformColor(account.platform)};"></i>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-1">
-                                        ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
-                                    </div>
-                                </div>
-                                
-                                <div class="text-center mb-0">
-                                    <small 
-                                        class="${statusClass} editable-field" 
-                                        contenteditable="true" 
-                                        data-account-id="${account.id}" 
-                                        data-field="username" 
-                                        data-is-secondary="false"
-                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: inline-block;"
-                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                        onclick="event.stopPropagation()"
-                                    >${account.username || 'Click để nhập'}${statusIcon}</small>
-                                    <small 
-                                        class="text-muted editable-field" 
-                                        contenteditable="true" 
-                                        data-account-id="${account.id}" 
-                                        data-field="phone" 
-                                        data-is-secondary="false"
-                                        style="font-size: 0.84rem; cursor: text; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                        onmouseenter="this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                                        onmouseleave="this.style.backgroundColor='transparent'"
-                                        onclick="event.stopPropagation()"
-                                    >📞 ${account.phone || 'Click để nhập'}</small>
-                                </div>
-                                
-                                ${account.platform === 'wechat' ? `
-                                    <div class="mt-auto">
-                                        ${isDisabled ?
-                                            `<div class="d-flex align-items-center justify-content-between">
-                                                <small class="text-danger" style="font-size: 0.77rem;">Ngày: ${account.die_date ? Math.ceil((new Date() - new Date(account.die_date)) / (1000 * 60 * 60 * 24)) : 0}</small>
-                                                <small style="font-size: 0.77rem;">Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
-                                            </div>` :
-                                            `<div class="text-center mt-1">
-                                                ${scanCountdown ? `<small style="font-size: 0.7rem;">${scanCountdown}</small>` : ''}
-                                            </div>`
-                                        }
-                                    </div>
-                                ` : ''}
-                                
-                                ${noticeHtml}
-                                ${tipHtml}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                });
-
-                html += `
-                    </div>
-                </div>
-            `;
-            }
-        });
-
-        tempDiv.innerHTML = html;
-        container.innerHTML = '';
-        container.appendChild(tempDiv);
-
-        // Enable tooltip on hover for notice with smart positioning
-        requestAnimationFrame(() => {
-            document.querySelectorAll('.mxh-card-container').forEach(card => {
-                const tip = card.querySelector('.notice-tooltip');
-                if (tip) {
-                    card.addEventListener('mouseenter', () => {
-                        // Smart positioning based on card center
-                        const rect = card.getBoundingClientRect();
-                        const viewportWidth = window.innerWidth;
-                        const cardCenter = rect.left + rect.width / 2;
-
-                        // Debug log
-                        // console.log('Tooltip positioning debug:', {
-                        //     cardLeft: rect.left,
-                        //     cardRight: rect.right,
-                        //     viewportWidth: viewportWidth,
-                        //     leftThird: viewportWidth / 3,
-                        //     rightThird: (viewportWidth * 2) / 3,
-                        //     cardCenter: cardCenter
-                        // });
-
-                        // Remove previous positioning classes
-                        tip.classList.remove('tooltip-left', 'tooltip-right', 'tooltip-center');
-
-                        // TEST: Always center tooltip to verify CSS works
-                        tip.classList.add('tooltip-center');
-                        // console.log('Applied: tooltip-center (TEST MODE)');
-
-                        tip.classList.add('show');
-                    });
-                    card.addEventListener('mouseleave', () => tip.classList.remove('show'));
-                }
-            });
-        });
-
-        // Restore visibility states efficiently
-        requestAnimationFrame(() => {
-            Object.keys(accountsByGroup).forEach(groupId => {
-                const isVisible = localStorage.getItem(`group_${groupId}_visible`) !== 'false';
-                const cardsContainerId = `cards-${groupId}`;
-                const toggleButtonId = `toggle-${groupId}`;
-                const cardsContainer = document.getElementById(cardsContainerId);
-                const toggleButton = document.getElementById(toggleButtonId);
-
-                if (cardsContainer && toggleButton) {
-                    const eyeIcon = toggleButton.querySelector('.bi-eye-fill, .bi-eye-slash-fill');
-
-                    if (isVisible) {
-                        // Show cards
-                        cardsContainer.style.display = 'flex';
-                        if (eyeIcon) {
-                            eyeIcon.classList.remove('bi-eye-slash-fill');
-                            eyeIcon.classList.add('bi-eye-fill');
-                        }
-                    } else {
-                        // Hide cards
-                        cardsContainer.style.display = 'none';
-                        if (eyeIcon) {
-                            eyeIcon.classList.remove('bi-eye-fill');
-                            eyeIcon.classList.add('bi-eye-slash-fill');
-                        }
-                    }
-                }
-            });
-
-            // 🔄 RESTORE SCROLL POSITION AFTER RENDER
-            window.scrollTo(scrollX, scrollY);
-
-            // Setup inline editing after render
-            setupEditableFields();
-
-            // Update accounts submenu if context menu is open
-            if (currentContextAccountId) {
-                generateAccountsSubmenu(currentContextAccountId);
-            }
-
-            isRendering = false;
-
-            // Process pending updates if any
-            if (pendingUpdates) {
-                pendingUpdates = false;
-                setTimeout(() => renderMXHAccounts(), 100);
-            }
-        });
-    }
-
-    // Context Menu Functions with auto-refresh pause
-    function showWeChatContextMenu(event, accountId) {
-        event.preventDefault();
-        event.stopPropagation();
-        currentContextAccountId = accountId;
-        currentEditingIsSecondary = false; // Always false now
-        pauseAutoRefresh();
-
-        const contextMenu = document.getElementById('wechat-context-menu');
-        contextMenu.style.display = 'block';
-        
-        // Smart positioning to avoid overflow
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
-        
-        // Calculate menu size and viewport
-        let menuRect = contextMenu.getBoundingClientRect();
-        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-        const margin = 8;
-        
-        let left = event.pageX;
-        let top = event.pageY;
-        
-        // Horizontal positioning: Smart left/right positioning
-        if (menuRect.right > viewportWidth - margin) {
-            // Menu will overflow right side of screen
-            // Show menu to the left of mouse
-            left = event.pageX - menuRect.width;
-            // console.log('Context menu positioned LEFT - would overflow right');
-            
-            // If still overflows left, clamp to left margin
-            if (left < margin) {
-                left = margin;
-                // console.log('Context menu clamped to left margin');
-            }
-        } else {
-            // console.log('Context menu positioned RIGHT - fits in viewport');
-        }
-        
-        // Vertical positioning
-        if (menuRect.bottom > viewportHeight) {
-            // Nếu đủ chỗ phía trên chuột thì show lên trên
-            if (event.pageY - menuRect.height > margin) {
-                top = event.pageY - menuRect.height;
-            } else {
-                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
-                top = viewportHeight - menuRect.height - margin + window.scrollY;
-                if (top < margin + window.scrollY) top = margin + window.scrollY;
-            }
-        }
-        
-        contextMenu.style.left = left + 'px';
-        contextMenu.style.top = top + 'px';
-
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (account) {
-            const toggleStatusItem = document.getElementById('toggle-status-item');
-            const rescueItem = document.getElementById('rescue-options-item');
-            const copyPhoneItem = document.getElementById('copy-phone-item');
-
-            const statusToCheck = isSecondary ? account.secondary_status : account.status;
-            const phoneToCopy = isSecondary ? account.secondary_phone : account.phone;
-
-            if (statusToCheck === 'disabled') {
-                toggleStatusItem.style.display = 'none';
-                rescueItem.style.display = 'block';
-            } else {
-                toggleStatusItem.style.display = 'block';
-                toggleStatusItem.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i> Vô hiệu hóa';
-                rescueItem.style.display = 'none';
-            }
-
-            copyPhoneItem.style.display = phoneToCopy ? 'block' : 'none';
-
-            // Configure notice toggle
-            configureNoticeToggleFor('wechat-context-menu', account);
-        }
-
-        setTimeout(() => {
-            document.addEventListener('click', hideWeChatContextMenu, { once: true });
-        }, 100);
-    }
-
+    // Helper function for notice configuration
     function configureNoticeToggleFor(menuId, account) {
         const el = document.querySelector(`#${menuId} [id$="-notice-toggle"]`);
         if (!el) return;
@@ -1731,79 +1269,6 @@
         el.innerHTML = hasNotice
             ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
             : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
-    }
-
-    function hideWeChatContextMenu() {
-        document.getElementById('wechat-context-menu').style.display = 'none';
-        resumeAutoRefresh();
-    }
-
-    function showGenericContextMenu(event, accountId) {
-        event.preventDefault();
-        currentContextAccountId = accountId;
-        pauseAutoRefresh();
-
-        const contextMenu = document.getElementById('generic-context-menu');
-        contextMenu.style.display = 'block';
-        
-        // Smart positioning to avoid overflow
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
-        
-        // Calculate menu size and viewport
-        let menuRect = contextMenu.getBoundingClientRect();
-        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-        const margin = 8;
-        
-        let left = event.pageX;
-        let top = event.pageY;
-        
-        // Horizontal positioning: Smart left/right positioning
-        if (menuRect.right > viewportWidth - margin) {
-            // Menu will overflow right side of screen
-            // Show menu to the left of mouse
-            left = event.pageX - menuRect.width;
-            // console.log('Context menu positioned LEFT - would overflow right');
-            
-            // If still overflows left, clamp to left margin
-            if (left < margin) {
-                left = margin;
-                // console.log('Context menu clamped to left margin');
-            }
-        } else {
-            // console.log('Context menu positioned RIGHT - fits in viewport');
-        }
-        
-        // Vertical positioning
-        if (menuRect.bottom > viewportHeight) {
-            // Nếu đủ chỗ phía trên chuột thì show lên trên
-            if (event.pageY - menuRect.height > margin) {
-                top = event.pageY - menuRect.height;
-            } else {
-                // Nếu không đủ chỗ trên, thì dán sát đáy viewport
-                top = viewportHeight - menuRect.height - margin + window.scrollY;
-                if (top < margin + window.scrollY) top = margin + window.scrollY;
-            }
-        }
-        
-        contextMenu.style.left = left + 'px';
-        contextMenu.style.top = top + 'px';
-
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (account) {
-            // Configure notice toggle
-            configureNoticeToggleFor('generic-context-menu', account);
-        }
-
-        setTimeout(() => {
-            document.addEventListener('click', hideGenericContextMenu, { once: true });
-        }, 100);
-    }
-
-    function hideGenericContextMenu() {
-        document.getElementById('generic-context-menu').style.display = 'none';
-        resumeAutoRefresh();
     }
 
     // ===== UNIFIED CONTEXT MENU (New) =====
@@ -2481,10 +1946,6 @@
 
         // console.log('Telegram context menu opened for account:', accountId);
 
-        // Hide all other context menus first
-        document.getElementById('wechat-context-menu').style.display = 'none';
-        document.getElementById('generic-context-menu').style.display = 'none';
-
         const contextMenu = document.getElementById('telegram-context-menu');
         if (!contextMenu) {
             console.error('Telegram context menu element not found!');
@@ -2601,7 +2062,7 @@
         // Use the global variable that was set when context menu was opened
         const isSecondary = currentEditingIsSecondary || false;
         openWeChatModal(currentContextAccountId, isSecondary);
-        hideWeChatContextMenu();
+        hideUnifiedContextMenu();
     }
 
     async function markAccountAsScanned(event) {
@@ -2611,8 +2072,7 @@
         }
         if (!currentContextAccountId) return;
 
-        const contextMenu = document.getElementById('wechat-context-menu');
-        const isSecondary = contextMenu.dataset.isSecondary === 'true';
+        const isSecondary = currentEditingIsSecondary || false;
 
         // Instant local update
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
@@ -2641,7 +2101,7 @@
             showToast('Lỗi kết nối!', 'error');
             await loadMXHData(false);
         }
-        hideWeChatContextMenu();
+        hideUnifiedContextMenu();
     }
 
     // Notice modal functions
@@ -2932,11 +2392,8 @@
             await loadMXHData(false);
         }
 
-        // Only hide context menu if it exists and is visible
-        const contextMenu = document.getElementById('wechat-context-menu');
-        if (contextMenu && contextMenu.style.display === 'block') {
-            hideWeChatContextMenu();
-        }
+        // Hide unified context menu if visible
+        hideUnifiedContextMenu();
     }
 
     // ===== UPDATE ACCOUNT STATUS (Unified Menu) =====
@@ -3510,111 +2967,6 @@
         });
 
         // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
-
-        // Event delegation for WeChat context menu
-        document.getElementById('wechat-context-menu').addEventListener('click', (e) => {
-            const menuItem = e.target.closest('.menu-item');
-            if (!menuItem) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const action = menuItem.dataset.action;
-            if (!action) return;
-
-            switch (action) {
-                case 'edit':
-                    openWeChatModal(currentContextAccountId);
-                    break;
-                case 'mark-scanned':
-                    markAccountAsScanned(e);
-                    break;
-                case 'set-notice':
-                    openNoticeModal(e);
-                    break;
-                case 'clear-notice':
-                    clearNotice(e);
-                    break;
-                case 'copy-phone':
-                    copyPhoneNumber(e);
-                    break;
-                case 'reset-scan':
-                    resetScanCount(e);
-                    break;
-                case 'change-number':
-                    changeCardNumber(e);
-                    break;
-                case 'toggle-status':
-                    toggleAccountStatus(e);
-                    break;
-                case 'rescue-success':
-                    rescueAccount('success', e);
-                    break;
-                case 'rescue-failed':
-                    rescueAccount('failed', e);
-                    break;
-                case 'delete':
-                    showDeleteConfirm(e);
-                    break;
-            }
-        });
-
-        // Event delegation for Generic context menu
-        document.getElementById('generic-context-menu').addEventListener('click', (e) => {
-            const menuItem = e.target.closest('.menu-item');
-            if (!menuItem) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const action = menuItem.dataset.action;
-            if (!action) return;
-
-            switch (action) {
-                case 'set-notice':
-                    openNoticeModal(e);
-                    break;
-                case 'clear-notice':
-                    clearNotice(e);
-                    break;
-                case 'edit-generic':
-                    openGenericModal(e);
-                    break;
-                case 'delete-generic':
-                    showDeleteConfirm(e);
-                    break;
-            }
-        });
-
-        // Event delegation for Telegram context menu
-        document.getElementById('telegram-context-menu').addEventListener('click', (e) => {
-            const menuItem = e.target.closest('.menu-item');
-            if (!menuItem) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const action = menuItem.dataset.action;
-            if (!action) return;
-
-            switch (action) {
-                case 'set-notice':
-                    openNoticeModal(e);
-                    break;
-                case 'clear-notice':
-                    clearNotice(e);
-                    break;
-                case 'copy-phone-telegram':
-                    copyTelegramPhone(e);
-                    break;
-                case 'edit-generic':
-                    openGenericModal(e);
-                    break;
-                case 'delete-generic':
-                    showDeleteConfirm(e);
-                    break;
-            }
-        });
     });
 
 
@@ -4133,23 +3485,11 @@
     }
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Override all context menu functions to position submenus
+        // Override unified context menu to position submenus
         const originalShowUnified = showUnifiedContextMenu;
         showUnifiedContextMenu = function(event, accountId, platform, isSecondary = false) {
             originalShowUnified(event, accountId, platform, isSecondary);
             positionAllSubmenus('unified-context-menu');
-        };
-        
-        const originalShowWeChat = showWeChatContextMenu;
-        showWeChatContextMenu = function(event, accountId, isSecondary = false) {
-            originalShowWeChat(event, accountId, isSecondary);
-            positionAllSubmenus('wechat-context-menu');
-        };
-        
-        const originalShowGeneric = showGenericContextMenu;
-        showGenericContextMenu = function(event, accountId) {
-            originalShowGeneric(event, accountId);
-            positionAllSubmenus('generic-context-menu');
         };
         
         const originalShowTelegram = showTelegramContextMenu;
