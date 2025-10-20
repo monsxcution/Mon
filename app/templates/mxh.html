@@ -312,7 +312,6 @@
                             <option value="active">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
                             <option value="die">Die</option>
-                            <option value="muted">Muted</option>
                         </select>
                     </div>
                 </div>
@@ -1145,9 +1144,9 @@
                 if (dueDate instanceof Date && !isNaN(dueDate)) {
                     const today = new Date();
                     const remainTime = dueDate - today;
+                    const remainDays = Math.ceil(remainTime / (1000 * 60 * 60 * 24));
                     
                     if (remainTime > 0) {
-                        const remainDays = Math.ceil(remainTime / (1000 * 60 * 60 * 24));
                         let timeDisplay = '';
                         if (remainDays >= 30) {
                             const remainMonths = Math.floor(remainDays / 30);
@@ -2177,8 +2176,16 @@
 
                 <!-- 5. Quét WeChat (WeChat only) -->
                 ${platform === 'wechat' ? `
-                <div class="mxh-menu-item" data-action="scan-wechat">
-                    <i class="bi bi-qr-code me-2"></i>Quét WeChat
+                <div class="mxh-menu-item has-submenu wechat-only">
+                    <span><i class="bi bi-qr-code me-2"></i>Quét WeChat</span>
+                    <div class="mxh-submenu">
+                        <div class="mxh-menu-item" data-action="scan-wechat">
+                            <i class="bi bi-check-circle me-2"></i>Đã Quét
+                        </div>
+                        <div class="mxh-menu-item" data-action="reset-scan">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Lượt Quét
+                        </div>
+                    </div>
                 </div>
                 ` : ''}
 
@@ -2330,6 +2337,11 @@
         } else if (action === 'scan-wechat') {
             if (currentContextAccountId) {
                 await scanWeChatAccount(currentContextAccountId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'reset-scan') {
+            if (currentContextAccountId) {
+                await resetScanCountNew(currentContextAccountId);
                 hideCardContextMenu();
             }
         } else if (action === 'delete') {
@@ -3008,6 +3020,37 @@
             await loadMXHData(false);
         }
         hideWeChatContextMenu();
+    }
+
+    // NEW: Reset scan count for new context menu
+    async function resetScanCountNew(accountId) {
+        if (!accountId) return;
+
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].wechat_scan_count = 0;
+            mxhAccounts[accountIndex].wechat_last_scan_date = null;
+        }
+        renderMXHAccounts();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reset: true })
+            });
+
+            if (response.ok) {
+                showToast('✅ Đã reset lượt quét!', 'success');
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
     }
 
     function changeCardNumber(event) {
@@ -3742,72 +3785,6 @@
                     showDeleteConfirm(e);
                     break;
             }
-        });
-
-
-        // ===== UNIFIED CONTEXT MENU EVENT LISTENER =====
-        document.getElementById('unified-context-menu').addEventListener('click', async (e) => {
-            const menuItem = e.target.closest('.menu-item');
-            if (!menuItem) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const action = menuItem.dataset.action;
-            if (!action) return;
-
-            // console.log('Unified menu action:', action);
-
-            switch (action) {
-                case 'edit':
-                    openWeChatModal(currentContextAccountId);
-                    break;
-                case 'status-available':
-                    await updateAccountStatus('active');
-                    break;
-                case 'status-die':
-                    await updateAccountStatus('die');
-                    break;
-                case 'status-disabled':
-                    await updateAccountStatus('disabled');
-                    break;
-                case 'rescue-success':
-                    await rescueAccountUnified('success');
-                    break;
-                case 'rescue-failed':
-                    await rescueAccountUnified('failed');
-                    break;
-                case 'mark-scanned':
-                    markAccountAsScanned(e);
-                    break;
-                case 'set-notice':
-                    openNoticeModal(e);
-                    break;
-                case 'clear-notice':
-                    clearNotice(e);
-                    break;
-                case 'copy-phone':
-                    copyPhoneNumber(e);
-                    break;
-                case 'copy-email':
-                    copyEmail(e);
-                    break;
-                case 'reset-scan':
-                    resetScanCount(e);
-                    break;
-                case 'change-number':
-                    changeCardNumber(e);
-                    break;
-                case 'delete':
-                    showDeleteConfirm(e);
-                    break;
-                // NOTE: 'switch-account' và 'add-new-account' đã bị xóa
-                // vì unified-context-menu không được dùng cho card mới
-                // Card mới sử dụng handleCardContextMenu() với card-context-menu
-            }
-
-            // Hide menu after action
-            hideUnifiedContextMenu();
         });
     });
 
