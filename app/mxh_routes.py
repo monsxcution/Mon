@@ -291,11 +291,63 @@ def mxh_update_or_delete_card(card_id):
         conn.close()
 
 
-# Alias để tương thích với route cũ - chỉ cho PUT/DELETE
-@mxh_bp.route("/api/accounts/<int:card_id>", methods=["PUT", "DELETE"])
-def update_delete_card(card_id):
-    """Alias cho route cũ - redirect đến /api/cards"""
-    return mxh_update_or_delete_card(card_id)
+# === NEW: PUT /api/accounts/<account_id> - Update Account (not card!) ===
+@mxh_bp.route("/api/accounts/<int:account_id>", methods=["PUT"])
+def update_account_direct(account_id):
+    """
+    PUT /mxh/api/accounts/<account_id> - Update account fields
+    Used by frontend to update account status, username, phone, etc.
+    """
+    conn = get_db_connection()
+    try:
+        data = request.get_json() or {}
+        
+        # Build dynamic UPDATE query
+        allowed_fields = {
+            "status", "username", "phone", "url", "login_username", "login_password",
+            "account_name", "wechat_created_day", "wechat_created_month", "wechat_created_year",
+            "wechat_status", "die_date", "wechat_scan_count", "wechat_last_scan_date",
+            "rescue_count", "rescue_success_count", "email_reset_date", "notice", "muted_until"
+        }
+        
+        updates = {}
+        for field in allowed_fields:
+            if field in data:
+                updates[field] = data[field]
+        
+        if not updates:
+            # No fields to update - just return current account
+            account = conn.execute("SELECT a.*, c.card_name, c.group_id, c.platform FROM mxh_accounts a JOIN mxh_cards c ON a.card_id = c.id WHERE a.id = ?", (account_id,)).fetchone()
+            if account:
+                return jsonify(dict(account))
+            return jsonify({"error": "Account not found"}), 404
+        
+        # Add updated_at
+        updates["updated_at"] = datetime.now().isoformat()
+        
+        # Build SQL
+        set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
+        values = list(updates.values()) + [account_id]
+        
+        conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", values)
+        conn.commit()
+        
+        # Return updated account with joined data (card_name, group_id, platform)
+        updated = conn.execute("""
+            SELECT a.*, c.card_name, c.group_id, c.platform 
+            FROM mxh_accounts a 
+            JOIN mxh_cards c ON a.card_id = c.id 
+            WHERE a.id = ?
+        """, (account_id,)).fetchone()
+        
+        if updated:
+            return jsonify(dict(updated))
+        return jsonify({"error": "Account not found after update"}), 404
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 
 @mxh_bp.route("/api/cards/<int:card_id>/accounts", methods=["POST"])
@@ -656,9 +708,19 @@ def acc_notice(account_id):
             conn.commit()
             return jsonify({"message": "Notice cleared"})
         data = request.get_json() or {}
+        
+        # Calculate due_date if not provided
+        if 'due_date' not in data and 'days' in data:
+            from datetime import timedelta
+            start_date = datetime.now(timezone.utc).astimezone()
+            due_date = start_date + timedelta(days=int(data['days']))
+            data['due_date'] = due_date.isoformat()
+            data['start_at'] = start_date.isoformat()
+            data['enabled'] = True
+        
         conn.execute("UPDATE mxh_accounts SET notice = ?, updated_at = ? WHERE id = ?", (json.dumps(data), now_iso, account_id))
         conn.commit()
-        return jsonify({"message": "Notice saved"})
+        return jsonify({"message": "Notice saved", "notice": data})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
