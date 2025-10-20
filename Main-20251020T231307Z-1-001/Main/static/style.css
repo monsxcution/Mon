@@ -1,0 +1,8 @@
+/* Hiệu ứng nổi cho tab khi hover */
+.main-nav .nav-link {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.main-nav .nav-link:hover {
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 0 4px 16px rgba(0,224,255,0.18);
+} 

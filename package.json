@@ -1,0 +1,24 @@
+{
+  "name": "mon",
+  "version": "1.0.0",
+  "description": "MonDashboard có hệ thống logging thống nhất, cho phép xem **cả log backend lẫn log F12 browser** trong cùng 1 terminal và file log.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stagewise": "stagewise -b"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monsxcution/Mon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/monsxcution/Mon/issues"
+  },
+  "homepage": "https://github.com/monsxcution/Mon#readme",
+  "devDependencies": {
+    "stagewise": "^0.11.1"
+  }
+}
