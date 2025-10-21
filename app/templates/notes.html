@@ -316,8 +316,42 @@
 /* (Không bắt buộc) đồng bộ link-popover nếu muốn dùng chung khung */
 .link-popover-400 .profile-media-preview { width:400px; height:400px; }
 
-/* Cho popover rộng hơn xíu để ảnh không bị bóp */
+/* Cho popover bình thường vẫn 320px */
 .popover { max-width: 320px; }
+
+/* Nhưng popover có preview ảnh thì cho rộng 448px, ưu tiên tuyệt đối */
+.popover.profile-popover-400,
+.popover.link-popover-400,
+.popover:has(.profile-popover),
+.popover:has(.link-popover) {
+  max-width: 448px !important;
+}
+
+/* Cố định khung preview đúng 400x400 và không cho tràn */
+.profile-popover .profile-media-preview,
+.link-popover .profile-media-preview {
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-popover .profile-media-preview img,
+.link-popover .profile-media-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Chỉ riêng popover có media thì ẩn tràn trong body để không "xì" ra ngoài */
+.popover:has(.profile-media-preview) .popover-body,
+.popover:has(.link-popover) .popover-body {
+  overflow: hidden;
+}
 </style>
 {% endblock %}
 
@@ -1768,26 +1802,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const profilePassword = span.dataset.profilePassword || '';
             const profileContent = span.dataset.profileContent || '';
 
-            // Lấy ảnh từ content (nếu có)
-            let imagesHTML = '';
+            // Lấy ảnh đầu tiên trong content để preview 400x400
+            let mediaHTML = '';
             if (profileContent) {
                 const tmp = document.createElement('div');
                 tmp.innerHTML = profileContent;
-                const imgs = Array.from(tmp.querySelectorAll('img')).slice(0, 3); // limit 3
+                const imgs = Array.from(tmp.querySelectorAll('img'));
                 if (imgs.length) {
-                    imagesHTML = `<div class="mt-1">${imgs.map(img => {
-                        // ép style hiển thị đẹp
-                        img.setAttribute('loading', 'lazy');
-                        img.style.setProperty('width', '260px', 'important');
-                        img.style.setProperty('height', '180px', 'important');
-                        img.style.setProperty('object-fit', 'cover', 'important');
-                        img.style.setProperty('object-position', 'center', 'important');
-                        img.style.setProperty('overflow', 'hidden', 'important');
-                        img.style.display = 'block';
-                        img.style.marginTop = '6px';
-                        img.style.borderRadius = '6px';
-                        return img.outerHTML;
-                    }).join('')}</div>`;
+                    // dùng src của ảnh đầu tiên, ép hiển thị trong khung 400x400
+                    const src = imgs[0].getAttribute('src');
+                    mediaHTML = `
+                        <div class="profile-media-preview">
+                            <img src="${src}" alt="preview"/>
+                        </div>
+                        ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
+                    `;
                 }
             }
 
@@ -1795,17 +1824,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="profile-popover">
                     ${profileId ? `<div><strong>ID:</strong> ${profileId}</div>` : ''}
                     ${profilePassword ? `<div><strong>Password:</strong> ${profilePassword}</div>` : ''}
-                    ${profileContent && !imagesHTML ? `<div><strong>Content:</strong> ${profileContent}</div>` : ''}
-                    ${imagesHTML}
+                    ${mediaHTML || (profileContent ? `<div class="mt-1">${profileContent}</div>` : '')}
                 </div>
             `;
+
+            // Gỡ popover cũ trước khi gắn lại để tránh duplicate
+            const old = bootstrap.Popover.getInstance(span);
+            if (old) old.dispose();
 
             new bootstrap.Popover(span, {
                 content: popoverContent,
                 html: true,
                 trigger: 'hover',
                 placement: 'top',
-                container: 'body'
+                container: 'body',
+                customClass: 'profile-popover-400',
+                template: '<div class="popover profile-popover-400" role="tooltip"><div class="popover-arrow"></div><div class="popover-body"></div></div>'
             });
         });
     }
@@ -1824,10 +1858,29 @@ document.addEventListener('DOMContentLoaded', function () {
         editor.querySelectorAll('a.has-link-content').forEach(a => {
             const contentHtml = a.dataset.linkContent || '';
             const href = a.getAttribute('href') || a.dataset.linkHref || '';
+            
+            // Lấy ảnh đầu tiên trong content để preview 400x400
+            let mediaHTML = '';
+            if (contentHtml) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = contentHtml;
+                const imgs = Array.from(tmp.querySelectorAll('img'));
+                if (imgs.length) {
+                    // dùng src của ảnh đầu tiên, ép hiển thị trong khung 400x400
+                    const src = imgs[0].getAttribute('src');
+                    mediaHTML = `
+                        <div class="profile-media-preview">
+                            <img src="${src}" alt="preview"/>
+                        </div>
+                        ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
+                    `;
+                }
+            }
+            
             const popHtml = `
                 <div class="link-popover">
                     ${href ? `<div class="mb-1"><a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a></div>` : ''}
-                    ${contentHtml}
+                    ${mediaHTML || contentHtml}
                 </div>
             `;
             new bootstrap.Popover(a, {
@@ -1835,7 +1888,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 html: true,
                 trigger: 'hover',
                 placement: 'top',
-                container: 'body'
+                container: 'body',
+                customClass: 'link-popover-400',
+                template: '<div class="popover link-popover-400" role="tooltip"><div class="popover-arrow"></div><div class="popover-body"></div></div>'
             });
         });
     }

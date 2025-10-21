@@ -29,18 +29,8 @@
                 <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('settings.settings_page') }}">
-                            <i class="bi bi-gear-wide-connected me-2"></i>Cài Đặt
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); location.reload();">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Tải Lại
-                        </a>
-                    </li>
+                <ul class="dropdown-menu dropdown-menu-end" id="dynamic-menu">
+                    {# Menu content will be populated by JavaScript based on current page #}
                 </ul>
             </li>
         </ul>
@@ -49,22 +39,23 @@
 
 <style>
 /* Hamburger menu position fix - Keep in place, just show dropdown */
-#hamburger-menu {
+.hamburger-menu {
     position: relative;
+    /* Removed padding-left */
 }
 
-#hamburger-menu .dropdown-menu {
-    position: absolute;
+/* Ensure dropdown appears correctly */
+.hamburger-menu .dropdown-menu {
+    position: absolute !important; /* Force absolute positioning */
     top: 100%;
     right: 0;
+    left: auto; /* Ensure it aligns to the right */
     margin-top: 0.125rem;
     display: none;
-    /* Prevent menu from affecting layout */
     min-width: 200px;
+    z-index: 1050; /* Ensure it's above other elements */
 }
 
-/* REMOVED CSS hover - Let JavaScript handle show/hide */
-/* JavaScript will control .show class instead */
 
 /* Smooth dropdown animation */
 @keyframes fadeInDown {
@@ -79,92 +70,148 @@
 }
 
 /* Show dropdown with animation when .show class is added */
-#hamburger-menu .dropdown-menu.show {
+.hamburger-menu .dropdown-menu.show {
     display: block;
-    animation: fadeInDown 0.3s ease-in-out;
+    animation: fadeInDown 0.2s ease-out; /* Faster animation */
 }
 
 /* Dropdown item hover effect */
-#hamburger-menu .dropdown-item {
-    transition: all 0.2s ease;
+.hamburger-menu .dropdown-item {
+    transition: all 0.15s ease; /* Faster transition */
 }
 
-#hamburger-menu .dropdown-item:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    transform: translateX(5px);
+.hamburger-menu .dropdown-item:hover,
+.hamburger-menu .dropdown-item:focus { /* Add focus state */
+    background-color: rgba(var(--bs-primary-rgb), 0.15); /* Lighter hover */
+    color: var(--bs-primary);
+    transform: translateX(3px); /* Smaller movement */
 }
 
-/* Prevent icon from moving */
-#hamburger-menu .nav-link {
+/* Ensure icon alignment */
+.hamburger-menu .nav-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0.25rem !important; /* Smaller padding for icon */
+    line-height: 1;
+}
+
+.hamburger-menu .nav-link i {
+    vertical-align: middle;
+}
+
+/* Style main nav items to align with hamburger */
+.main-nav .nav-item {
+    display: flex;
+    align-items: center;
 }
 </style>
 
 <script>
-// Enhanced hover menu behavior with smart timing
+// Enhanced hover menu behavior - Applied to all hamburger menus
 (function() {
-    const hamburgerMenu = document.getElementById('hamburger-menu');
-    if (!hamburgerMenu) return;
-    
-    const menuLink = hamburgerMenu.querySelector('.nav-link');
-    const dropdownMenu = hamburgerMenu.querySelector('.dropdown-menu');
-    
-    let autoHideTimeout;
-    let mouseLeaveTimeout;
-    let isMouseOverMenu = false;
-    let isMouseOverDropdown = false;
-    
-    // Show dropdown when hovering icon
-    hamburgerMenu.addEventListener('mouseenter', () => {
-        clearTimeout(autoHideTimeout);
-        clearTimeout(mouseLeaveTimeout);
-        isMouseOverMenu = true;
-        dropdownMenu.classList.add('show');
-        
-        // Auto-hide after 2 seconds if user doesn't move to dropdown
-        autoHideTimeout = setTimeout(() => {
-            if (!isMouseOverDropdown) {
-                dropdownMenu.classList.remove('show');
+    const hamburgerMenus = document.querySelectorAll('.hamburger-menu');
+    if (!hamburgerMenus.length) return;
+
+    hamburgerMenus.forEach(hamburgerMenu => {
+        const menuLink = hamburgerMenu.querySelector('.nav-link');
+        const dropdownMenu = hamburgerMenu.querySelector('.dropdown-menu');
+        let bsDropdownInstance = null; // Store Bootstrap instance
+
+        let autoHideTimeout;
+        let mouseLeaveTimeout;
+        let isMouseOverMenu = false;
+        let isMouseOverDropdown = false;
+
+        // Function to show dropdown using Bootstrap API
+        const showDropdown = () => {
+             if (!bsDropdownInstance) {
+                bsDropdownInstance = new bootstrap.Dropdown(menuLink, {
+                    // Options if needed
+                });
             }
-        }, 2000);
-    });
-    
-    // When mouse leaves hamburger icon
-    hamburgerMenu.addEventListener('mouseleave', () => {
-        isMouseOverMenu = false;
-        
-        // Give user time to move mouse to dropdown (500ms grace period)
-        mouseLeaveTimeout = setTimeout(() => {
-            // If not hovering dropdown after grace period, hide
-            if (!isMouseOverDropdown) {
-                clearTimeout(autoHideTimeout);
-                dropdownMenu.classList.remove('show');
+             // Use Bootstrap's show method if not already shown
+             // Check _isShown property (internal, might change) or check for 'show' class
+            if (!dropdownMenu.classList.contains('show')) {
+                 bsDropdownInstance.show();
             }
-        }, 500); // 500ms to move from icon to dropdown
-    });
-    
-    // When mouse enters dropdown menu
-    dropdownMenu.addEventListener('mouseenter', () => {
-        clearTimeout(autoHideTimeout);
-        clearTimeout(mouseLeaveTimeout); // Cancel hide action
-        isMouseOverDropdown = true;
-        dropdownMenu.classList.add('show');
-    });
-    
-    // When mouse leaves dropdown menu
-    dropdownMenu.addEventListener('mouseleave', () => {
-        isMouseOverDropdown = false;
-        
-        // Small delay before hiding
-        setTimeout(() => {
-            // Only hide if not back on menu icon
-            if (!isMouseOverMenu && !isMouseOverDropdown) {
-                dropdownMenu.classList.remove('show');
+        };
+
+        // Function to hide dropdown using Bootstrap API
+        const hideDropdown = () => {
+             if (bsDropdownInstance) {
+                 // Use Bootstrap's hide method if shown
+                 if (dropdownMenu.classList.contains('show')) {
+                    bsDropdownInstance.hide();
+                 }
             }
-        }, 100);
+        };
+
+        // Show dropdown when hovering icon
+        hamburgerMenu.addEventListener('mouseenter', () => {
+            clearTimeout(autoHideTimeout);
+            clearTimeout(mouseLeaveTimeout);
+            isMouseOverMenu = true;
+            showDropdown(); // Use Bootstrap's show
+
+            // Auto-hide after 2 seconds if user doesn't move to dropdown
+            autoHideTimeout = setTimeout(() => {
+                if (!isMouseOverDropdown) {
+                    hideDropdown(); // Use Bootstrap's hide
+                }
+            }, 2000);
+        });
+
+        // When mouse leaves hamburger icon
+        hamburgerMenu.addEventListener('mouseleave', () => {
+            isMouseOverMenu = false;
+
+            // Give user time to move mouse to dropdown (300ms grace period)
+            mouseLeaveTimeout = setTimeout(() => {
+                if (!isMouseOverDropdown) {
+                    clearTimeout(autoHideTimeout);
+                    hideDropdown(); // Use Bootstrap's hide
+                }
+            }, 300); // Reduced grace period
+        });
+
+        // When mouse enters dropdown menu
+        dropdownMenu.addEventListener('mouseenter', () => {
+            clearTimeout(autoHideTimeout);
+            clearTimeout(mouseLeaveTimeout); // Cancel hide action
+            isMouseOverDropdown = true;
+             // Ensure it stays shown (Bootstrap might try to hide it on focus loss)
+             if (!dropdownMenu.classList.contains('show')) {
+                showDropdown();
+             }
+        });
+
+        // When mouse leaves dropdown menu
+        dropdownMenu.addEventListener('mouseleave', () => {
+            isMouseOverDropdown = false;
+            // Small delay before potentially hiding
+            setTimeout(() => {
+                // Only hide if not back on menu icon
+                if (!isMouseOverMenu && !isMouseOverDropdown) {
+                     hideDropdown(); // Use Bootstrap's hide
+                }
+            }, 100);
+        });
+
+         // Close dropdown when an item is clicked
+        dropdownMenu.addEventListener('click', (e) => {
+            if (e.target.classList.contains('dropdown-item')) {
+                hideDropdown();
+            }
+        });
+
+         // Bootstrap event listener to clear state if closed externally
+         hamburgerMenu.addEventListener('hidden.bs.dropdown', () => {
+            isMouseOverMenu = false;
+            isMouseOverDropdown = false;
+            clearTimeout(autoHideTimeout);
+            clearTimeout(mouseLeaveTimeout);
+         });
     });
 })();
 </script>
