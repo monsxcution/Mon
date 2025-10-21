@@ -1,10 +1,249 @@
 {% extends "layouts/base.html" %}
 
 {% block content %}
-<div class="tab-pane fade show active" id="telegram-tool-pane" role="tabpanel">
-    <div class="p-4">
-        <h1 class="display-6 fw-bold mb-4">Quản Lý Telegram</h1>
-        <p>...Đang xây dựng...</p>
+<div class="container-fluid p-0">
+    <div class="row g-0 h-100">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="sidebar-header p-3">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-telegram me-2"></i>Telegram
+                </h5>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="manager-tab" data-bs-toggle="tab" href="#manager-pane" role="tab" aria-controls="manager-pane" aria-selected="true">
+                            <i class="bi bi-person-gear me-2"></i>Manager
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="group-tab" data-bs-toggle="tab" href="#group-pane" role="tab" aria-controls="group-pane" aria-selected="false">
+                            <i class="bi bi-people me-2"></i>Group
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="tab-content" id="telegram-tab-content">
+                <!-- Manager Tab -->
+                <div class="tab-pane fade show active" id="manager-pane" role="tabpanel" aria-labelledby="manager-tab">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h1 class="h3 mb-0">Manager</h1>
+                            <button class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Thêm Manager
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Danh sách Manager</h5>
+                                        <p class="text-muted">Quản lý các tài khoản Telegram Manager</p>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Tên</th>
+                                                        <th>Username</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Hành động</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="5" class="text-center text-muted py-4">
+                                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                            Chưa có Manager nào
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Group Tab -->
+                <div class="tab-pane fade" id="group-pane" role="tabpanel" aria-labelledby="group-tab">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h1 class="h3 mb-0">Group</h1>
+                            <button class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Thêm Group
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Danh sách Group</h5>
+                                        <p class="text-muted">Quản lý các nhóm Telegram</p>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Tên Group</th>
+                                                        <th>Link</th>
+                                                        <th>Thành viên</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Hành động</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="6" class="text-center text-muted py-4">
+                                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                            Chưa có Group nào
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+/* Sidebar Styles */
+.sidebar {
+    background: linear-gradient(135deg, #0088cc 0%, #229ED9 100%);
+    min-height: 100vh;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebar-nav .nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 12px 20px;
+    border-radius: 0;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-nav .nav-link:hover {
+    color: white;
+    background-color: rgba(255,255,255,0.1);
+    border-left-color: rgba(255,255,255,0.5);
+}
+
+.sidebar-nav .nav-link.active {
+    color: white;
+    background-color: rgba(255,255,255,0.2);
+    border-left-color: white;
+    font-weight: 600;
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Main Content */
+.main-content {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-radius: 10px;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Table Styles */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, #0088cc 0%, #229ED9 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,136,204,0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+    }
+    
+    .main-content {
+        min-height: auto;
+    }
+}
+</style>
+
+<script>
+// Sidebar tab switching
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+    
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // Show corresponding tab content
+            const targetId = this.getAttribute('href').substring(1);
+            const targetPane = document.getElementById(targetId);
+            
+            if (targetPane) {
+                // Hide all tab panes
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('show', 'active');
+                });
+                
+                // Show target tab pane
+                targetPane.classList.add('show', 'active');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

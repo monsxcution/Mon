@@ -24,6 +24,11 @@
                     <span class="nav-card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="bi bi-image-fill"></i></span> Image
                 </a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if request.path == url_for('telegram') %}active{% endif %}" id="telegram-tab-link" data-tab-id="telegram" href="{{ url_for('telegram') }}">
+                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #0088cc 0%, #229ED9 100%);"><i class="bi bi-telegram"></i></span> Telegram
+                </a>
+            </li>
         </ul>
 
         {# --- Global Hamburger Menu (Content changes dynamically) --- #}
@@ -138,6 +143,9 @@
                 break;
             case 'image':
                  items += `<li><a class="dropdown-item" href="#"><i class="bi bi-image-gear me-2"></i>Cài đặt Image</a></li>`; // Placeholder
+                break;
+            case 'telegram':
+                 items += `<li><a class="dropdown-item" href="#"><i class="bi bi-telegram me-2"></i>Cài đặt Telegram</a></li>`; // Placeholder
                 break;
              case 'home':
                  // No specific settings for home yet, maybe add later
