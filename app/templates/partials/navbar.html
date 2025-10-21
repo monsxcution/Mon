@@ -1,36 +1,40 @@
 <div class="container-fluid">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-0" style="margin-top: -1%;">
+        {# --- Main Navigation Tabs --- #}
         <ul class="nav nav-tabs main-nav mb-0" id="main-tab" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" href="{{ url_for('home') }}">
-                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #0da5aa 100%);"><i class="bi bi-house-door-fill"></i></span> 
+                <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" id="home-tab-link" data-tab-id="home" href="{{ url_for('home') }}">
+                    <span class="nav-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #0da5aa 100%);"><i class="bi bi-house-door-fill"></i></span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('notes') %}active{% endif %}" href="{{ url_for('notes') }}">
+                <a class="nav-link {% if request.path == url_for('notes') %}active{% endif %}" id="notes-tab-link" data-tab-id="notes" href="{{ url_for('notes') }}">
                     <span class="nav-card-icon" style="background: linear-gradient(135deg, #07c160 0%, #00a854 100%);"><i class="bi bi-journal-richtext"></i></span> Ghi Chú
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path == url_for('mxh.mxh_page') %}active{% endif %}" href="{{ url_for('mxh.mxh_page') }}">
+                <a class="nav-link {% if request.path == url_for('mxh.mxh_page') %}active{% endif %}" id="mxh-tab-link" data-tab-id="mxh" href="{{ url_for('mxh.mxh_page') }}">
                     <span class="nav-card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="bi bi-share-fill"></i></span> MXH
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if request.path.startswith('/image') %}active{% endif %}" 
+                <a class="nav-link {% if request.path.startswith('/image') %}active{% endif %}" id="image-tab-link" data-tab-id="image"
                    href="{{ url_for('image.index') }}"
                    onclick="return handleImageNavClick(event);">
                     <span class="nav-card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="bi bi-image-fill"></i></span> Image
                 </a>
             </li>
         </ul>
+
+        {# --- Global Hamburger Menu (Content changes dynamically) --- #}
         <ul class="navbar-nav ms-auto">
-            <li class="nav-item dropdown" id="hamburger-menu">
-                <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+             <li class="nav-item dropdown hamburger-menu" id="global-hamburger-menu">
+                <a class="nav-link p-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" id="dynamic-menu">
-                    {# Menu content will be populated by JavaScript based on current page #}
+                <ul class="dropdown-menu dropdown-menu-end" id="hamburger-dropdown-content">
+                    {# Content will be populated by JavaScript #}
+                    <li><span class="dropdown-item text-muted">Đang tải...</span></li>
                 </ul>
             </li>
         </ul>
@@ -38,53 +42,43 @@
 </div>
 
 <style>
-/* Hamburger menu position fix - Keep in place, just show dropdown */
+/* Hamburger menu position fix - Aligned to the right */
 .hamburger-menu {
     position: relative;
-    /* Removed padding-left */
 }
 
-/* Ensure dropdown appears correctly */
 .hamburger-menu .dropdown-menu {
-    position: absolute !important; /* Force absolute positioning */
+    position: absolute !important;
     top: 100%;
     right: 0;
-    left: auto; /* Ensure it aligns to the right */
+    left: auto;
     margin-top: 0.125rem;
     display: none;
     min-width: 200px;
-    z-index: 1050; /* Ensure it's above other elements */
+    z-index: 1050;
 }
-
 
 /* Smooth dropdown animation */
 @keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Show dropdown with animation when .show class is added */
 .hamburger-menu .dropdown-menu.show {
     display: block;
-    animation: fadeInDown 0.2s ease-out; /* Faster animation */
+    animation: fadeInDown 0.2s ease-out;
 }
 
 /* Dropdown item hover effect */
 .hamburger-menu .dropdown-item {
-    transition: all 0.15s ease; /* Faster transition */
+    transition: all 0.15s ease;
 }
 
 .hamburger-menu .dropdown-item:hover,
-.hamburger-menu .dropdown-item:focus { /* Add focus state */
-    background-color: rgba(var(--bs-primary-rgb), 0.15); /* Lighter hover */
+.hamburger-menu .dropdown-item:focus {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
     color: var(--bs-primary);
-    transform: translateX(3px); /* Smaller movement */
+    transform: translateX(3px);
 }
 
 /* Ensure icon alignment */
@@ -92,7 +86,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.25rem !important; /* Smaller padding for icon */
+    padding: 0.25rem !important;
     line-height: 1;
 }
 
@@ -100,118 +94,171 @@
     vertical-align: middle;
 }
 
-/* Style main nav items to align with hamburger */
-.main-nav .nav-item {
-    display: flex;
-    align-items: center;
+/* Ensure main nav items don't overlap */
+.main-nav {
+    flex-grow: 1; /* Allow tabs to take available space */
+    margin-right: 1rem; /* Add some space before the hamburger */
 }
 </style>
 
 <script>
-// Enhanced hover menu behavior - Applied to all hamburger menus
+// Logic for the single, dynamic hamburger menu
 (function() {
-    const hamburgerMenus = document.querySelectorAll('.hamburger-menu');
-    if (!hamburgerMenus.length) return;
+    const hamburgerMenu = document.getElementById('global-hamburger-menu');
+    if (!hamburgerMenu) return;
 
-    hamburgerMenus.forEach(hamburgerMenu => {
-        const menuLink = hamburgerMenu.querySelector('.nav-link');
-        const dropdownMenu = hamburgerMenu.querySelector('.dropdown-menu');
-        let bsDropdownInstance = null; // Store Bootstrap instance
+    const menuLink = hamburgerMenu.querySelector('.nav-link');
+    const dropdownMenu = hamburgerMenu.querySelector('.dropdown-menu');
+    const dropdownContentUl = document.getElementById('hamburger-dropdown-content');
+    let bsDropdownInstance = null; // Store Bootstrap instance
 
-        let autoHideTimeout;
-        let mouseLeaveTimeout;
-        let isMouseOverMenu = false;
-        let isMouseOverDropdown = false;
+    let autoHideTimeout;
+    let mouseLeaveTimeout;
+    let isMouseOverMenu = false;
+    let isMouseOverDropdown = false;
 
-        // Function to show dropdown using Bootstrap API
-        const showDropdown = () => {
-             if (!bsDropdownInstance) {
-                bsDropdownInstance = new bootstrap.Dropdown(menuLink, {
-                    // Options if needed
-                });
-            }
-             // Use Bootstrap's show method if not already shown
-             // Check _isShown property (internal, might change) or check for 'show' class
-            if (!dropdownMenu.classList.contains('show')) {
-                 bsDropdownInstance.show();
-            }
-        };
+    // --- Dynamic Content Generation ---
+    const getMenuItemsForTab = (tabId) => {
+        let items = `
+            <li>
+                <a class="dropdown-item" href="{{ url_for('settings.settings_page') }}">
+                    <i class="bi bi-gear-wide-connected me-2"></i>Cài Đặt Chung
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+        `;
 
-        // Function to hide dropdown using Bootstrap API
-        const hideDropdown = () => {
-             if (bsDropdownInstance) {
-                 // Use Bootstrap's hide method if shown
-                 if (dropdownMenu.classList.contains('show')) {
-                    bsDropdownInstance.hide();
-                 }
-            }
-        };
+        // Add tab-specific items
+        switch (tabId) {
+            case 'notes':
+                items += `<li><a class="dropdown-item" href="#"><i class="bi bi-journal-gear me-2"></i>Cài đặt Ghi chú</a></li>`; // Placeholder
+                break;
+            case 'mxh':
+                items += `<li><a class="dropdown-item" href="#"><i class="bi bi-share-gear me-2"></i>Cài đặt MXH</a></li>`; // Placeholder
+                break;
+            case 'image':
+                 items += `<li><a class="dropdown-item" href="#"><i class="bi bi-image-gear me-2"></i>Cài đặt Image</a></li>`; // Placeholder
+                break;
+             case 'home':
+                 // No specific settings for home yet, maybe add later
+                 // items += `<li><a class="dropdown-item" href="#"><i class="bi bi-house-gear me-2"></i>Cài đặt Trang chủ</a></li>`;
+                 break;
+            default:
+                 // Default case if no tab is active or unknown
+                 break;
+        }
 
-        // Show dropdown when hovering icon
-        hamburgerMenu.addEventListener('mouseenter', () => {
-            clearTimeout(autoHideTimeout);
-            clearTimeout(mouseLeaveTimeout);
-            isMouseOverMenu = true;
-            showDropdown(); // Use Bootstrap's show
+        // Removed reload option from all tabs
 
-            // Auto-hide after 2 seconds if user doesn't move to dropdown
-            autoHideTimeout = setTimeout(() => {
-                if (!isMouseOverDropdown) {
-                    hideDropdown(); // Use Bootstrap's hide
-                }
-            }, 2000);
-        });
 
-        // When mouse leaves hamburger icon
-        hamburgerMenu.addEventListener('mouseleave', () => {
-            isMouseOverMenu = false;
+        return items;
+    };
 
-            // Give user time to move mouse to dropdown (300ms grace period)
-            mouseLeaveTimeout = setTimeout(() => {
-                if (!isMouseOverDropdown) {
-                    clearTimeout(autoHideTimeout);
-                    hideDropdown(); // Use Bootstrap's hide
-                }
-            }, 300); // Reduced grace period
-        });
+    const updateDropdownContent = () => {
+        const activeTabLink = document.querySelector('#main-tab .nav-link.active');
+        const activeTabId = activeTabLink ? activeTabLink.dataset.tabId : 'home'; // Default to home if none active
+        dropdownContentUl.innerHTML = getMenuItemsForTab(activeTabId);
+    };
 
-        // When mouse enters dropdown menu
-        dropdownMenu.addEventListener('mouseenter', () => {
-            clearTimeout(autoHideTimeout);
-            clearTimeout(mouseLeaveTimeout); // Cancel hide action
-            isMouseOverDropdown = true;
-             // Ensure it stays shown (Bootstrap might try to hide it on focus loss)
-             if (!dropdownMenu.classList.contains('show')) {
-                showDropdown();
-             }
-        });
+    // --- Bootstrap Dropdown Interaction ---
+    const ensureBsInstance = () => {
+        if (!bsDropdownInstance) {
+            bsDropdownInstance = new bootstrap.Dropdown(menuLink);
+        }
+        return bsDropdownInstance;
+    }
 
-        // When mouse leaves dropdown menu
-        dropdownMenu.addEventListener('mouseleave', () => {
-            isMouseOverDropdown = false;
-            // Small delay before potentially hiding
-            setTimeout(() => {
-                // Only hide if not back on menu icon
-                if (!isMouseOverMenu && !isMouseOverDropdown) {
-                     hideDropdown(); // Use Bootstrap's hide
-                }
-            }, 100);
-        });
+    const showDropdown = () => {
+        const instance = ensureBsInstance();
+        // Update content *before* showing
+        updateDropdownContent();
+        if (!dropdownMenu.classList.contains('show')) {
+            instance.show();
+        }
+    };
 
-         // Close dropdown when an item is clicked
-        dropdownMenu.addEventListener('click', (e) => {
-            if (e.target.classList.contains('dropdown-item')) {
+    const hideDropdown = () => {
+        const instance = ensureBsInstance();
+        if (dropdownMenu.classList.contains('show')) {
+            instance.hide();
+        }
+    };
+
+    // --- Hover Logic ---
+    hamburgerMenu.addEventListener('mouseenter', () => {
+        clearTimeout(autoHideTimeout);
+        clearTimeout(mouseLeaveTimeout);
+        isMouseOverMenu = true;
+        showDropdown();
+
+        autoHideTimeout = setTimeout(() => {
+            if (!isMouseOverDropdown) {
                 hideDropdown();
             }
-        });
-
-         // Bootstrap event listener to clear state if closed externally
-         hamburgerMenu.addEventListener('hidden.bs.dropdown', () => {
-            isMouseOverMenu = false;
-            isMouseOverDropdown = false;
-            clearTimeout(autoHideTimeout);
-            clearTimeout(mouseLeaveTimeout);
-         });
+        }, 2000);
     });
+
+    hamburgerMenu.addEventListener('mouseleave', () => {
+        isMouseOverMenu = false;
+        mouseLeaveTimeout = setTimeout(() => {
+            if (!isMouseOverDropdown) {
+                clearTimeout(autoHideTimeout);
+                hideDropdown();
+            }
+        }, 300);
+    });
+
+    dropdownMenu.addEventListener('mouseenter', () => {
+        clearTimeout(autoHideTimeout);
+        clearTimeout(mouseLeaveTimeout);
+        isMouseOverDropdown = true;
+        // Ensure it stays shown
+        if (!dropdownMenu.classList.contains('show')) {
+           showDropdown();
+        }
+    });
+
+    dropdownMenu.addEventListener('mouseleave', () => {
+        isMouseOverDropdown = false;
+        setTimeout(() => {
+            if (!isMouseOverMenu && !isMouseOverDropdown) {
+                 hideDropdown();
+            }
+        }, 100);
+    });
+
+    // Close dropdown when an item is clicked
+    dropdownMenu.addEventListener('click', (e) => {
+        if (e.target.closest('.dropdown-item')) { // Use closest to handle clicks on icons inside items
+            hideDropdown();
+        }
+    });
+
+    // Bootstrap event listener to clear state if closed externally
+    hamburgerMenu.addEventListener('hidden.bs.dropdown', () => {
+        isMouseOverMenu = false;
+        isMouseOverDropdown = false;
+        clearTimeout(autoHideTimeout);
+        clearTimeout(mouseLeaveTimeout);
+    });
+
+     // Initial content update on load (based on potentially pre-active tab)
+     updateDropdownContent();
+
+     // Update content when tabs change (for cases where hover isn't involved immediately)
+     document.querySelectorAll('#main-tab .nav-link').forEach(tabLink => {
+        tabLink.addEventListener('shown.bs.tab', updateDropdownContent);
+     });
+
 })();
+
+// Handle Image Nav Click (Keep this function if needed)
+function handleImageNavClick(event) {
+    if (window.location.pathname.startsWith('/image')) {
+        event.preventDefault();
+        console.log('Already on image page, prevented reload');
+        return false;
+    }
+    return true;
+}
 </script>
