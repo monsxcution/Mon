@@ -1355,7 +1355,7 @@
                 </div>
 
                 <!-- 2. Thông tin -->
-                <div class="mxh-menu-item" data-action="edit">
+                <div class="mxh-menu-item" data-hover-action="edit-modal">
                     <i class="bi bi-pencil me-2"></i>Thông Tin
                 </div>
 
@@ -1427,6 +1427,21 @@
 
         // Position submenus
         setTimeout(() => positionAllSubmenusForMenu(menu), 50);
+
+        // ===== THÊM CODE MỚI TẠI ĐÂY =====
+        // Add mouseover listener for "Thông Tin"
+        const editItem = menu.querySelector('.mxh-menu-item[data-hover-action="edit-modal"]');
+        if (editItem) {
+            editItem.addEventListener('mouseover', () => {
+                if (currentContextAccountId) {
+                    // Mở modal
+                    openAccountModalForEdit(currentContextAccountId);
+                    // Ẩn context menu
+                    hideCardContextMenu();
+                }
+            });
+        }
+        // ===== KẾT THÚC CODE MỚI =====
 
         // Add click handler
         setTimeout(() => {
@@ -1570,11 +1585,6 @@
                     await deleteSubAccount(currentContextAccountId);
                     hideCardContextMenu();
                 }
-            }
-        } else if (action === 'edit') {
-            if (currentContextAccountId) {
-                openAccountModalForEdit(currentContextAccountId);
-                hideCardContextMenu();
             }
         } else if (action === 'copy-phone') {
             const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
