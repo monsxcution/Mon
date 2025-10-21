@@ -292,25 +292,31 @@
 }
 
 /* Popover 400px cho profile */
-.popover.profile-popover-400 { max-width: 448px; } /* 400 + padding */
+.popover.profile-popover-400 { 
+  max-width: 448px; /* 400 + padding */
+  max-height: 500px; /* Giới hạn chiều cao popover */
+  min-height: 450px; /* Đảm bảo popover đủ cao cho khung 400px */
+}
 .profile-popover .profile-media-preview {
-  position: relative; /* QUAN TRỌNG: Tạo ngữ cảnh định vị */
-  width: 400px;
-  height: 400px;
-  overflow: hidden;
+  position: relative !important; /* QUAN TRỌNG: Tạo ngữ cảnh định vị */
+  width: 400px !important;
+  height: 400px !important;
+  overflow: hidden !important;
   background: #0f1115;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
+  display: block !important; /* Loại bỏ flex để tránh xung đột */
 }
 .profile-popover .profile-media-preview img,
 .link-popover .profile-media-preview img {
   /* Ép ảnh nằm tuyệt đối bên trong khung */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Giữ nguyên tỷ lệ, không bị méo */
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important; /* Giữ nguyên tỷ lệ, không bị méo */
+  display: block !important;
 }
 
 /* (Không bắt buộc) đồng bộ link-popover nếu muốn dùng chung khung */
@@ -325,18 +331,17 @@
 .popover:has(.profile-popover),
 .popover:has(.link-popover) {
   max-width: 448px !important;
+  max-height: 500px !important; /* Giới hạn chiều cao popover */
+  min-height: 450px !important; /* Đảm bảo popover đủ cao cho khung 400px */
 }
 
 /* Cố định khung preview đúng 400x400 và không cho tràn */
-.profile-popover .profile-media-preview,
 .link-popover .profile-media-preview {
-  position: relative; /* QUAN TRỌNG */
-  width: 400px;
-  height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  position: relative !important;
+  width: 400px !important;
+  height: 400px !important;
+  overflow: hidden !important;
+  display: block !important;
 }
 
 
@@ -1806,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const src = imgs[0].getAttribute('src');
                     mediaHTML = `
                         <div class="profile-media-preview">
-                            <img src="${src}" alt="preview"/>
+                            <img src="${src}" alt="preview" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;" />
                         </div>
                         ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
                     `;
@@ -1863,7 +1868,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const src = imgs[0].getAttribute('src');
                     mediaHTML = `
                         <div class="profile-media-preview">
-                            <img src="${src}" alt="preview"/>
+                            <img src="${src}" alt="preview" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;" />
                         </div>
                         ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
                     `;

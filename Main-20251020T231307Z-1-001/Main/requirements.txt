@@ -1,0 +1,32 @@
+# Telegram Dashboard - Requirements
+
+# Core Flask framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Security and authentication
+hashlib
+hmac
+secrets
+
+# Database
+sqlite3
+
+# Utilities and helpers
+pathlib
+datetime
+re
+json
+os
+sys
+
+# Development dependencies (optional)
+pytest==7.4.3
+pytest-flask==1.3.0
+
+# Production server (optional)
+gunicorn==21.2.0
+waitress==2.1.2
+
+# Note: Most dependencies are part of Python standard library
+# Only Flask needs to be installed via pip
