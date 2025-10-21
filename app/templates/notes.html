@@ -291,32 +291,30 @@
     border-color: #fff;
 }
 
-/* Popover nội dung có ảnh (profile & link) */
-.profile-popover img,
-.link-popover img {
-    width: 300px !important;
-    height: 300px !important;
-    display: block;
-    margin-top: 6px;
-    border-radius: 6px;
-    object-fit: cover !important;
-    object-position: center;
-    overflow: hidden;
+/* Popover 400px cho profile */
+.popover.profile-popover-400 { max-width: 448px; } /* 400 + padding */
+.profile-popover .profile-media-preview {
+  width: 400px;
+  height: 400px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f1115;           /* nền tối dịu để ảnh nổi bật */
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.profile-popover .profile-media-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;                   /* giữ tỉ lệ */
+  height: auto;                  /* giữ tỉ lệ */
+  object-fit: contain;
+  display: block;
 }
 
-/* Container cho ảnh trong popover */
-.profile-popover,
-.link-popover {
-    max-width: 260px;
-}
-
-.profile-popover .mt-1,
-.link-popover .mt-1 {
-    width: 260px;
-    height: 180px;
-    overflow: hidden;
-    border-radius: 6px;
-}
+/* (Không bắt buộc) đồng bộ link-popover nếu muốn dùng chung khung */
+.link-popover-400 .profile-media-preview { width:400px; height:400px; }
 
 /* Cho popover rộng hơn xíu để ảnh không bị bóp */
 .popover { max-width: 320px; }
