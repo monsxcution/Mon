@@ -2,21 +2,8 @@
 alwaysApply: true
 ---
 Phạm vi & Mục tiêu
-Thư mục MXH_Old là chứa file mẫu. Ta sẽ dựa vào file mẫu để code lại từ con số 0. 
-Khi người dùng ra lệnh làm chức năng nào, thì phải tự xem thư mục MXH_OLD xem code mẫu từ trước rồi hoàn thiện lại
-Mục đích: 1 card chứa nhiều account (bắt đầu với WeChat).
-Phạm vi: Toàn bộ module MXH (DB → API → FE).
-Mục tiêu: Chuyển mô hình 1 card → N accounts. Dựa trên MXH_Old làm file mẫu UI/flow, nhưng code lại từ đầu.
-1) Chuẩn dữ liệu (Data Model)
-Bảng: mxh_cards(id, card_name, group_id, platform, created_at, updated_at).
-Bảng: mxh_accounts(id, card_id(FK CASCADE), is_primary, account_name, username, phone, url, login_username, login_password, wechat_created_day|month|year, wechat_status, status, die_date, wechat_scan_count, wechat_last_scan_date, rescue_count, rescue_success_count, email_reset_date, notice(JSON/text), created_at, updated_at).
-PRAGMA foreign_keys=ON.
-Index: mxh_accounts(card_id), mxh_cards(group_id), mxh_cards(platform), mxh_accounts(wechat_status,status).
-2) API chuẩn mới: chỉ /cards và /accounts, không alias.
-3) Làm trước với WeChat: CRUD đầy đủ, transactional, chuẩn REST.
-
 Quan trọng:
  Khi người dùng nói "đóng gói .zip":
-> 1. Tạo báo cáo chi tiết về tiến độ và lỗi hiện tại
-> 2. Đóng gói chỉ các file liên quan đến lỗi/chức năng đang làm vào .zip (không phải toàn bộ thư mục)
-> 3. Xóa file báo cáo sau khi đóng gói xong
+1. Tạo báo cáo chi tiết về tiến độ và lỗi hiện tại , và mục tiêu người dùng mong muốn.
+2. Đóng gói chỉ các file liên quan đến lỗi/chức năng đang làm vào .zip (không phải toàn bộ thư mục),  ví dụ đang làm chức năng hoặc giao diện của MXH.html, thì đóng gói các file khác liên quan đến MXH.html như là mxh_routes.py, mxh_api.py..... ( không đóng gói các file Backup )
+3. Xóa file báo cáo sau khi đóng gói xong

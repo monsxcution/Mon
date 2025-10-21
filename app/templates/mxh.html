@@ -498,6 +498,171 @@
     margin: 0;
 }
 
+/* Smart Group Badge Styles */
+.group-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.smart-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.group-btn:hover .smart-badge {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px currentColor;
+}
+
+/* Card Badge Styles - giống hệt group badge */
+.card-top-badge {
+    z-index: 20;
+    /* Sử dụng cùng styling với .group-badge */
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 8px currentColor;
+    transition: all 0.3s ease;
+}
+
+.card-top-badge:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px currentColor;
+}
+
+/* Nav Badge Styles */
+.nav-badge-container {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    z-index: 10;
+}
+
+.nav-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px #dc354540;
+    animation: pulse 2s infinite;
+    z-index: 10;
+}
+
+/* Mini preview cạnh badge */
+.notice-preview {
+    position: fixed;
+    width: auto;
+    min-width: 200px;
+    max-width: 280px;
+    background: var(--bs-body-bg, #121212);
+    color: var(--bs-body-color, #eee);
+    border: 1px solid var(--bs-border-color, #2a2a2a);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    padding: 12px 12px 10px 12px;
+    opacity: 0;
+    transform: translateY(-2px) scale(.985);
+    transition: opacity .12s ease, transform .18s cubic-bezier(.2,.8,.2,1);
+    z-index: 1999;
+    pointer-events: auto;
+}
+
+.notice-preview.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.notice-preview::after {
+    content: "";
+    position: absolute;
+    top: var(--arrow-top, -8px);
+    left: var(--arrow-left, 16px);
+    width: 12px; 
+    height: 12px;
+    background: inherit;
+    border-left: 1px solid var(--bs-border-color, #2a2a2a);
+    border-top: 1px solid var(--bs-border-color, #2a2a2a);
+    transform: rotate(45deg);
+}
+
+.notice-preview .title {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 6px 0;
+}
+
+.notice-preview .meta {
+    font-size: 12px;
+    opacity: .75;
+    margin-bottom: 8px;
+}
+
+.notice-preview .content {
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    max-height: 180px;
+    overflow: auto;
+    margin-bottom: 10px;
+}
+
+.notice-preview .actions {
+    display: none;         /* ẩn ở chế độ hover */
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.notice-preview.action .actions { 
+    display: flex; 
+} /* hiện khi click */
+
+.notice-preview .btn {
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.notice-preview .btn-ok {
+    background: var(--bs-secondary-bg, #1e1e1e);
+    border: 1px solid var(--bs-border-color, #2a2a2a);
+    color: var(--bs-body-color, #eee);
+}
+
+.notice-preview .btn-off {
+    background: var(--bs-danger, #dc3545);
+    border: 1px solid transparent;
+    color: #fff;
+}
+
 </style>
 
 <script>
@@ -508,6 +673,16 @@
         RENDER_BATCH_SIZE: 50, // Cards to render per batch (for smooth rendering)
         ENABLE_AUTO_REFRESH: true // Changed from false to true
     };
+
+    // --- GLOBAL FLAGS ---
+    window.interactionPaused = false; // set true khi mở modal/context, false khi đóng
+    let _mxhGroupsTick = 0;
+    let refreshAbortController;
+
+    // Tự dừng/bật auto-refresh theo trạng thái tab
+    document.addEventListener('visibilitychange', () => { 
+        document.hidden ? stopAutoRefresh() : startAutoRefresh(); 
+    });
 
     // MXH Global State
     let mxhGroups = [];
@@ -521,21 +696,57 @@
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
     
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
+    // State chỉ lưu trong memory, không persist qua reload
     const cardStates = new Map();
+    const lockedStates = new Map(); // Lock state để prevent override trong quá trình edit
     
+    // NEW: always normalize cardId to Number for state keys
     function getCardState(cardId) {
-        if (!cardStates.has(cardId)) {
-            cardStates.set(cardId, { activeAccountId: null, isFlipped: false });
+        const key = Number(cardId); // <-- normalize
+        if (!cardStates.has(key)) {
+            // console.log(`📦 Creating new state for card ${key}`);
+            cardStates.set(key, { activeAccountId: null, isFlipped: false });
         }
-        return cardStates.get(cardId);
+        const raw = cardStates.get(key);
+
+        // If locked, force activeAccountId to the locked one
+        if (lockedStates.has(key)) {
+            const lockedAccountId = lockedStates.get(key);
+            return { ...raw, activeAccountId: lockedAccountId };
+        }
+        return raw;
     }
     
-    function setCardState(cardId, updates) {
-        const state = getCardState(cardId);
+    function setCardState(cardId, updates, lock = false) {
+        const key = Number(cardId); // <-- normalize
+        // console.log(`📝 setCardState(${key}):`, JSON.stringify(updates), lock ? '🔒' : '');
+
+        if (lockedStates.has(key)) {
+            // console.warn(`⚠️ Card ${key} state is LOCKED, ignoring update`);
+            return;
+        }
+
+        const state = getCardState(key); // already normalized
         Object.assign(state, updates);
+        cardStates.set(key, state); // re-set not strictly required, but explicit
+
+        if (lock && updates.activeAccountId != null) {
+            lockedStates.set(key, updates.activeAccountId);
+            // Auto-unlock
+            setTimeout(() => lockedStates.delete(key), 2000);
+        }
     }
 
     // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
+    // Helper so sánh nhanh groups
+    const areGroupsEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+    // Gom render về idle để mượt
+    const scheduleRender = () => (window.requestIdleCallback
+        ? requestIdleCallback(() => renderMXHAccounts(), { timeout: 200 })
+        : setTimeout(() => renderMXHAccounts(), 50)
+    );
+
     // Debounce function - prevents excessive API calls
     function debounce(func, delay) {
         let timeoutId;
@@ -560,73 +771,72 @@
 
     // ===== REAL-TIME DATA LOADING WITH SMART UPDATES =====
     // Load MXH data from API with optimized rendering
-    async function loadMXHData(forceRender = true) {
+    async function loadMXHData(forceRender = false) {
+        if (window.interactionPaused || document.hidden) return; // (1) chặn khi đang tương tác/ẩn tab
+
+        // (3) chống race-condition
+        refreshAbortController?.abort();
+        refreshAbortController = new AbortController();
+        const { signal } = refreshAbortController;
+
         try {
-            // Check lastUpdateTime for delta polling
+            // last_updated_at ⇒ tự build accountsUrl như hiện tại của Sếp
             const accountsUrl = lastUpdateTime 
                 ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}` 
                 : '/mxh/api/accounts';
-                
-            // Parallel loading for speed
-            const [groupsResponse, accountsResponse] = await Promise.all([
-                fetch('/mxh/api/groups'),
-                fetch(accountsUrl) // Use the dynamic URL
-            ]);
 
-            if (groupsResponse.ok) {
-                mxhGroups = await groupsResponse.json();
+            // (2) giảm tần suất fetch groups
+            const fetchGroupsNow = ((++_mxhGroupsTick % 4) === 1) || forceRender;
+            const groupsReq   = fetchGroupsNow ? fetch('/mxh/api/groups', { signal }) : Promise.resolve({ ok:false });
+            const accountsReq = fetch(accountsUrl, { signal });
+
+            const [groupsResponse, accountsResponse] = await Promise.all([groupsReq, accountsReq]);
+
+            // (4) chỉ render groups nếu thay đổi
+            if (groupsResponse && groupsResponse.ok) {
+                const newGroups = await groupsResponse.json();
+                if (!areGroupsEqual(mxhGroups, newGroups)) {
+                    mxhGroups = newGroups;
+                    renderGroupsNav();
+                    updateMainNavBadge();
+                }
             }
+
+            let dataChanged = false;
 
             if (accountsResponse.ok) {
-                const newAccountsDelta = await accountsResponse.json();
-                
-                let dataChanged = false;
+                const delta = await accountsResponse.json();                 // [{...updated accounts...}]
+                const accountMap = new Map(mxhAccounts.map(a => [a.id, a])); // quick index
+                let touchedAny = false;
 
-                if (newAccountsDelta.length > 0) {
-                    dataChanged = true;
-                    // MERGE LOGIC: Replace/Update existing accounts with delta
-                    const accountMap = new Map(mxhAccounts.map(acc => [acc.id, acc]));
-                    
-                    newAccountsDelta.forEach(deltaAcc => {
-                        accountMap.set(deltaAcc.id, deltaAcc);
-                    });
-                    
-                    mxhAccounts = Array.from(accountMap.values());
-                    
-                    // Update lastUpdateTime with the latest timestamp from the delta
-                    // Use the *current* time if the delta is empty or the updated_at field is missing
-                    const latestTimestamp = newAccountsDelta.reduce((latest, acc) => {
-                        return (acc.updated_at && acc.updated_at > latest) ? acc.updated_at : latest;
-                    }, lastUpdateTime || new Date(0).toISOString());
-                    
-                    lastUpdateTime = latestTimestamp;
-                }
-
-                // Debug: log first account with notice
-                const accWithNotice = mxhAccounts.find(a => a.notice && a.notice.enabled);
-                if (accWithNotice) {
-                    // Debug disabled
-                }
-
-                // console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: mxhAccounts.length });
-
-                if (forceRender || dataChanged) {
-                    renderGroupsNav(); // Render groups navigation first
-                    if (!isRendering) {
-                        renderMXHAccounts();
-                    } else {
-                        pendingUpdates = true;
+                delta.forEach(acc => {
+                    const exist = accountMap.get(acc.id);
+                    if (!exist || JSON.stringify(exist) !== JSON.stringify(acc)) {
+                        accountMap.set(acc.id, acc);
+                        touchedAny = true;
                     }
+                });
+
+                if (touchedAny) {
+                    mxhAccounts = Array.from(accountMap.values());
+                    dataChanged = true;
+                    
+                    // Cập nhật lastUpdateTime sau khi merge delta thành công
+                    lastUpdateTime = Math.max(
+                        lastUpdateTime || 0,
+                        ...(delta.map(acc => new Date(acc.updated_at || acc.updatedAt || Date.now()).getTime()))
+                    ) || Date.now();
                 }
             }
-        } catch (error) {
-            console.error('Error loading MXH data:', error);
-            document.getElementById('mxh-accounts-container').innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Lỗi kết nối API! Đang thử kết nối lại...
-            </div>
-        `;
+
+            // (5) render mượt
+            if (forceRender || dataChanged) {
+                scheduleRender();
+                updateMainNavBadge();
+            }
+
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error('loadMXHData error:', err);
         }
     }
 
@@ -704,6 +914,92 @@
         return colors[platform] || '#6c757d';
     }
 
+    // Get card badge for individual cards (positioned like group badge)
+    function getCardBadge(account) {
+        const now = new Date();
+        let badgeInfo = {
+            total: 0,
+            noticeExpired: 0,
+            needHongKong: 0
+        };
+        
+        // 🟠 Cam: Check if notice countdown finished (causes blink)
+        if (account.notice) {
+            const noticeObj = ensureNoticeParsed(account.notice);
+            if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
+                const startDate = new Date(noticeObj.start_at);
+                const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
+                if (now >= endDate) {
+                    badgeInfo.noticeExpired++;
+                    badgeInfo.total++;
+                }
+            }
+        }
+
+        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
+        if (account.platform === 'wechat' && account.wechat_created_year) {
+            const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
+            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 365) {
+                // Check if Hong Kong number
+                const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
+                const isHongKongNumber = primaryPhone.startsWith('852');
+                if (!isHongKongNumber) {
+                    badgeInfo.needHongKong++;
+                    badgeInfo.total++;
+                }
+            }
+        }
+
+        // Return badge HTML if there are issues
+        let badges = '';
+        
+        // Badge ĐẾN HẠN (đỏ) - ưu tiên cao nhất
+        if (badgeInfo.noticeExpired > 0) {
+            let noticeCache = '';
+            if (account.notice) {
+                try {
+                    const noticeObj = ensureNoticeParsed(account.notice);
+                    if (noticeObj && noticeObj.enabled) {
+                        noticeCache = JSON.stringify({
+                            title: noticeObj.title || 'Thông báo đến hạn',
+                            message: noticeObj.note || 'Không có nội dung',
+                            due_human: noticeObj.due_date ? new Date(noticeObj.due_date).toLocaleDateString('vi-VN') : '',
+                            due_at: noticeObj.due_date,
+                            notice_id: account.id
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing notice cache:', e);
+                }
+            }
+            
+            badges += `<span class="group-badge card-top-badge notice-badge" 
+                            data-badge-type="due"
+                            data-account-id="${account.id}"
+                            data-notice-id="${account.id}"
+                            ${noticeCache ? `data-notice-cache='${noticeCache}'` : ''}
+                            title="Thông báo đến hạn"
+                            style="background-color: #fd7e14; color: white; box-shadow: 0 0 8px #fd7e1440;">
+                    </span>`;
+        }
+        
+        // Badge ĐỦ 1 NĂM (trắng) - chỉ hiển thị nếu không có badge đỏ
+        if (badgeInfo.needHongKong > 0 && badgeInfo.noticeExpired === 0) {
+            badges += `<span class="group-badge card-top-badge notice-badge" 
+                            data-badge-type="anniversary"
+                            data-account-id="${account.id}"
+                            title="Tài khoản đủ tuổi 1 năm"
+                            style="background:#fff; color:#111; border:2px solid rgba(0,0,0,.15); box-shadow: 0 0 8px rgba(255,255,255,0.3);">
+                        1Y
+                    </span>`;
+        }
+        
+        return badges;
+
+        return '';
+    }
+
     function getPlatformIconClass(platform) {
         const p = String(platform || '').toLowerCase();
         return ({
@@ -748,17 +1044,37 @@
         uniqueGroupIds.forEach(groupId => {
             const group = mxhGroups.find(g => g.id == groupId);
             if (group) {
-                // Calculate badge count for this group
-                const badgeCount = calculateGroupBadge(groupId);
+                // Calculate smart badge info for this group
+                const badgeInfo = calculateGroupBadge(groupId);
                 const isActive = activeGroupId === groupId;
 
+                // Create smart badge with tooltip
+                let badgeHtml = '';
+                if (badgeInfo.total > 0) {
+                    const badgeColor = badgeInfo.noticeExpired > 0 ? '#fd7e14' :  // 🟠 Cam: Thông báo hết hạn
+                                     badgeInfo.needHongKong > 0 ? '#ffffff' : group.color; // ⚪ Trắng: Cần đổi số HK
+                    
+                    const badgeTooltip = `Cần chú ý: ${badgeInfo.total} tài khoản
+${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hết hạn\n` : ''}${badgeInfo.needHongKong > 0 ? `• ${badgeInfo.needHongKong} tài khoản cần đổi số Hong Kong\n` : ''}`.trim();
+                    
+                    badgeHtml = `<span class="group-badge smart-badge" 
+                                        style="background-color: ${badgeColor}; 
+                                               color: ${badgeColor === '#ffffff' ? '#000000' : '#ffffff'};
+                                               border: ${badgeColor === '#ffffff' ? '2px solid #000000' : '2px solid rgba(255, 255, 255, 0.3)'};
+                                               box-shadow: 0 0 8px ${badgeColor}40;
+                                               animation: pulse 2s infinite;"
+                                        title="${badgeTooltip}">
+                                    ${badgeInfo.total}
+                                </span>`;
+                }
+
                 html += `
-                <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-light'}" 
+                <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-light'} group-btn" 
                         onclick="selectGroup('${groupId}')"
                         style="position: relative; ${isActive ? '' : 'border-color: ' + group.color + ';'}">
                     <i class="bi ${group.icon || 'bi-people-fill'}" style="color: ${isActive ? '#fff' : group.color};"></i>
                     ${group.name}
-                    ${badgeCount > 0 ? `<span class="group-badge" style="background-color: ${group.color};">${badgeCount}</span>` : ''}
+                    ${badgeHtml}
                 </button>
             `;
             }
@@ -779,27 +1095,32 @@
         updateMainNavBadge();
     }
 
-    // Calculate badge count for a specific group (only count cards with blink animation)
+    // Calculate smart badge count for a specific group with detailed breakdown
     function calculateGroupBadge(groupId) {
         const now = new Date();
-        let count = 0;
+        let badgeInfo = {
+            total: 0,
+            noticeExpired: 0,
+            needHongKong: 0
+        };
 
         mxhAccounts.forEach(account => {
             if (account.group_id != groupId) return;
 
-            // Check if notice countdown finished (causes blink)
+            // 🟠 Cam: Check if notice countdown finished (causes blink)
             if (account.notice) {
                 const noticeObj = ensureNoticeParsed(account.notice);
                 if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
                     const startDate = new Date(noticeObj.start_at);
                     const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
                     if (now >= endDate) {
-                        count++; // Notice expired = blink
+                        badgeInfo.noticeExpired++;
+                        badgeInfo.total++;
                     }
                 }
             }
 
-            // WeChat: Check if account is 1 year old AND NOT Hong Kong number (causes blink)
+            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
             if (account.platform === 'wechat' && account.wechat_created_year) {
                 const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
                 const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
@@ -808,7 +1129,8 @@
                     const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = primaryPhone.startsWith('852');
                     if (!isHongKongNumber) {
-                        count++; // 1 year old + NOT HK number = blink
+                        badgeInfo.needHongKong++;
+                        badgeInfo.total++;
                     }
                 }
             }
@@ -822,14 +1144,14 @@
                     const secondaryPhone = (account.secondary_phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = secondaryPhone.startsWith('852');
                     if (!isHongKongNumber) {
-                        count++; // 1 year old + NOT HK number = blink
+                        badgeInfo.needHongKong++;
+                        badgeInfo.total++;
                     }
                 }
             }
         });
 
-
-        return count;
+        return badgeInfo;
     }
 
     // Update badge dots on main MXH nav tab
@@ -837,36 +1159,61 @@
         const mxhNavLink = document.querySelector('a[href*="mxh"]');
         if (!mxhNavLink) return;
 
-        // Remove existing badge container
+        // Remove existing badge
         const existingBadge = mxhNavLink.querySelector('.nav-badge-container');
         if (existingBadge) existingBadge.remove();
 
-        // Get unique groups that have badges
+        // Calculate total badge count across all groups
         const uniqueGroupIds = [...new Set(mxhAccounts.map(acc => acc.group_id).filter(id => id))];
-        const groupsWithBadges = [];
+        let totalBadgeCount = 0;
+        let hasNoticeExpired = false;
+        let hasNeedHongKong = false;
 
         uniqueGroupIds.forEach(groupId => {
-            const badgeCount = calculateGroupBadge(groupId);
-            if (badgeCount > 0) {
-                const group = mxhGroups.find(g => g.id == groupId);
-                if (group) {
-                    groupsWithBadges.push(group);
-                }
+            const badgeInfo = calculateGroupBadge(groupId);
+            if (badgeInfo.total > 0) {
+                totalBadgeCount += badgeInfo.total;
+                if (badgeInfo.noticeExpired > 0) hasNoticeExpired = true;
+                if (badgeInfo.needHongKong > 0) hasNeedHongKong = true;
             }
         });
 
-        // Create badge dots
-        if (groupsWithBadges.length > 0) {
+        if (totalBadgeCount > 0) {
             const badgeContainer = document.createElement('div');
             badgeContainer.className = 'nav-badge-container';
-
-            groupsWithBadges.slice(0, 3).forEach(group => { // Max 3 dots
-                const dot = document.createElement('div');
-                dot.className = 'nav-badge-dot';
-                dot.style.backgroundColor = group.color;
-                badgeContainer.appendChild(dot);
-            });
-
+            
+            // Create red badge similar to group badge
+            const badge = document.createElement('span');
+            badge.className = 'group-badge nav-badge';
+            badge.style.cssText = `
+                position: absolute;
+                top: 2px;
+                right: -8px;
+                background-color: #dc3545;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                font-size: 0.7rem;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 8px #dc354540;
+                animation: pulse 2s infinite;
+                z-index: 10;
+            `;
+            
+            // Show count or priority indicator
+            if (hasNoticeExpired) {
+                badge.textContent = '!';
+                badge.title = `${totalBadgeCount} thông báo cần chú ý`;
+            } else {
+                badge.textContent = totalBadgeCount > 99 ? '99+' : totalBadgeCount;
+                badge.title = `${totalBadgeCount} tài khoản cần chú ý`;
+            }
+            
+            badgeContainer.appendChild(badge);
             mxhNavLink.appendChild(badgeContainer);
         }
     }
@@ -875,7 +1222,7 @@
     function selectGroup(groupId) {
         activeGroupId = groupId === 'null' ? null : groupId;
         renderGroupsNav();
-        renderMXHAccounts();
+        scheduleRender();
     }
 
     // ===== DATETIME NORMALIZATION HELPERS =====
@@ -1111,6 +1458,8 @@
     // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION =====
     // Render MXH Accounts with performance optimizations and scroll position preservation
     function renderMXHAccounts() {
+        console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
+        
         if (isRendering) {
             pendingUpdates = true;
             return;
@@ -1168,57 +1517,67 @@
             return nameA - nameB;
         });
 
-        // === Render Cards (1 card per card_id) ===
-        let html = '<div class="row g-2">';
+        // === Batch Render Cards với RENDER_BATCH_SIZE ===
+        const BATCH = MXH_CONFIG.RENDER_BATCH_SIZE || 50;
+        const cards = Array.from(sortedCards);
+        let i = 0; 
+        container.innerHTML = '<div class="row g-2"></div>';
+        const row = container.firstElementChild;
 
-        sortedCards.forEach(([cardId, accounts]) => {
-            const state = getCardState(cardId);
-            const primaryAccount = accounts.find(acc => acc.is_primary) || accounts[0];
-            
-            // Determine active account (mặt hiện tại đang hiển thị)
-            let activeAccount = primaryAccount;
-            if (state.activeAccountId) {
-                const found = accounts.find(acc => acc.id === state.activeAccountId);
-                if (found) {
-                    activeAccount = found;
-                } else {
-                    // DEBUG: Log when active account not found
-                    console.log(`⚠️ Active account ${state.activeAccountId} not found in card ${cardId}. Available:`, accounts.map(a => a.id));
-                    // Reset to primary if not found
-                    state.activeAccountId = primaryAccount.id;
+        function paintChunk(deadline) {
+            while (i < cards.length && (deadline.timeRemaining() > 4 || deadline.didTimeout)) {
+                const [cardId, accounts] = cards[i++];
+                const cid = Number(cardId);                // ✅ normalize
+                const state = getCardState(cid);           // dùng cid
+                const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
+
+                let activeAccount = null;
+                if (state.activeAccountId !== null) {
+                    // account id luôn là Number, an toàn so sánh ===
+                    activeAccount = accounts.find(acc => acc.id === state.activeAccountId);
                 }
-            } else {
-                // Initialize state with primary account
-                state.activeAccountId = primaryAccount.id;
-            }
 
-            // Determine border color based on active account
-            const borderClass = getAccountBorderClass(activeAccount);
+                if (!activeAccount) {
+                    if (state.activeAccountId === null) {
+                        const currentPrimaryId = primaryAccount ? primaryAccount.id : null;
+                        setCardState(cid, { activeAccountId: currentPrimaryId }); // dùng cid
+                        activeAccount = primaryAccount;
+                        // log tuỳ chọn...
+                    } else {
+                        // Hiển thị tạm primary, KHÔNG ghi đè state đã có
+                        activeAccount = primaryAccount;
+                    }
+                }
 
-            html += `
-                <div class="col" style="padding: 2px;" data-card-id="${cardId}">
-                    <div class="mxh-card-wrapper ${state.isFlipped ? 'flipped' : ''}" id="card-wrapper-${cardId}">
-                        <div class="mxh-card-inner">
-                            ${renderCardFace(activeAccount, accounts, 'front')}
-                            <!-- Mặt sau được cập nhật khi click chuyển account -->
+                // activeAccount bây giờ chắc chắn là tài khoản hợp lệ để hiển thị
+                const borderClass = getAccountBorderClass(activeAccount);
+
+                const cardHTML = `
+                    <div class="col" style="padding: 2px;" data-card-id="${cardId}">
+                        <div class="mxh-card-wrapper ${state.isFlipped ? 'flipped' : ''}" id="card-wrapper-${cardId}" style="position: relative;">
+                            ${getCardBadge(activeAccount)}
+                            <div class="mxh-card-inner">
+                                ${renderCardFace(activeAccount, accounts, 'front')}
+                                <!-- Mặt sau được cập nhật khi click chuyển account -->
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
+                `;
+                row.insertAdjacentHTML('beforeend', cardHTML);
+            }
+            if (i < cards.length) requestIdleCallback(paintChunk, { timeout: 50 });
+            else { 
+                isRendering = false; 
+                if (pendingUpdates) { 
+                    pendingUpdates = false; 
+                    scheduleRender(); 
+                } 
+            }
+        }
+        requestIdleCallback(paintChunk, { timeout: 50 });
 
         // Restore scroll position
         window.scrollTo(scrollX, scrollY);
-
-        isRendering = false;
-
-        if (pendingUpdates) {
-            pendingUpdates = false;
-            setTimeout(() => renderMXHAccounts(), 100);
-        }
     }
 
     // Helper: Get border class based on account status
@@ -1266,12 +1625,12 @@
             }
 
             // 1. Get the new account data
-            const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+            const accounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
             const newActiveAccount = accounts.find(acc => acc.id === accountId);
             if (!newActiveAccount) return;
 
-            // 2. Update the state
-            state.activeAccountId = accountId;
+            // 2. Update the state (save to sessionStorage)
+            setCardState(cardId, { activeAccountId: accountId });
 
             // 3. Start the flip-out animation
             cardInner.style.transform = 'rotateY(90deg)';
@@ -1321,7 +1680,7 @@
         if (!account) return;
 
         // Get all accounts on this card
-        const cardAccounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+        const cardAccounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
         const state = getCardState(cardId);
         const isPrimary = account.is_primary;
         const currentStatus = (account.status || 'active').toLowerCase();
@@ -1426,7 +1785,7 @@
         
         // Smart positioning
         const menu = document.getElementById('card-context-menu');
-        positionContextMenuSmart(menu, event.pageX, event.pageY);
+        positionContextMenuSmart(menu, event.clientX, event.clientY);
 
         // Position submenus
         setTimeout(() => positionAllSubmenusForMenu(menu), 50);
@@ -1437,36 +1796,39 @@
         }, 100);
     }
     
-    // Smart positioning function
+    // Smart anchor: flip trái/phải + trên/dưới theo mép màn hình, kèm offset 8px
     function positionContextMenuSmart(menu, x, y) {
         if (!menu) return;
-        
-        const menuRect = menu.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Default position
-        let left = x;
-        let top = y;
-        
-        // Check right overflow
-        if (x + menuRect.width > viewportWidth) {
-            left = viewportWidth - menuRect.width - 10;
-        }
-        
-        // Check bottom overflow
-        if (y + menuRect.height > viewportHeight) {
-            top = viewportHeight - menuRect.height - 10;
-        }
-        
-        // Check left overflow
-        if (left < 0) left = 10;
-        
-        // Check top overflow
-        if (top < 0) top = 10;
-        
+
+        // Tạm hiển thị để đo chính xác kích thước
+        const prevVis = menu.style.visibility;
+        const prevDisp = menu.style.display;
+        menu.style.visibility = 'hidden';
+        menu.style.display = 'block';
+
+        const rect = menu.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const m = 8; // offset tránh đè vào con trỏ & rìa
+
+        // Quyết định hướng
+        const placeRight = (x + rect.width + m <= vw);       // đủ chỗ bên phải con trỏ?
+        const placeDown  = (y + rect.height + m <= vh);      // đủ chỗ phía dưới con trỏ?
+
+        // Tính toạ độ theo hướng đã chọn
+        let left = placeRight ? (x + m) : (x - rect.width - m);
+        let top  = placeDown  ? (y + m) : (y - rect.height - m);
+
+        // Clamp cứng để không vượt viewport (khi cực sát rìa)
+        left = Math.min(Math.max(left, m), vw - rect.width  - m);
+        top  = Math.min(Math.max(top , m), vh - rect.height - m);
+
+        // Áp dụng
         menu.style.left = left + 'px';
-        menu.style.top = top + 'px';
+        menu.style.top  = top  + 'px';
+
+        // Trả lại trạng thái hiển thị ban đầu (menu đã có vị trí đúng)
+        menu.style.visibility = prevVis || '';
+        menu.style.display    = prevDisp || '';
     }
     
     // Position all submenus for a menu
@@ -1617,9 +1979,6 @@
                 // Flip to new account
                 flipCardToAccount(cardId, newAccount.id);
                 
-                // Force re-render sau khi flip
-                setTimeout(() => renderMXHAccounts(), 600);
-                
                 if (typeof showToast === 'function') {
                     showToast('Đã tạo tài khoản phụ!', 'success');
                 }
@@ -1647,7 +2006,7 @@
                 // Remove from local state
                 mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== cardId);
                 cardStates.delete(cardId);
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast('Đã xóa card!', 'success');
                 }
@@ -1674,7 +2033,7 @@
             if (response.ok) {
                 // Remove from local state
                 mxhAccounts = mxhAccounts.filter(acc => acc.id !== accountId);
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast('Đã xóa tài khoản phụ!', 'success');
                 }
@@ -1711,7 +2070,7 @@
                     }
                 }
                 
-                renderMXHAccounts();
+                scheduleRender();
                 const message = result === 'success' ? '✅ Cứu thành công!' : '📝 Đã ghi nhận cứu thất bại!';
                 if (typeof showToast === 'function') {
                     showToast(message, 'success');
@@ -1734,7 +2093,7 @@
         if (accountIndex !== -1) {
             mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
             mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
-            renderMXHAccounts();
+            scheduleRender();
         }
 
         try {
@@ -1750,7 +2109,7 @@
                     const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
                     if (idx !== -1) {
                         mxhAccounts[idx] = responseData;
-                        renderMXHAccounts();
+                        scheduleRender();
                     }
                 }
                 
@@ -1796,7 +2155,7 @@
                     mxhAccounts[index] = updatedAccount;
                 }
                 
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast(`Đã cập nhật trạng thái: ${status}`, 'success');
                 }
@@ -1822,8 +2181,8 @@
         if (!currentContextAccountId) return;
 
         noticeTargetId = currentContextAccountId;
-        document.getElementById('noticeTitle').value = 'Reg';
-        document.getElementById('noticeDays').value = 7;
+        document.getElementById('noticeTitle').value = 'Dưỡng';
+        document.getElementById('noticeDays').value = 30;
         document.getElementById('noticeNote').value = '';
 
         const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
@@ -1874,7 +2233,7 @@
                 }
 
                 // Force re-render with updated data
-                renderMXHAccounts();
+                scheduleRender();
 
                 // Resume auto-refresh after render
                 setTimeout(() => startAutoRefresh(), 100);
@@ -1915,7 +2274,7 @@
                 }
 
                 // Force re-render with updated data
-                renderMXHAccounts();
+                scheduleRender();
 
                 // Resume auto-refresh after render
                 setTimeout(() => startAutoRefresh(), 100);
@@ -1955,7 +2314,7 @@
         if (accountIndex !== -1) {
             mxhAccounts[accountIndex].wechat_scan_count = 0;
             mxhAccounts[accountIndex].wechat_last_scan_date = null;
-            renderMXHAccounts();
+            scheduleRender();
         }
 
         try {
@@ -1972,7 +2331,7 @@
                     const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
                     if (idx !== -1) {
                         mxhAccounts[idx] = responseData;
-                        renderMXHAccounts();
+                        scheduleRender();
                     }
                 }
                 showToast('✅ Đã reset lượt quét!', 'success');
@@ -2015,7 +2374,7 @@
         if (accountIndex !== -1) {
             mxhAccounts.splice(accountIndex, 1);
         }
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}`, {
@@ -2068,11 +2427,10 @@
             muted_until: null
         };
         
-        // Ensure activeAccountId is preserved
-        const state = getCardState(cardId);
-        state.activeAccountId = accountId;
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: accountId });
         
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/reset`, {
@@ -2085,10 +2443,10 @@
                 const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
                 if (idx !== -1) {
                     mxhAccounts[idx] = updatedAccount;
-                    // Ensure activeAccountId is still set
-                    state.activeAccountId = accountId;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: accountId });
                     console.log(`✅ Reset account ${accountId}, keeping it as active for card ${cardId}`);
-                    renderMXHAccounts(); // Re-render with server data
+                    scheduleRender(); // Re-render with server data
                 }
                 showToast('✅ Đã reset card!', 'success');
             } else {
@@ -2184,18 +2542,20 @@
             return;
         }
 
-        const cardId = mxhAccounts[accountIndex].card_id;
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
         
-        // Update local data immediately
+        // Update local data immediately - preserve ALL existing properties
         Object.assign(mxhAccounts[accountIndex], data);
         
-        // Ensure activeAccountId is preserved
-        const state = getCardState(cardId);
-        state.activeAccountId = currentContextAccountId;
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 WeChat Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
 
         // Hide modal and re-render (preserves active account)
         bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2210,10 +2570,10 @@
                 const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
                 if (idx !== -1) {
                     mxhAccounts[idx] = updatedAccount;
-                    // Ensure activeAccountId is still set
-                    state.activeAccountId = currentContextAccountId;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
                     console.log(`✅ Updated WeChat account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
-                    renderMXHAccounts(); // Re-render with server data
+                    scheduleRender(); // Re-render with server data
                 }
                 showToast('✅ Đã cập nhật!', 'success');
             } else {
@@ -2246,7 +2606,7 @@
             return;
         }
 
-        const cardId = mxhAccounts[accountIndex].card_id;
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
         
         // Instant local update
         Object.keys(data).forEach(key => {
@@ -2255,12 +2615,14 @@
             }
         });
         
-        // Ensure activeAccountId is preserved
-        const state = getCardState(cardId);
-        state.activeAccountId = currentContextAccountId;
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 Generic Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
 
         bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2275,10 +2637,10 @@
                 const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
                 if (idx !== -1) {
                     mxhAccounts[idx] = updatedAccount;
-                    // Ensure activeAccountId is still set
-                    state.activeAccountId = currentContextAccountId;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
                     console.log(`✅ Updated generic account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
-                    renderMXHAccounts(); // Re-render with server data
+                    scheduleRender(); // Re-render with server data
                 }
                 showToast('✅ Đã cập nhật!', 'success');
             } else {
@@ -2304,7 +2666,7 @@
         }
 
         bootstrap.Modal.getInstance(document.getElementById('change-card-number-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2322,7 +2684,7 @@
                         mxhAccounts[idx].card_name = newNumber;
                     }
                 });
-                renderMXHAccounts();
+                scheduleRender();
                 showToast('✅ Đã đổi số hiệu!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2413,6 +2775,18 @@
 
         // Initial load
         await loadMXHData(true);
+        
+        // Ensure groups are rendered after initial load
+        renderGroupsNav();
+        
+        // Update main nav badge immediately
+        updateMainNavBadge();
+        
+        // Backup: Force render groups after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            renderGroupsNav();
+            updateMainNavBadge();
+        }, 100);
 
         // Start auto-refresh
         startAutoRefresh();
@@ -2420,9 +2794,11 @@
         // Pause auto-refresh when modal is opened
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('show.bs.modal', () => {
+                window.interactionPaused = true;
                 pauseAutoRefresh();
             });
             modal.addEventListener('hide.bs.modal', () => {
+                window.interactionPaused = false;
                 resumeAutoRefresh();
             });
         });
@@ -2519,7 +2895,7 @@
                 element.textContent = cleanValue;
             }
             // Re-render to update all cards showing this account
-            renderMXHAccounts();
+            scheduleRender();
         } else {
             // Restore original on failure
             if (field === 'phone') {
@@ -2543,10 +2919,19 @@
             }
 
             const oldValue = mxhAccounts[accountIndex][field];
+
+            // ✅ normalize here
+            const cardId = Number(mxhAccounts[accountIndex].card_id);
             
             // INSTANT LOCAL UPDATE - Update UI immediately
             mxhAccounts[accountIndex][field] = value;
-            renderMXHAccounts();
+            
+            // *** CRITICAL: Set active account BEFORE rendering AND LOCK IT ***
+            setCardState(cardId, { activeAccountId: accountId }, true); // Lock state for 2 seconds
+            console.log(`🔧 Inline Edit (before API): Set card ${cardId} to show account ${accountId}`);
+            
+            // Render mục tiêu cho 1 card khi chỉnh sửa nhanh
+            flipCardToAccount(cardId, accountId);
 
             // API call in background using the existing PUT endpoint
             const response = await fetch(`/mxh/api/accounts/${accountId}`, {
@@ -2558,22 +2943,16 @@
             });
 
             if (response.ok) {
-                const updatedAccount = await response.json();
-                // Merge server response back into local data
                 const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
                 if (idx !== -1) {
-                    // Preserve the card_id before replacing
-                    const cardId = mxhAccounts[idx].card_id;
+                    const normalizedCardId = Number(mxhAccounts[idx].card_id); // ✅ normalize again
+                    const updatedAccount = await response.json();
+                    updatedAccount.card_id = normalizedCardId;                 // ensure card_id kept
+                    
                     mxhAccounts[idx] = updatedAccount;
                     
-                    // Ensure activeAccountId is still set for this card
-                    const state = getCardState(cardId);
-                    if (!state.activeAccountId || state.activeAccountId === accountId) {
-                        state.activeAccountId = accountId;
-                    }
-                    
-                    console.log(`✅ Updated account ${accountId}, active account for card ${cardId}: ${state.activeAccountId}`);
-                    renderMXHAccounts(); // Re-render with server data (preserves activeAccountId)
+                    setCardState(normalizedCardId, { activeAccountId: accountId }, true);
+                    scheduleRender();
                 }
                 showToast(`✅ Đã lưu ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
                 return true;
@@ -2582,7 +2961,7 @@
                 mxhAccounts[accountIndex][field] = oldValue;
                 const error = await response.json();
                 showToast(error.error || 'Lỗi khi cập nhật!', 'error');
-                renderMXHAccounts();
+                scheduleRender();
                 return false;
             }
         } catch (error) {
@@ -2713,7 +3092,7 @@
         }
 
         // Re-render immediately (no API call wait)
-        renderMXHAccounts();
+        scheduleRender();
 
         // Then update backend in background
         try {
@@ -3079,6 +3458,270 @@
             });
         }
     });
+
+    // ===== NOTICE PREVIEW SYSTEM =====
+    (() => {
+        // ===== Config endpoint (có fallback để tránh 404) =====
+        const ENDPOINTS = {
+            getNotice: [
+                '/mxh/api/notice',
+                '/mxh/notice',
+                '/api/mxh/notice'
+            ],
+            disableNotice: [
+                '/mxh/api/notice/disable',
+                '/mxh/notice/disable',
+                '/api/mxh/notice/disable'
+            ]
+        };
+        let cachedGetURL = null;
+        let cachedDisableURL = null;
+
+        // ===== State =====
+        let $preview = null;
+        let $badge = null;
+        let hoverEnterTimer = null;
+        let hoverLeaveTimer = null;
+        let actionDocClickBound = false;
+
+        const ENTER_DELAY = 80;   // ms: tránh rung khi lia chuột nhanh
+        const LEAVE_DELAY = 160;  // ms: cho phép di từ badge -> preview
+
+        // ===== Utils =====
+        const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+        function clearTimers(){
+            if (hoverEnterTimer){ clearTimeout(hoverEnterTimer); hoverEnterTimer=null; }
+            if (hoverLeaveTimer){ clearTimeout(hoverLeaveTimer); hoverLeaveTimer=null; }
+        }
+
+        function closePreview(force=false){
+            clearTimers();
+            if (!$preview) return;
+            // nếu đang action mode, chỉ đóng khi force hoặc click outside
+            $preview.classList.remove('show');
+            const el = $preview;
+            $preview = null;
+            $badge = null;
+            setTimeout(() => el.remove(), 120);
+            if (actionDocClickBound){
+                document.removeEventListener('click', onDocumentClick, true);
+                actionDocClickBound = false;
+            }
+        }
+
+        function onDocumentClick(e){
+            if (!$preview || !$badge) return;
+            if (e.target.closest('.notice-preview') || e.target.closest('.notice-badge')) return;
+            // click ngoài khi đang action -> đóng
+            closePreview(true);
+        }
+
+        function placePreview(box, badge){
+            const r = badge.getBoundingClientRect();
+            const boxH = box.offsetHeight || 200;
+            const boxW = box.offsetWidth || 200;
+
+            // Auto width positioning - center relative to badge
+            const desiredLeft = Math.max(8, Math.min(r.left - (boxW - r.width) / 2, window.innerWidth - boxW - 8));
+
+            let top = r.bottom + 10;
+            if (top + boxH > window.innerHeight - 8) {
+                top = Math.max(8, r.top - boxH - 12);
+                box.style.setProperty('--arrow-top', (boxH - 6) + 'px');
+            } else {
+                box.style.setProperty('--arrow-top', '-8px');
+            }
+
+            // Arrow positioning relative to badge center
+            const arrowLeft = Math.min(Math.max(r.left + r.width/2 - desiredLeft - 6, 10), boxW - 22);
+            box.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+            box.style.left = desiredLeft + 'px';
+            box.style.top  = top + 'px';
+        }
+
+        async function tryFetch(urls, init) {
+            let lastErr;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url, init);
+                    if (res.ok) return { res, url };
+                    lastErr = new Error(`HTTP ${res.status} @ ${url}`);
+                    if (res.status === 404) continue;
+                    throw lastErr;
+                } catch(e){ lastErr = e; continue; }
+            }
+            throw lastErr || new Error('No endpoint matched');
+        }
+
+        async function getNoticeData(accountId, badge) {
+            const raw = badge?.dataset?.noticeCache;
+            if (raw){ try { return JSON.parse(raw); } catch{} }
+            const q = `?account_id=${encodeURIComponent(accountId)}`;
+            const urls = cachedGetURL ? [cachedGetURL + q] : ENDPOINTS.getNotice.map(u => u + q);
+            const { res, url } = await tryFetch(urls, { headers: { 'Accept':'application/json' } });
+            cachedGetURL = url.replace(q,'');
+            return await res.json();
+        }
+
+        async function disableNotice(accountId, noticeId) {
+            const body = noticeId ? { notice_id: noticeId } : { account_id: accountId };
+            const urls = cachedDisableURL ? [cachedDisableURL] : ENDPOINTS.disableNotice;
+            const { res, url } = await tryFetch(urls, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json' },
+                body: JSON.stringify(body)
+            });
+            cachedDisableURL = url;
+            if (!res.ok) throw new Error('Disable notice failed: ' + res.status);
+            return await res.json().catch(() => ({}));
+        }
+
+        function buildPreviewDOM(data, badgeType, mode /* 'hover' | 'action' */) {
+            const box = document.createElement('div');
+            box.className = 'notice-preview' + (mode==='action' ? ' action' : '');
+
+            const title = data?.title || (badgeType === 'anniversary' ? 'Đủ tuổi 1 năm' : 'Thông báo đến hạn');
+            const meta  = data?.due_human ? `Đến hạn: ${data.due_human}` :
+                          (data?.due_at ? `Đến hạn: ${new Date(data.due_at).toLocaleString()}` :
+                           (badgeType==='anniversary' ? 'Mốc tuổi tài khoản: 1 năm' : ''));
+            const msg   = data?.message || (badgeType === 'anniversary' ? 'Tài khoản đã đủ tuổi 1 năm' : '(Không có nội dung)');
+
+            box.innerHTML = `
+                <div class="title">${escapeHtml(title)}</div>
+                <div class="meta">${escapeHtml(meta)}</div>
+                <div class="content">${escapeHtml(msg)}</div>
+                <div class="actions">
+                    <button type="button" class="btn btn-off">Tắt Thông Báo</button>
+                    <button type="button" class="btn btn-ok">Ok</button>
+                </div>
+            `;
+
+            // hành vi nút (chỉ hữu dụng ở mode 'action'; ở 'hover' .actions bị CSS ẩn)
+            box.querySelector('.btn-ok').addEventListener('click', () => closePreview(true));
+            box.querySelector('.btn-off').addEventListener('click', async () => {
+                try {
+                    const accId = $badge?.dataset.accountId;
+                    const noticeId = $badge?.dataset.noticeId;
+                    await disableNotice(accId, noticeId);
+                    // Ẩn badge
+                    $badge.style.display = 'none';
+                    closePreview(true);
+                } catch(err){
+                    console.error(err);
+                    alert('Tắt thông báo thất bại (kiểm tra route backend)');
+                }
+            });
+
+            // hover-intent: không đóng khi rê chuột vào preview
+            box.addEventListener('mouseover', () => { if (hoverLeaveTimer){ clearTimeout(hoverLeaveTimer); hoverLeaveTimer=null; } });
+            box.addEventListener('mouseout', (e) => {
+                if (!box.contains(e.relatedTarget) && (!$badge || !$badge.contains(e.relatedTarget))) {
+                    scheduleClose();
+                }
+            });
+
+            return box;
+        }
+
+        function scheduleOpen(badge, mode){
+            clearTimers();
+            hoverEnterTimer = setTimeout(async () => {
+                // nếu đã mở cho badge khác -> đóng
+                if ($preview && $badge && $badge !== badge) closePreview(true);
+
+                $badge = badge;
+
+                // dữ liệu
+                const badgeType = badge.dataset.badgeType || 'due';
+                let data = null;
+                try {
+                    data = await getNoticeData(badge.dataset.accountId, badge);
+                } catch (err) {
+                    if (badgeType !== 'anniversary') {
+                        console.error(err);
+                        data = { title: 'Thông báo đến hạn', message: 'Không lấy được nội dung', due_human: '' };
+                    }
+                }
+
+                // nếu đã có preview -> chỉ chuyển mode
+                if ($preview){
+                    $preview.classList.toggle('action', mode==='action');
+                } else {
+                    $preview = buildPreviewDOM(data, badgeType, mode);
+                    document.body.appendChild($preview);
+                }
+
+                // đo & đặt vị trí
+                $preview.style.visibility = 'hidden';
+                $preview.classList.add('show');
+                placePreview($preview, badge);
+                $preview.style.visibility = '';
+
+                // khi đang action, bật click-outside
+                if (mode==='action' && !actionDocClickBound) {
+                    document.addEventListener('click', onDocumentClick, true);
+                    actionDocClickBound = true;
+                }
+            }, ENTER_DELAY);
+        }
+
+        function scheduleClose(){
+            clearTimers();
+            hoverLeaveTimer = setTimeout(() => {
+                // chỉ đóng tự động nếu không ở action mode
+                if ($preview && !$preview.classList.contains('action')) {
+                    closePreview();
+                }
+            }, LEAVE_DELAY);
+        }
+
+        // ===== Hover logic trên badge (dùng mouseover/mouseout để delegation) =====
+        document.addEventListener('mouseover', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+            if (b.contains(e.relatedTarget)) return; // vẫn ở trong badge
+            // mở ở chế độ 'hover' (không hiện nút)
+            scheduleOpen(b, 'hover');
+        }, true);
+
+        document.addEventListener('mouseout', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+            if (b.contains(e.relatedTarget)) return; // vẫn ở trong badge
+            // nếu không di vào preview thì đóng theo delay
+            if (!$preview || ($preview && !$preview.contains(e.relatedTarget))) {
+                scheduleClose();
+            }
+        }, true);
+
+        // ===== Click trên badge -> chuyển sang 'action' (hiện 2 nút) =====
+        document.addEventListener('click', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // nếu đang mở preview cho badge này -> chỉ chuyển mode sang action
+            if ($preview && $badge === b) {
+                $preview.classList.add('action');
+                if (!actionDocClickBound) {
+                    document.addEventListener('click', onDocumentClick, true);
+                    actionDocClickBound = true;
+                }
+                return;
+            }
+
+            // chưa mở: mở ngay 'action'
+            scheduleOpen(b, 'action');
+        }, true);
+
+        // viewport thay đổi -> reposition
+        window.addEventListener('scroll', () => { if($preview && $badge) placePreview($preview, $badge); }, true);
+        window.addEventListener('resize', () => { if($preview && $badge) placePreview($preview, $badge); }, true);
+    })();
 
 </script>
 {% endblock %}

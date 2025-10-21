@@ -34,8 +34,8 @@
 <!-- MXH View Mode Modal -->
 <div class="modal fade" id="mxh-view-mode-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="height: 70%;">
+            <div class="modal-header" style="height: 44px; padding: 0.5rem 1rem;">
                 <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -138,7 +138,7 @@
 
 <!-- WeChat Account Modal -->
 <div class="modal fade" id="wechat-account-modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 220px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content">
             <div class="modal-header" style="height: 50px; padding: 8px 16px;">
                 <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin
@@ -148,12 +148,17 @@
             <div class="modal-body">
                 <div class="row mb-2">
                     <div style="width: 80px; display: inline-block; margin-right: 1px;">
-                        <label class="form-label mb-1">Số Card</label>
+                        <label class="form-label mb-1">Card</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3"
                             required style="width: 100%;">
                     </div>
-                    <div style="width: 120px; display: inline-block;">
-                        <label class="form-label mb-1">Trạng Thái</label>
+                    <div style="width: 140px; display: inline-block;">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-date"
+                            placeholder="dd/mm/yyyy" maxlength="10" required style="width: 80%;">
+                    </div>
+                    <div style="width: 160px; display: inline-block;">
+                        <label class="form-label mb-10">Trạng Thái</label>
                         <select class="form-select form-select-sm" id="wechat-status" required style="width: 100%;">
                             <option value="active">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
@@ -161,25 +166,16 @@
                         </select>
                     </div>
                 </div>
-                <div class="row" style="margin-bottom: 5px;">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Tên Người Dùng</label>
+                <div class="row" style="margin-bottom: 1px;">
+                    <div style="width: 200px; display: inline-block; margin-right: 1px;">
+                        <label class="form-label mb-1" style="margin-bottom: 1ch;">Tên Người Dùng</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-username" required
                             style="width: 100%;">
                     </div>
-                </div>
-                <div class="row" style="margin-bottom: 5px;">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Số Điện Thoại</label>
+                    <div style="width: 180px; display: inline-block;">
+                        <label class="form-label mb-1" style="margin-bottom: 1px;">Số Điện Thoại</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-phone"
                             placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
-                    </div>
-                </div>
-                <div class="row">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Ngày Tạo</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-date"
-                            placeholder="dd/mm/yyyy" maxlength="10" required style="width: 100%;">
                     </div>
                 </div>
             </div>
@@ -504,7 +500,7 @@
 
     /* Hide number input spinners */
     .no-spinner {
-        -moz-appearance: textfield;
+        appearance: textfield;
     }
 
     .no-spinner::-webkit-outer-spin-button,
@@ -523,6 +519,16 @@
         ENABLE_AUTO_REFRESH: true // Changed from false to true
     };
 
+    // --- GLOBAL FLAGS ---
+    window.interactionPaused = false; // set true khi mở modal/context, false khi đóng
+    let _mxhGroupsTick = 0;
+    let refreshAbortController;
+
+    // Tự dừng/bật auto-refresh theo trạng thái tab
+    document.addEventListener('visibilitychange', () => {
+        document.hidden ? stopAutoRefresh() : startAutoRefresh();
+    });
+
     // MXH Global State
     let mxhGroups = [];
     let mxhAccounts = [];
@@ -535,21 +541,57 @@
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
+    // State chỉ lưu trong memory, không persist qua reload
     const cardStates = new Map();
+    const lockedStates = new Map(); // Lock state để prevent override trong quá trình edit
 
+    // NEW: always normalize cardId to Number for state keys
     function getCardState(cardId) {
-        if (!cardStates.has(cardId)) {
-            cardStates.set(cardId, { activeAccountId: null, isFlipped: false });
+        const key = Number(cardId); // <-- normalize
+        if (!cardStates.has(key)) {
+            // console.log(`📦 Creating new state for card ${key}`);
+            cardStates.set(key, { activeAccountId: null, isFlipped: false });
         }
-        return cardStates.get(cardId);
+        const raw = cardStates.get(key);
+
+        // If locked, force activeAccountId to the locked one
+        if (lockedStates.has(key)) {
+            const lockedAccountId = lockedStates.get(key);
+            return { ...raw, activeAccountId: lockedAccountId };
+        }
+        return raw;
     }
 
-    function setCardState(cardId, updates) {
-        const state = getCardState(cardId);
+    function setCardState(cardId, updates, lock = false) {
+        const key = Number(cardId); // <-- normalize
+        // console.log(`📝 setCardState(${key}):`, JSON.stringify(updates), lock ? '🔒' : '');
+
+        if (lockedStates.has(key)) {
+            // console.warn(`⚠️ Card ${key} state is LOCKED, ignoring update`);
+            return;
+        }
+
+        const state = getCardState(key); // already normalized
         Object.assign(state, updates);
+        cardStates.set(key, state); // re-set not strictly required, but explicit
+
+        if (lock && updates.activeAccountId != null) {
+            lockedStates.set(key, updates.activeAccountId);
+            // Auto-unlock
+            setTimeout(() => lockedStates.delete(key), 2000);
+        }
     }
 
     // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
+    // Helper so sánh nhanh groups
+    const areGroupsEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+    // Gom render về idle để mượt
+    const scheduleRender = () => (window.requestIdleCallback
+        ? requestIdleCallback(() => renderMXHAccounts(), { timeout: 200 })
+        : setTimeout(() => renderMXHAccounts(), 50)
+    );
+
     // Debounce function - prevents excessive API calls
     function debounce(func, delay) {
         let timeoutId;
@@ -574,73 +616,62 @@
 
     // ===== REAL-TIME DATA LOADING WITH SMART UPDATES =====
     // Load MXH data from API with optimized rendering
-    async function loadMXHData(forceRender = true) {
+    async function loadMXHData(forceRender = false) {
+        if (window.interactionPaused || document.hidden) return; // (1) chặn khi đang tương tác/ẩn tab
+
+        // (3) chống race-condition
+        refreshAbortController?.abort();
+        refreshAbortController = new AbortController();
+        const { signal } = refreshAbortController;
+
         try {
-            // Check lastUpdateTime for delta polling
+            // last_updated_at ⇒ tự build accountsUrl như hiện tại của Sếp
             const accountsUrl = lastUpdateTime
                 ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}`
                 : '/mxh/api/accounts';
 
-            // Parallel loading for speed
-            const [groupsResponse, accountsResponse] = await Promise.all([
-                fetch('/mxh/api/groups'),
-                fetch(accountsUrl) // Use the dynamic URL
-            ]);
+            // (2) giảm tần suất fetch groups
+            const fetchGroupsNow = ((++_mxhGroupsTick % 4) === 1) || forceRender;
+            const groupsReq = fetchGroupsNow ? fetch('/mxh/api/groups', { signal }) : Promise.resolve({ ok: false });
+            const accountsReq = fetch(accountsUrl, { signal });
 
-            if (groupsResponse.ok) {
-                mxhGroups = await groupsResponse.json();
+            const [groupsResponse, accountsResponse] = await Promise.all([groupsReq, accountsReq]);
+
+            // (4) chỉ render groups nếu thay đổi
+            if (groupsResponse && groupsResponse.ok) {
+                const newGroups = await groupsResponse.json();
+                if (!areGroupsEqual(mxhGroups, newGroups)) {
+                    mxhGroups = newGroups;
+                    renderGroupsNav();
+                }
             }
+
+            let dataChanged = false;
 
             if (accountsResponse.ok) {
-                const newAccountsDelta = await accountsResponse.json();
+                const delta = await accountsResponse.json();                 // [{...updated accounts...}]
+                const accountMap = new Map(mxhAccounts.map(a => [a.id, a])); // quick index
+                let touchedAny = false;
 
-                let dataChanged = false;
-
-                if (newAccountsDelta.length > 0) {
-                    dataChanged = true;
-                    // MERGE LOGIC: Replace/Update existing accounts with delta
-                    const accountMap = new Map(mxhAccounts.map(acc => [acc.id, acc]));
-
-                    newAccountsDelta.forEach(deltaAcc => {
-                        accountMap.set(deltaAcc.id, deltaAcc);
-                    });
-
-                    mxhAccounts = Array.from(accountMap.values());
-
-                    // Update lastUpdateTime with the latest timestamp from the delta
-                    // Use the *current* time if the delta is empty or the updated_at field is missing
-                    const latestTimestamp = newAccountsDelta.reduce((latest, acc) => {
-                        return (acc.updated_at && acc.updated_at > latest) ? acc.updated_at : latest;
-                    }, lastUpdateTime || new Date(0).toISOString());
-
-                    lastUpdateTime = latestTimestamp;
-                }
-
-                // Debug: log first account with notice
-                const accWithNotice = mxhAccounts.find(a => a.notice && a.notice.enabled);
-                if (accWithNotice) {
-                    // Debug disabled
-                }
-
-                // console.log('loadMXHData:', { forceRender, dataChanged, totalAccounts: mxhAccounts.length });
-
-                if (forceRender || dataChanged) {
-                    renderGroupsNav(); // Render groups navigation first
-                    if (!isRendering) {
-                        renderMXHAccounts();
-                    } else {
-                        pendingUpdates = true;
+                delta.forEach(acc => {
+                    const exist = accountMap.get(acc.id);
+                    if (!exist || JSON.stringify(exist) !== JSON.stringify(acc)) {
+                        accountMap.set(acc.id, acc);
+                        touchedAny = true;
                     }
+                });
+
+                if (touchedAny) {
+                    mxhAccounts = Array.from(accountMap.values());
+                    dataChanged = true;
                 }
             }
-        } catch (error) {
-            console.error('Error loading MXH data:', error);
-            document.getElementById('mxh-accounts-container').innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Lỗi kết nối API! Đang thử kết nối lại...
-            </div>
-        `;
+
+            // (5) render mượt
+            if (forceRender || dataChanged) scheduleRender();
+
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error('loadMXHData error:', err);
         }
     }
 
@@ -889,7 +920,7 @@
     function selectGroup(groupId) {
         activeGroupId = groupId === 'null' ? null : groupId;
         renderGroupsNav();
-        renderMXHAccounts();
+        scheduleRender();
     }
 
     // ===== DATETIME NORMALIZATION HELPERS =====
@@ -1125,6 +1156,8 @@
     // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION =====
     // Render MXH Accounts with performance optimizations and scroll position preservation
     function renderMXHAccounts() {
+        console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
+
         if (isRendering) {
             pendingUpdates = true;
             return;
@@ -1186,20 +1219,29 @@
         let html = '<div class="row g-2">';
 
         sortedCards.forEach(([cardId, accounts]) => {
-            const state = getCardState(cardId);
-            const primaryAccount = accounts.find(acc => acc.is_primary) || accounts[0];
+            const cid = Number(cardId);                // ✅ normalize
+            const state = getCardState(cid);           // dùng cid
+            const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
 
-            // Determine active account (mặt hiện tại đang hiển thị)
-            let activeAccount = primaryAccount;
-            if (state.activeAccountId) {
-                const found = accounts.find(acc => acc.id === state.activeAccountId);
-                if (found) activeAccount = found;
-            } else {
-                // Initialize state with primary account
-                state.activeAccountId = primaryAccount.id;
+            let activeAccount = null;
+            if (state.activeAccountId !== null) {
+                // account id luôn là Number, an toàn so sánh ===
+                activeAccount = accounts.find(acc => acc.id === state.activeAccountId);
             }
 
-            // Determine border color based on active account
+            if (!activeAccount) {
+                if (state.activeAccountId === null) {
+                    const currentPrimaryId = primaryAccount ? primaryAccount.id : null;
+                    setCardState(cid, { activeAccountId: currentPrimaryId }); // dùng cid
+                    activeAccount = primaryAccount;
+                    // log tuỳ chọn...
+                } else {
+                    // Hiển thị tạm primary, KHÔNG ghi đè state đã có
+                    activeAccount = primaryAccount;
+                }
+            }
+
+            // activeAccount bây giờ chắc chắn là tài khoản hợp lệ để hiển thị
             const borderClass = getAccountBorderClass(activeAccount);
 
             html += `
@@ -1224,7 +1266,7 @@
 
         if (pendingUpdates) {
             pendingUpdates = false;
-            setTimeout(() => renderMXHAccounts(), 100);
+            scheduleRender();
         }
     }
 
@@ -1273,12 +1315,12 @@
         }
 
         // 1. Get the new account data
-        const accounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+        const accounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
         const newActiveAccount = accounts.find(acc => acc.id === accountId);
         if (!newActiveAccount) return;
 
-        // 2. Update the state
-        state.activeAccountId = accountId;
+        // 2. Update the state (save to sessionStorage)
+        setCardState(cardId, { activeAccountId: accountId });
 
         // 3. Start the flip-out animation
         cardInner.style.transform = 'rotateY(90deg)';
@@ -1328,7 +1370,7 @@
         if (!account) return;
 
         // Get all accounts on this card
-        const cardAccounts = mxhAccounts.filter(acc => acc.card_id === cardId);
+        const cardAccounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
         const state = getCardState(cardId);
         const isPrimary = account.is_primary;
         const currentStatus = (account.status || 'active').toLowerCase();
@@ -1624,9 +1666,6 @@
                 // Flip to new account
                 flipCardToAccount(cardId, newAccount.id);
 
-                // Force re-render sau khi flip
-                setTimeout(() => renderMXHAccounts(), 600);
-
                 if (typeof showToast === 'function') {
                     showToast('Đã tạo tài khoản phụ!', 'success');
                 }
@@ -1654,7 +1693,7 @@
                 // Remove from local state
                 mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== cardId);
                 cardStates.delete(cardId);
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast('Đã xóa card!', 'success');
                 }
@@ -1681,7 +1720,7 @@
             if (response.ok) {
                 // Remove from local state
                 mxhAccounts = mxhAccounts.filter(acc => acc.id !== accountId);
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast('Đã xóa tài khoản phụ!', 'success');
                 }
@@ -1718,7 +1757,7 @@
                     }
                 }
 
-                renderMXHAccounts();
+                scheduleRender();
                 const message = result === 'success' ? '✅ Cứu thành công!' : '📝 Đã ghi nhận cứu thất bại!';
                 if (typeof showToast === 'function') {
                     showToast(message, 'success');
@@ -1736,6 +1775,14 @@
 
     // === NEW: Scan WeChat Account ===
     async function scanWeChatAccount(accountId) {
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
+            mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
+            scheduleRender();
+        }
+
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
                 method: 'POST',
@@ -1743,17 +1790,15 @@
             });
 
             if (response.ok) {
-                // Update local state
-                const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-                if (accountIndex !== -1) {
-                    mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
-                    mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        scheduleRender();
+                    }
                 }
-
-                renderMXHAccounts();
-
-                // Show scan QR modal
-                showScanQRModal(accountId);
 
                 if (typeof showToast === 'function') {
                     showToast('✅ Đã ghi nhận quét WeChat!', 'success');
@@ -1769,58 +1814,6 @@
         }
     }
 
-    // Show Scan QR Modal with WeChat icon
-    function showScanQRModal(accountId) {
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (!account) return;
-
-        // Create modal HTML
-        const modalHtml = `
-            <div class="modal fade" id="scan-qr-modal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="bi bi-wechat me-2" style="color: #07c160;"></i>Quét WeChat
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                            <div style="font-size: 5rem; color: #07c160;">
-                                <i class="bi bi-qr-code"></i>
-                            </div>
-                            <h4 class="mt-3">${account.card_name}</h4>
-                            <p class="text-muted">${account.username || '...'}</p>
-                            <p class="text-muted">📞 ${account.phone || '...'}</p>
-                            <div class="mt-3">
-                                <p><strong>Lượt quét:</strong> ${account.wechat_scan_count || 0}</p>
-                                ${account.wechat_last_scan_date ? `<p class="text-muted small">Lần cuối: ${new Date(account.wechat_last_scan_date).toLocaleString('vi-VN')}</p>` : ''}
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Remove existing modal if any
-        const existingModal = document.getElementById('scan-qr-modal');
-        if (existingModal) existingModal.remove();
-
-        // Add modal to body
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('scan-qr-modal'));
-        modal.show();
-
-        // Remove modal from DOM when hidden
-        document.getElementById('scan-qr-modal').addEventListener('hidden.bs.modal', function () {
-            this.remove();
-        });
-    }
 
     // === NEW: Update Account Status với die_date persist ===
     async function updateAccountStatusNew(accountId, status) {
@@ -1849,7 +1842,7 @@
                     mxhAccounts[index] = updatedAccount;
                 }
 
-                renderMXHAccounts();
+                scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast(`Đã cập nhật trạng thái: ${status}`, 'success');
                 }
@@ -1927,7 +1920,7 @@
                 }
 
                 // Force re-render with updated data
-                renderMXHAccounts();
+                scheduleRender();
 
                 // Resume auto-refresh after render
                 setTimeout(() => startAutoRefresh(), 100);
@@ -1968,7 +1961,7 @@
                 }
 
                 // Force re-render with updated data
-                renderMXHAccounts();
+                scheduleRender();
 
                 // Resume auto-refresh after render
                 setTimeout(() => startAutoRefresh(), 100);
@@ -2008,8 +2001,8 @@
         if (accountIndex !== -1) {
             mxhAccounts[accountIndex].wechat_scan_count = 0;
             mxhAccounts[accountIndex].wechat_last_scan_date = null;
+            scheduleRender();
         }
-        renderMXHAccounts();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
@@ -2019,6 +2012,15 @@
             });
 
             if (response.ok) {
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        scheduleRender();
+                    }
+                }
                 showToast('✅ Đã reset lượt quét!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2059,7 +2061,7 @@
         if (accountIndex !== -1) {
             mxhAccounts.splice(accountIndex, 1);
         }
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}`, {
@@ -2080,32 +2082,42 @@
     }
 
     async function resetAccount(accountId) {
-        // Instant local update - reset all data
+        // Find the account and its card_id
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-        if (accountIndex !== -1) {
-            // Keep only basic structure, reset everything else
-            const account = mxhAccounts[accountIndex];
-            mxhAccounts[accountIndex] = {
-                id: account.id,
-                platform: account.platform,
-                group_id: account.group_id,
-                card_name: account.card_name,
-                // Reset all other fields
-                username: '',
-                phone: '',
-                status: 'active',
-                wechat_created_day: null,
-                wechat_created_month: null,
-                wechat_created_year: null,
-                wechat_scan_count: 0,
-                wechat_last_scan_date: null,
-                die_date: null,
-                rescue_count: 0,
-                rescue_success_count: 0,
-                notice: null
-            };
+        if (accountIndex === -1) {
+            console.error(`Account ${accountId} not found for reset`);
+            return;
         }
-        renderMXHAccounts();
+
+        const cardId = mxhAccounts[accountIndex].card_id;
+
+        // Instant local update - reset all data
+        const account = mxhAccounts[accountIndex];
+        mxhAccounts[accountIndex] = {
+            ...account, // Keep all existing fields
+            id: account.id,
+            card_id: account.card_id,
+            platform: account.platform,
+            group_id: account.group_id,
+            card_name: account.card_name,
+            is_primary: account.is_primary,
+            // Reset these fields
+            username: '.',
+            phone: '.',
+            status: 'active',
+            wechat_scan_count: 0,
+            wechat_last_scan_date: null,
+            die_date: null,
+            rescue_count: 0,
+            rescue_success_count: 0,
+            notice: null,
+            muted_until: null
+        };
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: accountId });
+
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/reset`, {
@@ -2113,13 +2125,23 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: accountId });
+                    console.log(`✅ Reset account ${accountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
                 showToast('✅ Đã reset card!', 'success');
-
             } else {
                 showToast('Lỗi!', 'error');
                 await loadMXHData(false);
             }
         } catch (error) {
+            console.error('Error resetting account:', error);
             showToast('Lỗi kết nối!', 'error');
             await loadMXHData(false);
         }
@@ -2196,12 +2218,31 @@
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus),
+            status: selectedStatus,  // Keep the status as-is: 'active', 'disabled', or 'die'
             wechat_status: selectedStatus
         };
 
+        // Find account and preserve card_id
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
+        }
+
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+        // Update local data immediately - preserve ALL existing properties
+        Object.assign(mxhAccounts[accountIndex], data);
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 WeChat Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
+
+        // Hide modal and re-render (preserves active account)
         bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2211,8 +2252,17 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
+                    console.log(`✅ Updated WeChat account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
                 showToast('✅ Đã cập nhật!', 'success');
-
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi!', 'error');
@@ -2236,18 +2286,30 @@
             url: document.getElementById('generic-url').value
         };
 
-        // Instant local update
+        // Find account and preserve card_id
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
-        if (accountIndex !== -1) {
-            Object.keys(data).forEach(key => {
-                if (data[key] !== undefined && data[key] !== null) {
-                    mxhAccounts[accountIndex][key] = data[key];
-                }
-            });
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
         }
 
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+        // Instant local update
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+                mxhAccounts[accountIndex][key] = data[key];
+            }
+        });
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 Generic Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
+
         bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2257,6 +2319,16 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
+                    console.log(`✅ Updated generic account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
                 showToast('✅ Đã cập nhật!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2281,7 +2353,7 @@
         }
 
         bootstrap.Modal.getInstance(document.getElementById('change-card-number-modal')).hide();
-        renderMXHAccounts();
+        scheduleRender();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
@@ -2291,6 +2363,15 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Update all accounts with the same card_id to have the new card_name
+                const cardId = updatedAccount.card_id;
+                mxhAccounts.forEach((acc, idx) => {
+                    if (acc.card_id === cardId) {
+                        mxhAccounts[idx].card_name = newNumber;
+                    }
+                });
+                scheduleRender();
                 showToast('✅ Đã đổi số hiệu!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2324,9 +2405,16 @@
     document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
         if (!currentContextAccountId) return;
         await resetAccount(currentContextAccountId);
-        bootstrap.Modal.getInstance(document.getElementById('reset-card-modal')).hide();
-        bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
-        bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
+
+        // Safely hide modals - check if instance exists first
+        const resetModal = bootstrap.Modal.getInstance(document.getElementById('reset-card-modal'));
+        if (resetModal) resetModal.hide();
+
+        const wechatModal = bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal'));
+        if (wechatModal) wechatModal.hide();
+
+        const genericModal = bootstrap.Modal.getInstance(document.getElementById('generic-account-modal'));
+        if (genericModal) genericModal.hide();
     });
 
     document.getElementById('mxh-apply-view-mode-btn').addEventListener('click', () => {
@@ -2381,9 +2469,11 @@
         // Pause auto-refresh when modal is opened
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('show.bs.modal', () => {
+                window.interactionPaused = true;
                 pauseAutoRefresh();
             });
             modal.addEventListener('hide.bs.modal', () => {
+                window.interactionPaused = false;
                 resumeAutoRefresh();
             });
         });
@@ -2480,7 +2570,7 @@
                 element.textContent = cleanValue;
             }
             // Re-render to update all cards showing this account
-            renderMXHAccounts();
+            scheduleRender();
         } else {
             // Restore original on failure
             if (field === 'phone') {
@@ -2496,33 +2586,60 @@
     // Quick update field (instant local update, debounced API call)
     async function quickUpdateField(accountId, field, value) {
         try {
-            // INSTANT LOCAL UPDATE - Update UI immediately
+            // Find the account first
             const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-            if (accountIndex !== -1) {
-                mxhAccounts[accountIndex][field] = value;
+            if (accountIndex === -1) {
+                console.error(`Account ${accountId} not found`);
+                return false;
             }
 
-            // API call in background
-            const response = await fetch(`/mxh/api/accounts/${accountId}/quick-update`, {
-                method: 'POST',
+            const oldValue = mxhAccounts[accountIndex][field];
+
+            // ✅ normalize here
+            const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+            // INSTANT LOCAL UPDATE - Update UI immediately
+            mxhAccounts[accountIndex][field] = value;
+
+            // *** CRITICAL: Set active account BEFORE rendering AND LOCK IT ***
+            setCardState(cardId, { activeAccountId: accountId }, true); // Lock state for 2 seconds
+            console.log(`🔧 Inline Edit (before API): Set card ${cardId} to show account ${accountId}`);
+
+            scheduleRender();
+
+            // API call in background using the existing PUT endpoint
+            const response = await fetch(`/mxh/api/accounts/${accountId}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    field: field,
-                    value: value
+                    [field]: value
                 })
             });
 
             if (response.ok) {
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    const normalizedCardId = Number(mxhAccounts[idx].card_id); // ✅ normalize again
+                    const updatedAccount = await response.json();
+                    updatedAccount.card_id = normalizedCardId;                 // ensure card_id kept
+
+                    mxhAccounts[idx] = updatedAccount;
+
+                    setCardState(normalizedCardId, { activeAccountId: accountId }, true);
+                    scheduleRender();
+                }
                 showToast(`✅ Đã lưu ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
                 return true;
             } else {
                 // Revert on error
+                mxhAccounts[accountIndex][field] = oldValue;
                 const error = await response.json();
                 showToast(error.error || 'Lỗi khi cập nhật!', 'error');
-                await loadMXHData(false); // Reload to get correct data
+                scheduleRender();
                 return false;
             }
         } catch (error) {
+            console.error('Error in quickUpdateField:', error);
             showToast('Lỗi kết nối!', 'error');
             await loadMXHData(false); // Reload to get correct data
             return false;
@@ -2649,7 +2766,7 @@
         }
 
         // Re-render immediately (no API call wait)
-        renderMXHAccounts();
+        scheduleRender();
 
         // Then update backend in background
         try {

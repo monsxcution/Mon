@@ -429,3 +429,90 @@ def update_account(account_id):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+
+@mxh_api_bp.route("/notice", methods=["GET"])
+def get_notice():
+    """
+    GET /mxh/api/notice?account_id=...
+    Get notice data for a specific account.
+    """
+    conn = get_db_connection()
+    try:
+        account_id = request.args.get('account_id')
+        if not account_id:
+            return jsonify({"error": "account_id is required"}), 400
+        
+        # Get account with notice data
+        account = conn.execute(
+            "SELECT * FROM mxh_accounts WHERE id = ?", 
+            (account_id,)
+        ).fetchone()
+        
+        if not account:
+            return jsonify({"error": "Account not found"}), 404
+        
+        # Parse notice JSON
+        notice_data = {}
+        if account['notice']:
+            try:
+                notice_obj = json.loads(account['notice'])
+                if notice_obj and notice_obj.get('enabled'):
+                    notice_data = {
+                        "title": notice_obj.get('title', 'Thông báo đến hạn'),
+                        "message": notice_obj.get('note', 'Không có nội dung'),
+                        "due_human": notice_obj.get('due_date', ''),
+                        "due_at": notice_obj.get('due_date'),
+                        "notice_id": account_id
+                    }
+            except json.JSONDecodeError:
+                pass
+        
+        return jsonify(notice_data)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_api_bp.route("/notice/disable", methods=["POST"])
+def disable_notice():
+    """
+    POST /mxh/api/notice/disable
+    Disable notice for an account.
+    Body: {"account_id": "..."} or {"notice_id": "..."}
+    """
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
+        
+        account_id = data.get('account_id') or data.get('notice_id')
+        if not account_id:
+            return jsonify({"error": "account_id or notice_id is required"}), 400
+        
+        # Update notice to disabled
+        disabled_notice = json.dumps({
+            "enabled": False,
+            "title": "",
+            "days": 0,
+            "note": "",
+            "start_at": None
+        })
+        
+        conn.execute(
+            "UPDATE mxh_accounts SET notice = ?, updated_at = ? WHERE id = ?",
+            (disabled_notice, datetime.now().isoformat(), account_id)
+        )
+        
+        conn.commit()
+        
+        return jsonify({"ok": True, "message": "Notice disabled successfully"})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

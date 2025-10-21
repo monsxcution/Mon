@@ -1,5 +1,328 @@
 {% extends "layouts/base.html" %}
 
+{% block styles %}
+<style>
+/* Notes Layout Container */
+.notes-layout-container {
+    display: flex;
+    gap: 1rem;
+}
+
+#notes-list-wrapper {
+    flex-grow: 1;
+    width: 100%;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper {
+    flex-shrink: 0;
+    width: 0;
+    transform: translateX(30px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper.visible {
+    width: 66.666667%;
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+#notes-list-wrapper.shrunk {
+    width: 33.333333%;
+}
+
+/* Grid View */
+#notes-container.notes-grid-view .note-card-wrapper {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding: 0 !important;
+}
+
+#notes-container.notes-grid-view .card {
+    height: 120px;
+}
+
+/* List View */
+#notes-container.notes-list-view .note-card-wrapper {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 !important;
+}
+
+#notes-container.notes-list-view .card {
+    height: 70px;
+}
+
+#notes-container.notes-list-view .card .card-title {
+    font-size: 1.14rem;
+    margin-bottom: 0.2rem;
+}
+
+#notes-container.notes-list-view .card .card-note-body {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+}
+
+#notes-container.notes-list-view .card .card-body {
+    padding: 0.5rem;
+}
+
+/* Card Animations */
+#notes-container .card {
+    border-left: 4px solid var(--bs-card-border-color);
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                box-shadow 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                border-color 0.2s ease-in-out;
+}
+
+#notes-container .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 32px 0 rgba(0, 224, 255, 0.2), 
+                0 12px 30px rgba(0, 0, 0, 0.4);
+    border-color: #00e0ff;
+}
+
+#notes-container .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0.75rem;
+    overflow: hidden;
+}
+
+#notes-container .card-note-body {
+    flex-grow: 1;
+    margin-right: 8px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+.note-card-active {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3) !important;
+    border: 2px solid var(--primary-color) !important;
+}
+
+/* Card Size Modifiers */
+#notes-container.h-minus-2 .card {
+    height: 80px;
+}
+
+#notes-container.h-minus-4 .card {
+    height: 65px;
+}
+
+#notes-container.h-minus-4 .card .card-note-body {
+    display: none;
+}
+
+#notes-container.h-minus-4 .card .card-title {
+    font-size: 0.9rem;
+    white-space: normal;
+}
+
+#notes-container.h-minus-2 .card .card-title {
+    font-size: 0.9rem;
+}
+
+#notes-container.h-minus-2 .card .card-note-body {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+}
+
+/* Profile highlighting */
+.has-profile {
+    background-color: rgba(0, 224, 255, 0.2);
+    padding: 2px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.has-profile:hover {
+    background-color: rgba(0, 224, 255, 0.3);
+}
+
+/* Card Enter Animation */
+.note-card-enter-active {
+    animation: noteCardEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes noteCardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Profile Highlight Animation */
+.profile-highlight {
+    display: inline-block;
+    animation: profile-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes profile-bounce {
+    0% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-10px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Context Menu Styles */
+.custom-context-menu {
+    position: fixed;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: none;
+    min-width: 180px;
+}
+
+.menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+.menu-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 4px 0;
+}
+
+.color-palette {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 8px;
+    margin-top: 4px;
+}
+
+.color-palette span {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.color-palette span:hover {
+    border-color: #fff;
+}
+
+/* Submenu styles */
+.menu-item.has-submenu {
+    position: relative;
+}
+
+.submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: none;
+    min-width: 180px;
+}
+
+.menu-item.has-submenu:hover .submenu {
+    display: block;
+}
+
+.submenu-arrow {
+    margin-left: auto;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 8px;
+}
+
+.color-option {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.color-option:hover {
+    border-color: #fff;
+}
+
+/* Popover nội dung có ảnh (profile & link) */
+.profile-popover img,
+.link-popover img {
+    width: 300px !important;
+    height: 300px !important;
+    display: block;
+    margin-top: 6px;
+    border-radius: 6px;
+    object-fit: cover !important;
+    object-position: center;
+    overflow: hidden;
+}
+
+/* Container cho ảnh trong popover */
+.profile-popover,
+.link-popover {
+    max-width: 260px;
+}
+
+.profile-popover .mt-1,
+.link-popover .mt-1 {
+    width: 260px;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+/* Cho popover rộng hơn xíu để ảnh không bị bóp */
+.popover { max-width: 320px; }
+</style>
+{% endblock %}
+
 {% block content %}
 {# --- PHẦN HTML CHO CÁC CONTEXT MENU (ĐANG BỊ THIẾU) --- #}
 <div id="notes-tab-context-menu" class="custom-context-menu">
@@ -127,12 +450,53 @@
                 <input type="hidden" id="notes-editId">
                 <div class="modal-body">
                     <div class="mb-3">
+                        <label for="notes-title-input" class="form-label">Tiêu đề (tùy chọn)</label>
                         <div id="notes-title-input" contenteditable="true" class="form-control" spellcheck="false"
-                            placeholder="Nhập tiêu đề..." style="min-height: 40px;"></div>
+                            placeholder="Nhập tiêu đề ghi chú..." style="min-height: 40px;"></div>
                     </div>
                     <div class="mb-3">
                         <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false"
-                            style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung..."></div>
+                            style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung ghi chú..."></div>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="notes-enableAlarmCheck">
+                        <label class="form-check-label" for="notes-enableAlarmCheck">Đặt báo thức</label>
+                    </div>
+                    <div id="notes-alarm-container" class="d-none">
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="alarmType" id="alarmTypeRelative" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="alarmTypeRelative">Sau một khoảng</label>
+
+                            <input type="radio" class="btn-check" name="alarmType" id="alarmTypeAbsolute" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary" for="alarmTypeAbsolute">Thời gian cụ thể</label>
+                        </div>
+                        
+                        <div id="notes-alarm-absolute-panel">
+                            <input type="datetime-local" class="form-control" id="notes-dueTime">
+                        </div>
+                        
+                        <div id="notes-alarm-relative-panel" class="d-none">
+                            <div class="row g-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="relative-days" placeholder="0" min="0">
+                                        <span class="input-group-text">Ngày</span>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="relative-hours" placeholder="0" min="0" max="23">
+                                        <span class="input-group-text">Giờ</span>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="relative-minutes" placeholder="5" min="0" max="59">
+                                        <span class="input-group-text">Phút</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -152,8 +516,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <label for="notes-link-url" class="form-label">Nhập URL</label>
-                <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
+                <div class="mb-2">
+                    <label for="notes-link-url" class="form-label">Nhập URL</label>
+                    <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Nội dung (tuỳ chọn)</label>
+                    <div id="notes-link-content-editor"
+                         class="form-control"
+                         contenteditable="true"
+                         style="min-height:120px; max-height:240px; overflow:auto"
+                         spellcheck="false"
+                         data-placeholder="Gõ hoặc dán hình (Ctrl+V) vào đây..."></div>
+                    <div class="form-text">Dán trực tiếp ảnh (Ctrl+V). Ảnh sẽ được tự nén và resize.</div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -192,8 +568,14 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="notes-profile-content" class="form-label">Nội dung</label>
-                    <textarea class="form-control" id="notes-profile-content" rows="4" placeholder="Nhập nội dung chi tiết..."></textarea>
+                    <label class="form-label">Nội dung (tuỳ chọn)</label>
+                    <div id="notes-profile-content-editor"
+                         class="form-control"
+                         contenteditable="true"
+                         style="min-height:120px; max-height:240px; overflow:auto"
+                         spellcheck="false"
+                         data-placeholder="Gõ hoặc dán hình (Ctrl+V) vào đây..."></div>
+                    <div class="form-text">Dán trực tiếp ảnh (Ctrl+V). Ảnh sẽ tự nén & resize.</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -220,6 +602,29 @@
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
                 <button type="button" class="btn btn-danger" id="notes-confirm-delete-btn">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notes-notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border border-warning border-3 shadow-lg">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2"></i>ĐẾN GIỜ RỒI!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h3 id="notes-notificationTitle" class="text-center mb-3"></h3>
+                <p id="notes-notificationContent" style="white-space: pre-wrap;"></p>
+                <input type="hidden" id="notes-notificationId">
+                <audio id="notificationSound" preload="auto">
+                    <source src="{{ url_for('static', filename='sounds/notification.wav') }}" type="audio/wav">
+                </audio>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="notes-acknowledgeBtn">OK, Đã hiểu</button>
             </div>
         </div>
     </div>
@@ -255,6 +660,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const addLinkModal = new bootstrap.Modal(document.getElementById('notes-addLinkModal'));
     const linkUrlInput = document.getElementById('notes-link-url');
     const saveLinkBtn = document.getElementById('notes-save-link-btn');
+    const linkContentEditor = document.getElementById('notes-link-content-editor');
+    enablePasteImagesInto(linkContentEditor);
 
     // --- State Variables ---
     let activeNoteId = null;
@@ -263,6 +670,83 @@ document.addEventListener('DOMContentLoaded', function () {
     let blockNextBlurSave = false;
     window.notesData = [];
     window.filteredNotes = [];
+    
+    // --- Image utils ---
+    async function compressImageFile(file, { maxW = 900, maxH = 900, quality = 0.76 } = {}) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                const w = Math.round(img.width * scale);
+                const h = Math.round(img.height * scale);
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                canvas.toBlob((blob) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result); // dataURL
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', quality);
+                URL.revokeObjectURL(url);
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    }
+
+    function enablePasteImagesInto(el) {
+        if (!el) return;
+        el.addEventListener('paste', async (e) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            let handled = false;
+            for (const it of items) {
+                if (it.kind === 'file' && it.type.startsWith('image/')) {
+                    handled = true;
+                    const file = it.getAsFile();
+                    const dataURL = await compressImageFile(file);
+                    // Chèn ảnh vào caret
+                    document.execCommand('insertImage', false, dataURL);
+                }
+            }
+            if (handled) e.preventDefault();
+        });
+    }
+
+    function enableDropImagesInto(el) {
+        if (!el) return;
+        el.addEventListener('dragover', (e) => {
+            if ([...(e.dataTransfer?.items || [])].some(it => it.kind === 'file' && it.type.startsWith('image/'))) {
+                e.preventDefault();
+            }
+        });
+        el.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            for (const file of e.dataTransfer.files) {
+                if (file.type.startsWith('image/')) {
+                    const dataURL = await compressImageFile(file);
+                    document.execCommand('insertImage', false, dataURL);
+                }
+            }
+        });
+    }
+    
+    // Alarm system variables
+    const alarmCheckbox = document.getElementById('notes-enableAlarmCheck');
+    const alarmContainer = document.getElementById('notes-alarm-container');
+    const alarmTypeRadios = document.querySelectorAll('input[name="alarmType"]');
+    const absolutePanel = document.getElementById('notes-alarm-absolute-panel');
+    const relativePanel = document.getElementById('notes-alarm-relative-panel');
+    
+    // Notification elements
+    const notificationModal = new bootstrap.Modal(document.getElementById('notes-notificationModal'));
+    const notificationTitle = document.getElementById('notes-notificationTitle');
+    const notificationContent = document.getElementById('notes-notificationContent');
+    const notificationIdInput = document.getElementById('notes-notificationId');
+    const notificationSound = document.getElementById('notificationSound');
 
     // --- Core Functions ---
     function formatTimeAgo(isoString) {
@@ -291,14 +775,14 @@ document.addEventListener('DOMContentLoaded', function () {
                      (note.content_html || '').toLowerCase().includes(searchTerm)))
                 : [...window.notesData];
 
-            renderNotes(window.filteredNotes);
+            renderNotes(window.filteredNotes, searchTerm);
 
         } catch (error) {
             showToast(`Tải ghi chú thất bại: ${error.message}`, 'error');
         }
     }
     
-    function renderNotes(notesToRender) {
+    function renderNotes(notesToRender, searchTerm = '') {
         container.innerHTML = '';
         
         let displayList = [...notesToRender];
@@ -311,14 +795,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (displayList.length === 0) {
-            const emptyMessage = searchInput.value 
+            const emptyMessage = searchTerm 
                 ? `<div class="col-12 text-center text-muted p-5"><h6>Không tìm thấy ghi chú nào.</h6></div>`
                 : `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6><button class="btn btn-primary mt-3" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo ghi chú đầu tiên</button></div>`;
             container.innerHTML = emptyMessage;
             return;
         }
         
-        displayList.forEach(note => container.appendChild(createNoteCard(note)));
+        displayList.forEach(note => container.appendChild(createNoteCard(note, searchTerm)));
         
         // Re-apply active class after rendering
         if (activeNoteId) {
@@ -327,13 +811,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function createNoteCard(note) {
+    function createNoteCard(note, searchTerm = '') {
         const col = document.createElement('div');
         col.className = 'note-card-wrapper';
         
         const markedIconHTML = note.is_marked ? `<i class="bi bi-star-fill text-warning me-2" title="Đã đánh dấu"></i>` : '';
-        const title = note.title_html || 'Ghi chú không tiêu đề';
-        const content = note.content_html || '...';
+        
+        let title = note.title_html || 'Ghi chú không tiêu đề';
+        let content = note.content_html || '...';
+        
+        // Apply profile highlight for search
+        if (searchTerm) {
+            const regex = new RegExp(`(<span class="has-profile"[^>]*data-profile-id="${searchTerm}"[^>]*?)>`, 'i');
+            title = title.replace(regex, `$1 class="has-profile profile-highlight">`);
+            content = content.replace(regex, `$1 class="has-profile profile-highlight">`);
+        }
+        
+        // Countdown HTML for alarm
+        let countdownHTML = '';
+        if (note.due_time) {
+            countdownHTML = `<small class="text-warning fw-bold"><i class="bi bi-alarm-fill"></i> <span id="countdown-${note.id}" data-due-time="${note.due_time}">...</span></small>`;
+        }
 
         col.innerHTML = `
             <div class="card h-100" data-note-id="${note.id}">
@@ -345,6 +843,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <small class="text-muted" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">${formatTimeAgo(note.modified_at)}</small>
                         </div>
                     </div>
+                    ${countdownHTML ? `<div class="mb-2">${countdownHTML}</div>` : ''}
                     <div class="card-text card-note-body flex-grow-1">${content}</div>
                 </div>
             </div>`;
@@ -371,16 +870,16 @@ document.addEventListener('DOMContentLoaded', function () {
         detailWrapper.classList.remove('visible');
         container.classList.remove('notes-list-view');
         container.classList.add('notes-grid-view');
-        document.querySelectorAll('#notes-container .card').forEach(card => card.classList.remove('note-card-active'));
+        document.querySelector('.note-card-active')?.classList.remove('note-card-active');
         activeNoteId = null;
         
         // Reset detail panel
         const detailHeader = detailWrapper.querySelector('.card-header');
         const detailContent = detailWrapper.querySelector('#notes-detail-content');
         const detailPlaceholder = detailWrapper.querySelector('#notes-detail-placeholder');
-        detailHeader.innerHTML = '';
-        detailContent.classList.add('d-none');
-        detailPlaceholder.classList.remove('d-none');
+        if (detailHeader) detailHeader.innerHTML = '';
+        if (detailContent) detailContent.classList.add('d-none');
+        if (detailPlaceholder) detailPlaceholder.classList.remove('d-none');
     };
 
     function showNoteDetail(note) {
@@ -412,6 +911,12 @@ document.addEventListener('DOMContentLoaded', function () {
         detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
         const editorEl = document.getElementById('detail-editable-full');
         
+        // Force disable spellcheck via JavaScript
+        editorEl.spellcheck = false;
+        
+        // Enable paste images into main editor
+        enablePasteImagesInto(editorEl);
+        
         // Set initial content for comparison
         editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
         
@@ -431,8 +936,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
         editorEl.addEventListener('contextmenu', handleEditorContextMenu);
         
-        // Paste handler - auto-save after paste
+        // Click handler for links - open in new tab
+        editorEl.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(link.href, '_blank', 'noopener,noreferrer');
+            }
+        });
+        
+        // Paste handler - auto-save after paste and auto-convert URLs to links
         editorEl.addEventListener('paste', (e) => {
+            e.preventDefault();
+            
+            // Get the pasted content as plain text from the clipboard
+            const plainText = (e.clipboardData || window.clipboardData).getData('text');
+            if (!plainText) {
+                return;
+            }
+            
+            // URL regex pattern - handles http, https, ftp, and file protocols
+            const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            
+            if (urlRegex.test(plainText)) {
+                // If URLs are found, replace them with HTML anchor tags
+                const processedHtml = plainText.replace(urlRegex, (url) => {
+                    // Create a styled and secure link
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #69b3ff; text-decoration: underline;">${url}</a>`;
+                });
+                
+                // Insert the processed HTML into the editor
+                document.execCommand('insertHTML', false, processedHtml);
+            } else {
+                // If no URLs are found, simply insert the content as plain text
+                document.execCommand('insertText', false, plainText);
+            }
+            
+            // Auto-save after paste
             setTimeout(() => {
                 if (activeNoteId) {
                     saveNoteChanges(activeNoteId, true);
@@ -440,8 +981,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);
         });
         
+        // Initialize profile interactions and apply saved colors
+        initializeProfileInteractions();
+        initializeLinkPopovers();
+        applySavedColors();
+        
+        // Profile highlight logic for search
+        const currentSearchTerm = searchInput.value.trim().toLowerCase();
+        if (currentSearchTerm) {
+            const matchingSpans = editorEl.querySelectorAll(`.has-profile[data-profile-id="${currentSearchTerm}" i]`);
+            matchingSpans.forEach(span => {
+                span.classList.add('profile-highlight');
+                setTimeout(() => {
+                    span.classList.remove('profile-highlight');
+                }, 600);
+            });
+            
+            if (matchingSpans.length > 0) {
+                matchingSpans[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        
         detailPlaceholder.classList.add('d-none');
         detailContent.classList.remove('d-none');
+        
+        // Update countdown if note has due_time
+        if (note.due_time) {
+            updateCountdown(`detail-countdown-${note.id}`, note.due_time);
+        }
     }
 
     async function saveNoteChanges(noteId, forceSave = false) {
@@ -528,6 +1095,22 @@ document.addEventListener('DOMContentLoaded', function () {
         editIdInput.value = '';
         titleInput.innerHTML = '';
         contentEditor.innerHTML = '';
+        
+        // Force disable spellcheck
+        titleInput.spellcheck = false;
+        contentEditor.spellcheck = false;
+        
+        // Reset alarm settings
+        if (alarmCheckbox) {
+            alarmCheckbox.checked = false;
+            alarmContainer.classList.add('d-none');
+        }
+        document.getElementById('alarmTypeAbsolute').checked = true;
+        document.getElementById('notes-dueTime').value = '';
+        document.getElementById('relative-days').value = '';
+        document.getElementById('relative-hours').value = '';
+        document.getElementById('relative-minutes').value = '5';
+        
         notesModal.show();
     };
 
@@ -545,6 +1128,17 @@ document.addEventListener('DOMContentLoaded', function () {
         editIdInput.value = noteId;
         titleInput.innerHTML = note.title_html || '';
         contentEditor.innerHTML = note.content_html || '';
+        
+        // Show alarm options
+        alarmCheckbox.checked = true;
+        alarmContainer.classList.remove('d-none');
+        
+        // Set default values
+        document.getElementById('notes-dueTime').value = '';
+        document.getElementById('relative-days').value = '';
+        document.getElementById('relative-hours').value = '';
+        document.getElementById('relative-minutes').value = '5';
+        
         notesModal.show();
     };
 
@@ -579,14 +1173,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    window.closeDetailPanel = () => {
-        listWrapper.classList.remove('shrunk');
-        detailWrapper.classList.remove('visible');
-        container.classList.add('notes-grid-view');
-        container.classList.remove('notes-list-view');
-        document.querySelector('.note-card-active')?.classList.remove('note-card-active');
-        activeNoteId = null;
-    };
     
     // --- Context Menu Logic ---
     function restoreSelection() {
@@ -673,6 +1259,40 @@ document.addEventListener('DOMContentLoaded', function () {
             title_html: titleInput.innerHTML,
             content_html: contentEditor.innerHTML,
         };
+        
+        // Add alarm data if enabled
+        if (alarmCheckbox && alarmCheckbox.checked) {
+            const isAbsolute = document.getElementById('alarmTypeAbsolute').checked;
+            if (isAbsolute) {
+                const dueTime = document.getElementById('notes-dueTime').value;
+                if (dueTime) {
+                    payload.due_date = dueTime;
+                    payload.notice = JSON.stringify({
+                        enabled: true,
+                        title: titleInput.textContent || 'Nhắc nhở',
+                        note: contentEditor.textContent || '',
+                        due_date: dueTime
+                    });
+                }
+            } else {
+                const days = parseInt(document.getElementById('relative-days').value) || 0;
+                const hours = parseInt(document.getElementById('relative-hours').value) || 0;
+                const minutes = parseInt(document.getElementById('relative-minutes').value) || 5;
+                
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + days);
+                dueDate.setHours(dueDate.getHours() + hours);
+                dueDate.setMinutes(dueDate.getMinutes() + minutes);
+                
+                payload.due_date = dueDate.toISOString();
+                payload.notice = JSON.stringify({
+                    enabled: true,
+                    title: titleInput.textContent || 'Nhắc nhở',
+                    note: contentEditor.textContent || '',
+                    due_date: dueDate.toISOString()
+                });
+            }
+        }
 
         if (!payload.title_html && !payload.content_html) {
             alert('Ghi chú không được để trống.');
@@ -692,9 +1312,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Search input
-    searchInput.addEventListener('input', () => {
-        fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+    // Search input - Enhanced search like original version
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const notesToShow = searchTerm
+            ? window.notesData.filter(note => {
+                const titleLower = (note.title_html || '').toLowerCase();
+                const contentLower = (note.content_html || '').toLowerCase();
+                const searchLower = searchTerm.toLowerCase();
+
+                // Check 1: Search in visible title
+                if (titleLower.includes(searchLower)) return true;
+
+                // Check 2: Search in visible content (plain text)
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = note.content_html || '';
+                if (tempDiv.textContent.toLowerCase().includes(searchLower)) return true;
+
+                // Check 3: Search for the profile ID attribute directly in the HTML string
+                // This is crucial for finding IDs that are not part of the visible text.
+                const profileIdSearchString = `data-profile-id="${searchLower}"`.toLowerCase();
+                if (contentLower.includes(profileIdSearchString)) return true;
+
+                return false;
+            })
+            : window.notesData;
+
+        window.filteredNotes = notesToShow;
+        renderNotes(notesToShow, searchTerm);
     });
 
     // Context menu actions for note card
@@ -751,30 +1396,60 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#context-link').addEventListener('click', () => {
         // The selection is already saved, just show the modal
         linkUrlInput.value = 'https://';
+        if (linkContentEditor) linkContentEditor.innerHTML = ''; // reset nội dung
         addLinkModal.show();
     });
     saveLinkBtn.addEventListener('click', () => {
         const url = linkUrlInput.value.trim();
-        if (url) {
-            restoreSelection(); // Restore selection before creating link
-            document.execCommand('createLink', false, url);
+        if (!url) return;
+
+        restoreSelection(); // khôi phục bôi đen
+        document.execCommand('createLink', false, url); // tạo <a>
+
+        // Gắn nội dung mở rộng vào <a>
+        setTimeout(() => {
+            const sel = window.getSelection();
+            let node = sel.anchorNode;
+            if (node && node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+            const a = node ? node.closest('a') : null;
+            if (a) {
+                a.classList.add('has-link-content');
+                a.dataset.linkHref = url;
+                a.dataset.linkContent = linkContentEditor ? linkContentEditor.innerHTML : '';
+            }
+            initializeLinkPopovers();
             addLinkModal.hide();
-            savedSelection = null; // Clear saved selection
+            savedSelection = null;
             setTimeout(() => saveNoteChanges(activeNoteId), 100);
-        }
+        }, 30);
     });
 
     // Profile Modal Elements
     const profileModal = new bootstrap.Modal(document.getElementById('notes-addProfileModal'));
     const profileIdInput = document.getElementById('notes-profile-id');
     const profilePasswordInput = document.getElementById('notes-profile-password');
-    const profileContentInput = document.getElementById('notes-profile-content');
+    const profileContentInput = document.getElementById('notes-profile-content-editor');
     const saveProfileBtn = document.getElementById('notes-save-profile-btn');
     const deleteProfileBtn = document.getElementById('notes-delete-profile-btn');
     const copyProfileIdBtn = document.getElementById('notes-copy-profile-id-btn');
     const copyProfilePasswordBtn = document.getElementById('notes-copy-profile-password-btn');
     const profileSpanMenu = document.getElementById('profile-span-context-menu');
     let currentProfileSpan = null;
+    
+    // Modal Gán profile - enable paste images
+    const addProfileModalEl = document.getElementById('notes-addProfileModal');
+    if (addProfileModalEl) {
+        addProfileModalEl.addEventListener('shown.bs.modal', () => {
+            const ed = document.getElementById('notes-profile-content-editor');
+            if (ed) {
+                // reset nội dung nếu cần
+                // ed.innerHTML = ''; // nếu muốn xoá mỗi lần mở
+                enablePasteImagesInto(ed);
+                enableDropImagesInto(ed);
+                ed.focus();
+            }
+        });
+    }
     
     // Profile: Click "Gán Profile" in context menu
     document.querySelector('#context-profile').addEventListener('click', () => {
@@ -787,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', function () {
         savedSelection = selection.getRangeAt(0).cloneRange();
         profileIdInput.value = '';
         profilePasswordInput.value = '';
-        profileContentInput.value = '';
+        if (profileContentInput) profileContentInput.innerHTML = '';
         deleteProfileBtn.style.display = 'none';
         blockNextBlurSave = true;
         hideAllContextMenus();
@@ -798,10 +1473,10 @@ document.addEventListener('DOMContentLoaded', function () {
     saveProfileBtn.addEventListener('click', () => {
         const profileId = profileIdInput.value.trim();
         const profilePassword = profilePasswordInput.value.trim();
-        const profileContent = profileContentInput.value.trim();
+        const profileContent = profileContentInput?.innerHTML.trim() || '';
         
-        if (!profileId) {
-            alert('Vui lòng nhập ID.');
+        if (!profileId && !profileContent) {
+            alert('Nhập ít nhất 1 trường: Nội dung hoặc ID.');
             return;
         }
         
@@ -810,19 +1485,24 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan.dataset.profileId = profileId;
             currentProfileSpan.dataset.profilePassword = profilePassword;
             currentProfileSpan.dataset.profileContent = profileContent;
-            currentProfileSpan.textContent = profileId;
+            // Chỉ đổi text nếu có ID; nếu không, giữ nguyên chữ gốc
+            if (profileId) {
+                currentProfileSpan.textContent = profileId;
+            }
         } else if (savedSelection) {
             // Creating new profile
-            restoreSelection();
             const span = document.createElement('span');
             span.className = 'has-profile';
             span.dataset.profileId = profileId;
             span.dataset.profilePassword = profilePassword;
             span.dataset.profileContent = profileContent;
-            span.textContent = profileId;
             span.style.color = '#00e0ff';
-            
-            savedSelection.deleteContents();
+            // Chỉ đổi text nếu có ID; nếu không, giữ nguyên chữ gốc
+            if (profileId) {
+                span.textContent = profileId;
+            } else {
+                span.appendChild(savedSelection.extractContents());
+            }
             savedSelection.insertNode(span);
         }
         
@@ -835,23 +1515,51 @@ document.addEventListener('DOMContentLoaded', function () {
     // Profile: Delete button
     deleteProfileBtn.addEventListener('click', () => {
         if (currentProfileSpan && confirm('Xóa profile này?')) {
-            const text = currentProfileSpan.textContent;
-            currentProfileSpan.replaceWith(document.createTextNode(text));
+            // Unwrap the span, replacing it with its own text content
+            const parent = currentProfileSpan.parentNode;
+            while (currentProfileSpan.firstChild) {
+                parent.insertBefore(currentProfileSpan.firstChild, currentProfileSpan);
+            }
+            parent.removeChild(currentProfileSpan);
+            
             profileModal.hide();
             currentProfileSpan = null;
             saveNoteChanges(activeNoteId, true);
         }
     });
     
+    // Helper function for copy-to-clipboard feedback
+    const copyFeedback = (button) => {
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 1500);
+    };
+    
     // Profile: Copy buttons
-    copyProfileIdBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(profileIdInput.value);
-        showToast('Đã copy ID!', 'success');
+    copyProfileIdBtn.addEventListener('click', function() {
+        const idToCopy = profileIdInput.value;
+        if (idToCopy) {
+            navigator.clipboard.writeText(idToCopy).then(() => {
+                copyFeedback(this);
+            }).catch(err => {
+                console.error('Failed to copy ID: ', err);
+                alert('Lỗi khi sao chép ID.');
+            });
+        }
     });
     
-    copyProfilePasswordBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(profilePasswordInput.value);
-        showToast('Đã copy Password!', 'success');
+    copyProfilePasswordBtn.addEventListener('click', function() {
+        const passwordToCopy = profilePasswordInput.value;
+        if (passwordToCopy) {
+            navigator.clipboard.writeText(passwordToCopy).then(() => {
+                copyFeedback(this);
+            }).catch(err => {
+                console.error('Failed to copy password: ', err);
+                alert('Lỗi khi sao chép mật khẩu.');
+            });
+        }
     });
     
     // Profile Span Context Menu
@@ -875,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan = profileSpan;
             profileIdInput.value = profileSpan.dataset.profileId || '';
             profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
-            profileContentInput.value = profileSpan.dataset.profileContent || '';
+            if (profileContentInput) profileContentInput.innerHTML = profileSpan.dataset.profileContent || '';
             deleteProfileBtn.style.display = 'block';
             blockNextBlurSave = true;
             profileModal.show();
@@ -887,7 +1595,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const colorOption = e.target.closest('.color-option');
         if (colorOption && currentProfileSpan) {
             const newColor = colorOption.dataset.color;
+            const profileId = currentProfileSpan.dataset.profileId;
+            
+            // Update the span color
             currentProfileSpan.style.color = newColor;
+            
+            // Save color to localStorage
+            if (window.profileColors) {
+                window.profileColors[profileId] = newColor;
+                localStorage.setItem('profileColors', JSON.stringify(window.profileColors));
+            }
+            
             hideAllContextMenus();
             saveNoteChanges(activeNoteId, true);
         }
@@ -896,8 +1614,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Profile Span: Delete
     document.querySelector('#context-delete-profile').addEventListener('click', () => {
         if (currentProfileSpan && confirm('Xóa profile này?')) {
-            const text = currentProfileSpan.textContent;
-            currentProfileSpan.replaceWith(document.createTextNode(text));
+            // Unwrap the span, replacing it with its own text content
+            const parent = currentProfileSpan.parentNode;
+            while (currentProfileSpan.firstChild) {
+                parent.insertBefore(currentProfileSpan.firstChild, currentProfileSpan);
+            }
+            parent.removeChild(currentProfileSpan);
+            
             hideAllContextMenus();
             currentProfileSpan = null;
             saveNoteChanges(activeNoteId, true);
@@ -913,9 +1636,23 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan = profileSpan;
             profileIdInput.value = profileSpan.dataset.profileId || '';
             profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
-            profileContentInput.value = profileSpan.dataset.profileContent || '';
+            if (profileContentInput) profileContentInput.innerHTML = profileSpan.dataset.profileContent || '';
             deleteProfileBtn.style.display = 'block';
             profileModal.show();
+        }
+    });
+    
+    // Title input context menu (như phiên bản cũ)
+    titleInput.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const selection = window.getSelection();
+        // Chỉ hiển thị menu nếu có đoạn text được bôi đen
+        if (selection.toString().length > 0) {
+            // Đây là logic đúng, giống hệt với của ô Nội dung
+            editorContextMenu.style.top = `${e.clientY}px`;
+            editorContextMenu.style.left = `${e.clientX}px`;
+            editorContextMenu.style.display = 'block';
         }
     });
 
@@ -958,12 +1695,243 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', hideAllContextMenus);
     notesPane.addEventListener('contextmenu', handleTabContextMenu);
 
+    // --- Countdown Functions ---
+    
+    function updateCountdown(elementId, dueTimeString) {
+        const elem = document.getElementById(elementId);
+        if (!elem) return;
+        
+        const distance = new Date(dueTimeString).getTime() - new Date().getTime();
+        if (distance < 0) {
+            elem.textContent = "Đã đến giờ!";
+            return;
+        }
+        
+        const days = Math.floor(distance / 86400000);
+        const hours = Math.floor((distance % 86400000) / 3600000);
+        const minutes = Math.floor((distance % 3600000) / 60000);
+        const seconds = Math.floor((distance % 60000) / 1000);
+        
+        let result = "Còn ";
+        if (days > 0) result += `${days} ngày `;
+        if (hours > 0 || days > 0) result += `${hours} giờ `;
+        result += `${minutes} phút ${seconds} giây`;
+        elem.textContent = result;
+    }
+    
+    // Update countdown every second
+    setInterval(() => {
+        document.querySelectorAll('[id^="countdown-"]').forEach(span => {
+            if (span.dataset.dueTime) updateCountdown(span.id, span.dataset.dueTime);
+        });
+    }, 1000);
+    
+    // --- Profile Functions ---
+    
+    // Initialize profile colors storage
+    if (typeof (Storage) !== "undefined") {
+        const savedColors = localStorage.getItem('profileColors');
+        if (savedColors) {
+            window.profileColors = JSON.parse(savedColors);
+        } else {
+            window.profileColors = {};
+        }
+    }
+    
+    // Apply saved colors on load
+    function applySavedColors() {
+        if (window.profileColors) {
+            Object.keys(window.profileColors).forEach(profileId => {
+                const color = window.profileColors[profileId];
+                const spans = document.querySelectorAll(`.has-profile[data-profile-id="${profileId}"]`);
+                spans.forEach(span => {
+                    span.style.color = color;
+                });
+            });
+        }
+    }
+    
+    // Initialize profile interactions (popovers, click handlers)
+    function initializeProfileInteractions() {
+        const editor = document.getElementById('detail-editable-full');
+        if (!editor) return;
+        
+        // First, destroy any existing popovers to prevent duplicates
+        editor.querySelectorAll('.has-profile').forEach(span => {
+            const popoverInstance = bootstrap.Popover.getInstance(span);
+            if (popoverInstance) {
+                popoverInstance.dispose();
+            }
+        });
+        
+        // Add popovers to all profile spans
+        editor.querySelectorAll('.has-profile').forEach(span => {
+            const profileId = span.dataset.profileId || '';
+            const profilePassword = span.dataset.profilePassword || '';
+            const profileContent = span.dataset.profileContent || '';
+
+            // Lấy ảnh từ content (nếu có)
+            let imagesHTML = '';
+            if (profileContent) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = profileContent;
+                const imgs = Array.from(tmp.querySelectorAll('img')).slice(0, 3); // limit 3
+                if (imgs.length) {
+                    imagesHTML = `<div class="mt-1">${imgs.map(img => {
+                        // ép style hiển thị đẹp
+                        img.setAttribute('loading', 'lazy');
+                        img.style.setProperty('width', '260px', 'important');
+                        img.style.setProperty('height', '180px', 'important');
+                        img.style.setProperty('object-fit', 'cover', 'important');
+                        img.style.setProperty('object-position', 'center', 'important');
+                        img.style.setProperty('overflow', 'hidden', 'important');
+                        img.style.display = 'block';
+                        img.style.marginTop = '6px';
+                        img.style.borderRadius = '6px';
+                        return img.outerHTML;
+                    }).join('')}</div>`;
+                }
+            }
+
+            const popoverContent = `
+                <div class="profile-popover">
+                    ${profileId ? `<div><strong>ID:</strong> ${profileId}</div>` : ''}
+                    ${profilePassword ? `<div><strong>Password:</strong> ${profilePassword}</div>` : ''}
+                    ${profileContent && !imagesHTML ? `<div><strong>Content:</strong> ${profileContent}</div>` : ''}
+                    ${imagesHTML}
+                </div>
+            `;
+
+            new bootstrap.Popover(span, {
+                content: popoverContent,
+                html: true,
+                trigger: 'hover',
+                placement: 'top',
+                container: 'body'
+            });
+        });
+    }
+    
+    function initializeLinkPopovers() {
+        const editor = document.getElementById('detail-editable-full');
+        if (!editor) return;
+
+        // dọn popover cũ
+        editor.querySelectorAll('a.has-link-content').forEach(a => {
+            const inst = bootstrap.Popover.getInstance(a);
+            if (inst) inst.dispose();
+        });
+
+        // gắn popover mới
+        editor.querySelectorAll('a.has-link-content').forEach(a => {
+            const contentHtml = a.dataset.linkContent || '';
+            const href = a.getAttribute('href') || a.dataset.linkHref || '';
+            const popHtml = `
+                <div class="link-popover">
+                    ${href ? `<div class="mb-1"><a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a></div>` : ''}
+                    ${contentHtml}
+                </div>
+            `;
+            new bootstrap.Popover(a, {
+                content: popHtml,
+                html: true,
+                trigger: 'hover',
+                placement: 'top',
+                container: 'body'
+            });
+        });
+    }
+    
+    // --- Alarm System Functions ---
+    
+    // Toggle alarm container visibility
+    if (alarmCheckbox) {
+        alarmCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                alarmContainer.classList.remove('d-none');
+            } else {
+                alarmContainer.classList.add('d-none');
+            }
+        });
+    }
+    
+    // Handle alarm type radio buttons
+    alarmTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.id === 'alarmTypeAbsolute') {
+                absolutePanel.classList.remove('d-none');
+                relativePanel.classList.add('d-none');
+            } else {
+                absolutePanel.classList.add('d-none');
+                relativePanel.classList.remove('d-none');
+            }
+        });
+    });
+    
+    // Notification polling
+    setInterval(async () => {
+        try {
+            const response = await fetch('/notes/api/check-notifications');
+            if (response.ok) {
+                const notification = await response.json();
+                if (notification) {
+                    notificationTitle.textContent = notification.title;
+                    notificationContent.innerHTML = notification.notes || 'Không có nội dung chi tiết.';
+                    notificationIdInput.value = notification.id;
+                    
+                    // Play notification sound
+                    if (notificationSound) {
+                        notificationSound.play().catch(e => console.log("User interaction needed to play sound."));
+                    }
+                    
+                    notificationModal.show();
+                    
+                    // Refresh notes if on notes tab
+                    if (document.getElementById('notes-tool-pane').classList.contains('active')) {
+                        await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error polling for notifications:", error);
+        }
+    }, 10000); // Check every 10 seconds
+
     // --- Initial Setup ---
     async function initializeNotesView() {
-        applySavedCardSize(); // Apply saved card size preference
+        // Requirement 1: Set default to list view (như phiên bản cũ)
+        container.classList.add('notes-list-view');
+        container.classList.remove('notes-grid-view');
+        
+        // Close detail panel if it's open, ensuring a clean list view
+        if (detailWrapper.classList.contains('visible')) {
+            window.closeDetailPanel();
+        }
+        
+        // Await fetching and rendering to ensure data and elements are ready
         await fetchAndRenderNotes();
-        if (window.notesData.length > 0) {
-            showNoteDetail(window.notesData[0]);
+        
+        // Apply card size settings
+        applySavedCardSize();
+        
+        // Animate the cards after they have been rendered
+        setTimeout(() => {
+            const cards = container.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.add('note-card-enter-active');
+                setTimeout(() => card.classList.remove('note-card-enter-active'), 400);
+            });
+        }, 50);
+        
+        // NEW LOGIC: Automatically select and show the first note (như phiên bản cũ)
+        if (window.filteredNotes && window.filteredNotes.length > 0) {
+            const firstNote = window.filteredNotes[0];
+            
+            // Open the detail panel layout
+            openDetailPanel();
+            
+            // Populate the panel with the first note's details
+            showNoteDetail(firstNote);
         }
     }
 
