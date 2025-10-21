@@ -290,41 +290,6 @@
 .color-option:hover {
     border-color: #fff;
 }
-
-/* Ghi chú: Toàn bộ khối CSS cho popover được viết lại để đảm bảo tính nhất quán */
-
-/* 1. Kích thước và layout cho popover có chứa ảnh preview */
-.popover:has(.profile-media-preview) {
-  max-width: 448px !important; /* 400px + padding */
-}
-
-.popover:has(.profile-media-preview) .popover-body {
-  overflow: hidden; /* Cắt mọi thứ tràn ra khỏi body của popover */
-}
-
-/* 2. Container chứa ảnh preview - ĐÂY LÀ THAY ĐỔI QUAN TRỌNG NHẤT */
-.profile-popover .profile-media-preview,
-.link-popover .profile-media-preview {
-  display: block;
-  position: relative;
-  width: 400px;         /* Chỉ định chiều rộng làm gốc */
-  aspect-ratio: 1 / 1;  /* BẮT BUỘC container phải là hình vuông (tỷ lệ 1:1) */
-  overflow: hidden;
-  background: #0f1115;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-/* 3. Thẻ IMG bên trong - bắt buộc phải lấp đầy container */
-.profile-popover .profile-media-preview img,
-.link-popover .profile-media-preview img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Giữ tỷ lệ ảnh, không bị méo */
-}
 </style>
 {% endblock %}
 
@@ -521,20 +486,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2">
-                    <label for="notes-link-url" class="form-label">Nhập URL</label>
-                    <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Nội dung (tuỳ chọn)</label>
-                    <div id="notes-link-content-editor"
-                         class="form-control"
-                         contenteditable="true"
-                         style="min-height:120px; max-height:240px; overflow:auto"
-                         spellcheck="false"
-                         data-placeholder="Gõ hoặc dán hình (Ctrl+V) vào đây..."></div>
-                    <div class="form-text">Dán trực tiếp ảnh (Ctrl+V). Ảnh sẽ được tự nén và resize.</div>
-                </div>
+                <label for="notes-link-url" class="form-label">Nhập URL</label>
+                <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -573,14 +526,8 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Nội dung (tuỳ chọn)</label>
-                    <div id="notes-profile-content-editor"
-                         class="form-control"
-                         contenteditable="true"
-                         style="min-height:120px; max-height:240px; overflow:auto"
-                         spellcheck="false"
-                         data-placeholder="Gõ hoặc dán hình (Ctrl+V) vào đây..."></div>
-                    <div class="form-text">Dán trực tiếp ảnh (Ctrl+V). Ảnh sẽ tự nén & resize.</div>
+                    <label for="notes-profile-content" class="form-label">Nội dung</label>
+                    <textarea class="form-control" id="notes-profile-content" rows="4" placeholder="Nhập nội dung chi tiết..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -665,8 +612,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const addLinkModal = new bootstrap.Modal(document.getElementById('notes-addLinkModal'));
     const linkUrlInput = document.getElementById('notes-link-url');
     const saveLinkBtn = document.getElementById('notes-save-link-btn');
-    const linkContentEditor = document.getElementById('notes-link-content-editor');
-    enablePasteImagesInto(linkContentEditor);
 
     // --- State Variables ---
     let activeNoteId = null;
@@ -675,69 +620,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let blockNextBlurSave = false;
     window.notesData = [];
     window.filteredNotes = [];
-    
-    // --- Image utils ---
-    async function compressImageFile(file, { maxW = 900, maxH = 900, quality = 0.76 } = {}) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            const url = URL.createObjectURL(file);
-            img.onload = () => {
-                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
-                const w = Math.round(img.width * scale);
-                const h = Math.round(img.height * scale);
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                canvas.toBlob((blob) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result); // dataURL
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                }, 'image/jpeg', quality);
-                URL.revokeObjectURL(url);
-            };
-            img.onerror = reject;
-            img.src = url;
-        });
-    }
-
-    function enablePasteImagesInto(el) {
-        if (!el) return;
-        el.addEventListener('paste', async (e) => {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-            let handled = false;
-            for (const it of items) {
-                if (it.kind === 'file' && it.type.startsWith('image/')) {
-                    handled = true;
-                    const file = it.getAsFile();
-                    const dataURL = await compressImageFile(file);
-                    // Chèn ảnh vào caret
-                    document.execCommand('insertImage', false, dataURL);
-                }
-            }
-            if (handled) e.preventDefault();
-        });
-    }
-
-    function enableDropImagesInto(el) {
-        if (!el) return;
-        el.addEventListener('dragover', (e) => {
-            if ([...(e.dataTransfer?.items || [])].some(it => it.kind === 'file' && it.type.startsWith('image/'))) {
-                e.preventDefault();
-            }
-        });
-        el.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            for (const file of e.dataTransfer.files) {
-                if (file.type.startsWith('image/')) {
-                    const dataURL = await compressImageFile(file);
-                    document.execCommand('insertImage', false, dataURL);
-                }
-            }
-        });
-    }
     
     // Alarm system variables
     const alarmCheckbox = document.getElementById('notes-enableAlarmCheck');
@@ -919,9 +801,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Force disable spellcheck via JavaScript
         editorEl.spellcheck = false;
         
-        // Enable paste images into main editor
-        enablePasteImagesInto(editorEl);
-        
         // Set initial content for comparison
         editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
         
@@ -988,7 +867,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Initialize profile interactions and apply saved colors
         initializeProfileInteractions();
-        initializeLinkPopovers();
         applySavedColors();
         
         // Profile highlight logic for search
@@ -1401,60 +1279,30 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#context-link').addEventListener('click', () => {
         // The selection is already saved, just show the modal
         linkUrlInput.value = 'https://';
-        if (linkContentEditor) linkContentEditor.innerHTML = ''; // reset nội dung
         addLinkModal.show();
     });
     saveLinkBtn.addEventListener('click', () => {
         const url = linkUrlInput.value.trim();
-        if (!url) return;
-
-        restoreSelection(); // khôi phục bôi đen
-        document.execCommand('createLink', false, url); // tạo <a>
-
-        // Gắn nội dung mở rộng vào <a>
-        setTimeout(() => {
-            const sel = window.getSelection();
-            let node = sel.anchorNode;
-            if (node && node.nodeType === Node.TEXT_NODE) node = node.parentElement;
-            const a = node ? node.closest('a') : null;
-            if (a) {
-                a.classList.add('has-link-content');
-                a.dataset.linkHref = url;
-                a.dataset.linkContent = linkContentEditor ? linkContentEditor.innerHTML : '';
-            }
-            initializeLinkPopovers();
+        if (url) {
+            restoreSelection(); // Restore selection before creating link
+            document.execCommand('createLink', false, url);
             addLinkModal.hide();
-            savedSelection = null;
+            savedSelection = null; // Clear saved selection
             setTimeout(() => saveNoteChanges(activeNoteId), 100);
-        }, 30);
+        }
     });
 
     // Profile Modal Elements
     const profileModal = new bootstrap.Modal(document.getElementById('notes-addProfileModal'));
     const profileIdInput = document.getElementById('notes-profile-id');
     const profilePasswordInput = document.getElementById('notes-profile-password');
-    const profileContentInput = document.getElementById('notes-profile-content-editor');
+    const profileContentInput = document.getElementById('notes-profile-content');
     const saveProfileBtn = document.getElementById('notes-save-profile-btn');
     const deleteProfileBtn = document.getElementById('notes-delete-profile-btn');
     const copyProfileIdBtn = document.getElementById('notes-copy-profile-id-btn');
     const copyProfilePasswordBtn = document.getElementById('notes-copy-profile-password-btn');
     const profileSpanMenu = document.getElementById('profile-span-context-menu');
     let currentProfileSpan = null;
-    
-    // Modal Gán profile - enable paste images
-    const addProfileModalEl = document.getElementById('notes-addProfileModal');
-    if (addProfileModalEl) {
-        addProfileModalEl.addEventListener('shown.bs.modal', () => {
-            const ed = document.getElementById('notes-profile-content-editor');
-            if (ed) {
-                // reset nội dung nếu cần
-                // ed.innerHTML = ''; // nếu muốn xoá mỗi lần mở
-                enablePasteImagesInto(ed);
-                enableDropImagesInto(ed);
-                ed.focus();
-            }
-        });
-    }
     
     // Profile: Click "Gán Profile" in context menu
     document.querySelector('#context-profile').addEventListener('click', () => {
@@ -1467,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', function () {
         savedSelection = selection.getRangeAt(0).cloneRange();
         profileIdInput.value = '';
         profilePasswordInput.value = '';
-        if (profileContentInput) profileContentInput.innerHTML = '';
+        profileContentInput.value = '';
         deleteProfileBtn.style.display = 'none';
         blockNextBlurSave = true;
         hideAllContextMenus();
@@ -1478,10 +1326,10 @@ document.addEventListener('DOMContentLoaded', function () {
     saveProfileBtn.addEventListener('click', () => {
         const profileId = profileIdInput.value.trim();
         const profilePassword = profilePasswordInput.value.trim();
-        const profileContent = profileContentInput?.innerHTML.trim() || '';
+        const profileContent = profileContentInput.value.trim();
         
-        if (!profileId && !profileContent) {
-            alert('Nhập ít nhất 1 trường: Nội dung hoặc ID.');
+        if (!profileId) {
+            alert('Vui lòng nhập ID.');
             return;
         }
         
@@ -1490,10 +1338,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan.dataset.profileId = profileId;
             currentProfileSpan.dataset.profilePassword = profilePassword;
             currentProfileSpan.dataset.profileContent = profileContent;
-            // Chỉ đổi text nếu có ID; nếu không, giữ nguyên chữ gốc
-            if (profileId) {
-                currentProfileSpan.textContent = profileId;
-            }
+            currentProfileSpan.textContent = profileId;
         } else if (savedSelection) {
             // Creating new profile
             const span = document.createElement('span');
@@ -1502,12 +1347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             span.dataset.profilePassword = profilePassword;
             span.dataset.profileContent = profileContent;
             span.style.color = '#00e0ff';
-            // Chỉ đổi text nếu có ID; nếu không, giữ nguyên chữ gốc
-            if (profileId) {
-                span.textContent = profileId;
-            } else {
-                span.appendChild(savedSelection.extractContents());
-            }
+            span.appendChild(savedSelection.extractContents());
             savedSelection.insertNode(span);
         }
         
@@ -1588,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan = profileSpan;
             profileIdInput.value = profileSpan.dataset.profileId || '';
             profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
-            if (profileContentInput) profileContentInput.innerHTML = profileSpan.dataset.profileContent || '';
+            profileContentInput.value = profileSpan.dataset.profileContent || '';
             deleteProfileBtn.style.display = 'block';
             blockNextBlurSave = true;
             profileModal.show();
@@ -1641,7 +1481,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentProfileSpan = profileSpan;
             profileIdInput.value = profileSpan.dataset.profileId || '';
             profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
-            if (profileContentInput) profileContentInput.innerHTML = profileSpan.dataset.profileContent || '';
+            profileContentInput.value = profileSpan.dataset.profileContent || '';
             deleteProfileBtn.style.display = 'block';
             profileModal.show();
         }
@@ -1771,99 +1611,23 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Add popovers to all profile spans
         editor.querySelectorAll('.has-profile').forEach(span => {
-            const profileId = span.dataset.profileId || '';
-            const profilePassword = span.dataset.profilePassword || '';
-            const profileContent = span.dataset.profileContent || '';
-
-            // Lấy ảnh đầu tiên trong content để preview 400x400
-            let mediaHTML = '';
-            if (profileContent) {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = profileContent;
-                const imgs = Array.from(tmp.querySelectorAll('img'));
-                if (imgs.length) {
-                    // dùng src của ảnh đầu tiên, ép hiển thị trong khung 400x400
-                    const src = imgs[0].getAttribute('src');
-                    mediaHTML = `
-                        <div class="profile-media-preview">
-                            <img src="${src}" alt="preview" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;" />
-                        </div>
-                        ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
-                    `;
-                }
-            }
-
+            const profileId = span.dataset.profileId;
+            const profilePassword = span.dataset.profilePassword;
+            const profileContent = span.dataset.profileContent;
+            
             const popoverContent = `
                 <div class="profile-popover">
-                    ${profileId ? `<div><strong>ID:</strong> ${profileId}</div>` : ''}
-                    ${profilePassword ? `<div><strong>Password:</strong> ${profilePassword}</div>` : ''}
-                    ${mediaHTML || (profileContent ? `<div class="mt-1">${profileContent}</div>` : '')}
+                    <strong>ID:</strong> ${profileId}<br>
+                    ${profilePassword ? `<strong>Password:</strong> ${profilePassword}<br>` : ''}
+                    ${profileContent ? `<strong>Content:</strong> ${profileContent}` : ''}
                 </div>
             `;
-
-            // Gỡ popover cũ trước khi gắn lại để tránh duplicate
-            const old = bootstrap.Popover.getInstance(span);
-            if (old) old.dispose();
-
+            
             new bootstrap.Popover(span, {
                 content: popoverContent,
                 html: true,
                 trigger: 'hover',
-                placement: 'top',
-                container: 'body',
-                customClass: 'profile-popover-400',
-                template: '<div class="popover profile-popover-400" role="tooltip"><div class="popover-arrow"></div><div class="popover-body"></div></div>'
-            });
-        });
-    }
-    
-    function initializeLinkPopovers() {
-        const editor = document.getElementById('detail-editable-full');
-        if (!editor) return;
-
-        // dọn popover cũ
-        editor.querySelectorAll('a.has-link-content').forEach(a => {
-            const inst = bootstrap.Popover.getInstance(a);
-            if (inst) inst.dispose();
-        });
-
-        // gắn popover mới
-        editor.querySelectorAll('a.has-link-content').forEach(a => {
-            const contentHtml = a.dataset.linkContent || '';
-            const href = a.getAttribute('href') || a.dataset.linkHref || '';
-            
-            // Lấy ảnh đầu tiên trong content để preview 400x400
-            let mediaHTML = '';
-            if (contentHtml) {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = contentHtml;
-                const imgs = Array.from(tmp.querySelectorAll('img'));
-                if (imgs.length) {
-                    // dùng src của ảnh đầu tiên, ép hiển thị trong khung 400x400
-                    const src = imgs[0].getAttribute('src');
-                    mediaHTML = `
-                        <div class="profile-media-preview">
-                            <img src="${src}" alt="preview" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;" />
-                        </div>
-                        ${imgs.length > 1 ? `<div class="mt-1 text-muted" style="font-size:12px">+${imgs.length-1} ảnh khác</div>` : ''}
-                    `;
-                }
-            }
-            
-            const popHtml = `
-                <div class="link-popover">
-                    ${href ? `<div class="mb-1"><a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a></div>` : ''}
-                    ${mediaHTML || contentHtml}
-                </div>
-            `;
-            new bootstrap.Popover(a, {
-                content: popHtml,
-                html: true,
-                trigger: 'hover',
-                placement: 'top',
-                container: 'body',
-                customClass: 'link-popover-400',
-                template: '<div class="popover link-popover-400" role="tooltip"><div class="popover-arrow"></div><div class="popover-body"></div></div>'
+                placement: 'top'
             });
         });
     }

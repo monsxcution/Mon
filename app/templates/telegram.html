@@ -1,51 +1,105 @@
 {% extends "layouts/base.html" %}
 
 {% block content %}
-<div class="tab-pane fade show active" id="telegram-tool-pane" role="tabpanel">
-    <div class="telegram-container">
-        <!-- Sidebar -->
-        <div class="telegram-sidebar">
-            <div class="sidebar-header">
-                <h3>Telegram</h3>
-                <button class="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-            
-            <!-- Navigation Menu -->
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-view="manager">
-                    <i class="fas fa-user-tie"></i>
-                    <span class="nav-item-text">Manager</span>
-                </a>
-                <a href="#" class="nav-item" data-view="group">
-                    <i class="fas fa-layer-group"></i>
-                    <span class="nav-item-text">Group</span>
-                </a>
-            </nav>
+<div class="d-flex vh-100">
+    <div class="bg-dark border-end" style="width: fit-content;">
+        <div class="p-3">
+            <ul class="nav nav-pills flex-column" id="telegram-sidebar-nav">
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-light fw-bold telegram-nav-link" data-tab="manager" style="border: 2px solid transparent; transition: all 0.3s ease; margin: 0 -15px; padding-left: 15px; padding-right: 15px;">
+                        Manager
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-light fw-bold telegram-nav-link" data-tab="group" style="border: 2px solid transparent; transition: all 0.3s ease; margin: 0 -15px; padding-left: 15px; padding-right: 15px;">
+                        Group
+                    </a>
+                </li>
+            </ul>
         </div>
-        
-        <!-- Main Content -->
-        <div class="telegram-main-content">
-            <div class="content-header">
-                <h1 class="content-title">Telegram Management</h1>
-                <p class="content-subtitle">Quản lý Telegram</p>
-            </div>
-            
-            <div class="content-body">
-                <p>Chọn Manager hoặc Group từ sidebar để bắt đầu.</p>
+    </div>
+    <div class="flex-grow-1">
+        <div class="tab-pane fade show active" id="telegram-tool-pane" role="tabpanel">
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="core-count" class="form-label fw-bold">Số Core</label>
+                        <input type="number" class="form-control" id="core-count" placeholder="Nhập số core">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="thread-count" class="form-label fw-bold">Số Luồng</label>
+                        <input type="number" class="form-control" id="thread-count" placeholder="Nhập số luồng">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="delay" class="form-label fw-bold">Delay</label>
+                        <input type="number" class="form-control" id="delay" placeholder="Nhập delay (ms)">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="additional-setting" class="form-label fw-bold">Cài Đặt Khác</label>
+                        <input type="text" class="form-control" id="additional-setting" placeholder="Nhập cài đặt khác">
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="button" class="btn btn-primary me-2">Bắt Đầu</button>
+                    <button type="button" class="btn btn-secondary me-2">Dừng</button>
+                    <button type="button" class="btn btn-success">Lưu Cài Đặt</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Include Telegram CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/telegram.css') }}">
+<style>
+.telegram-nav-link {
+    border: 2px solid transparent !important;
+    transition: all 0.3s ease !important;
+    margin: 0 -15px !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+}
 
-<!-- Include Telegram JavaScript -->
-<script src="{{ url_for('static', filename='js/telegram.js') }}"></script>
+.telegram-nav-link:hover {
+    border: 1px solid #0d6efd !important;
+    background-color: transparent !important;
+}
 
-<!-- Include Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+.telegram-nav-link.active {
+    border: 1px solid #0d6efd !important;
+    background-color: transparent !important;
+    color: #0d6efd !important;
+}
 
+.telegram-nav-link.active:hover {
+    border: 1px solid #0d6efd !important;
+    background-color: transparent !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.telegram-nav-link');
+    
+    // Set default active tab (Manager)
+    if (navLinks.length > 0) {
+        navLinks[0].classList.add('active');
+    }
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            navLinks.forEach(l => l.classList.remove('active'));
+            
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // You can add content switching logic here
+            const tab = this.getAttribute('data-tab');
+            console.log('Selected tab:', tab);
+        });
+    });
+});
+</script>
 {% endblock %}
