@@ -34,8 +34,8 @@
 <!-- MXH View Mode Modal -->
 <div class="modal fade" id="mxh-view-mode-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="height: 70%;">
+            <div class="modal-header" style="height: 44px; padding: 0.5rem 1rem;">
                 <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -135,7 +135,7 @@
 
 <!-- WeChat Account Modal -->
 <div class="modal fade" id="wechat-account-modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 220px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content">
             <div class="modal-header" style="height: 50px; padding: 8px 16px;">
                 <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h5>
@@ -144,11 +144,15 @@
             <div class="modal-body">
                 <div class="row mb-2">
                     <div style="width: 80px; display: inline-block; margin-right: 1px;">
-                        <label class="form-label mb-1">Số Card</label>
+                        <label class="form-label mb-1">Card</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" required style="width: 100%;">
                     </div>
-                    <div style="width: 120px; display: inline-block;">
-                        <label class="form-label mb-1">Trạng Thái</label>
+                    <div style="width: 140px; display: inline-block;">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-date" placeholder="dd/mm/yyyy" maxlength="10" required style="width: 80%;">
+                    </div>
+                    <div style="width: 160px; display: inline-block;">
+                        <label class="form-label mb-10">Trạng Thái</label>
                         <select class="form-select form-select-sm" id="wechat-status" required style="width: 100%;">
                             <option value="active">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
@@ -156,22 +160,14 @@
                         </select>
                     </div>
                 </div>
-                <div class="row" style="margin-bottom: 5px;">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Tên Người Dùng</label>
+                <div class="row" style="margin-bottom: 1px;">
+                    <div style="width: 200px; display: inline-block; margin-right: 1px;">
+                        <label class="form-label mb-1" style="margin-bottom: 1ch;">Tên Người Dùng</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-username" required style="width: 100%;">
                     </div>
-                </div>
-                <div class="row" style="margin-bottom: 5px;">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Số Điện Thoại</label>
+                    <div style="width: 180px; display: inline-block;">
+                        <label class="form-label mb-1" style="margin-bottom: 1px;">Số Điện Thoại</label>
                         <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
-                    </div>
-                </div>
-                <div class="row">
-                    <div style="width: 200px; display: block;">
-                        <label class="form-label mb-1" style="margin-bottom: 2px;">Ngày Tạo</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-date" placeholder="dd/mm/yyyy" maxlength="10" required style="width: 100%;">
                     </div>
                 </div>
             </div>
@@ -493,7 +489,7 @@
 
 /* Hide number input spinners */
 .no-spinner {
-    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .no-spinner::-webkit-outer-spin-button,
@@ -1355,7 +1351,7 @@
                 </div>
 
                 <!-- 2. Thông tin -->
-                <div class="mxh-menu-item" data-hover-action="edit-modal">
+                <div class="mxh-menu-item" data-action="edit">
                     <i class="bi bi-pencil me-2"></i>Thông Tin
                 </div>
 
@@ -1427,21 +1423,6 @@
 
         // Position submenus
         setTimeout(() => positionAllSubmenusForMenu(menu), 50);
-
-        // ===== THÊM CODE MỚI TẠI ĐÂY =====
-        // Add mouseover listener for "Thông Tin"
-        const editItem = menu.querySelector('.mxh-menu-item[data-hover-action="edit-modal"]');
-        if (editItem) {
-            editItem.addEventListener('mouseover', () => {
-                if (currentContextAccountId) {
-                    // Mở modal
-                    openAccountModalForEdit(currentContextAccountId);
-                    // Ẩn context menu
-                    hideCardContextMenu();
-                }
-            });
-        }
-        // ===== KẾT THÚC CODE MỚI =====
 
         // Add click handler
         setTimeout(() => {
@@ -1585,6 +1566,11 @@
                     await deleteSubAccount(currentContextAccountId);
                     hideCardContextMenu();
                 }
+            }
+        } else if (action === 'edit') {
+            if (currentContextAccountId) {
+                openAccountModalForEdit(currentContextAccountId);
+                hideCardContextMenu();
             }
         } else if (action === 'copy-phone') {
             const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
