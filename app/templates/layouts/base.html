@@ -88,5 +88,6 @@
         })();
     </script>
     {% block scripts %}{% endblock %}
+    <script type="module" src="{{ url_for('static', filename='js/stagewise-init.js') }}"></script>
 </body>
 </html>

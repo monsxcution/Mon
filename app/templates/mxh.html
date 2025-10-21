@@ -135,43 +135,43 @@
 
 <!-- WeChat Account Modal -->
 <div class="modal fade" id="wechat-account-modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 220px;">
         <div class="modal-content">
-            <div class="modal-header">
-                <h10 class="modal-title"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h10>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="height: 50px; padding: 8px 16px;">
+                <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
             </div>
             <div class="modal-body">
                 <div class="row mb-2">
-                    <div class="col-3">
+                    <div style="width: 80px; display: inline-block; margin-right: 1px;">
                         <label class="form-label mb-1">Số Card</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" required>
+                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" required style="width: 100%;">
                     </div>
-                    <div class="col-auto">
-                        <label class="form-label mb-1">Ngày Tạo</label>
-                        <div class="d-flex gap-1">
-                            <input type="number" class="form-control form-control-sm" id="wechat-day" placeholder="19" min="1" max="31" maxlength="2" style="width: 50px" required>
-                            <input type="number" class="form-control form-control-sm" id="wechat-month" placeholder="10" min="1" max="12" maxlength="2" style="width:50px" required>
-                            <input type="number" class="form-control form-control-sm" id="wechat-year" placeholder="2025" min="2020" max="9999" maxlength="4" style="width:70px" required>
-                        </div>
-                    </div>
-                    <div class="col-auto">
+                    <div style="width: 120px; display: inline-block;">
                         <label class="form-label mb-1">Trạng Thái</label>
-                        <select class="form-select form-select-sm" id="wechat-status" required>
+                        <select class="form-select form-select-sm" id="wechat-status" required style="width: 100%;">
                             <option value="active">Available</option>
                             <option value="disabled">Vô hiệu hóa</option>
                             <option value="die">Die</option>
                         </select>
                     </div>
                 </div>
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label class="form-label mb-1">Tên Người Dùng</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-username" required>
+                <div class="row" style="margin-bottom: 5px;">
+                    <div style="width: 200px; display: block;">
+                        <label class="form-label mb-1" style="margin-bottom: 2px;">Tên Người Dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-username" required style="width: 100%;">
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label mb-1">Số Điện Thoại</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13">
+                </div>
+                <div class="row" style="margin-bottom: 5px;">
+                    <div style="width: 200px; display: block;">
+                        <label class="form-label mb-1" style="margin-bottom: 2px;">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
+                    </div>
+                </div>
+                <div class="row">
+                    <div style="width: 200px; display: block;">
+                        <label class="form-label mb-1" style="margin-bottom: 2px;">Ngày Tạo</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-date" placeholder="dd/mm/yyyy" maxlength="10" required style="width: 100%;">
                     </div>
                 </div>
             </div>
@@ -490,6 +490,18 @@
     border: 2px solid #ffffff !important;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 12px rgba(255, 255, 255, 0.4) !important;
 }
+
+/* Hide number input spinners */
+.no-spinner {
+    -moz-appearance: textfield;
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 </style>
 
 <script>
@@ -2160,10 +2172,12 @@
 
         const selectedStatus = document.getElementById('wechat-status').value;
         
-        // Get date values from separate inputs
-        const day = parseInt(document.getElementById('wechat-day').value) || 1;
-        const month = parseInt(document.getElementById('wechat-month').value) || 1;
-        const year = parseInt(document.getElementById('wechat-year').value) || 2024;
+        // Get date value from single input and parse it
+        const dateValue = document.getElementById('wechat-date').value;
+        const dateParts = dateValue.split('/');
+        const day = parseInt(dateParts[0]) || 1;
+        const month = parseInt(dateParts[1]) || 1;
+        const year = parseInt(dateParts[2]) || 2024;
         
         const data = {
             card_name: document.getElementById('wechat-card-name').value,
@@ -2400,9 +2414,12 @@
         document.getElementById('wechat-card-name').value = account.card_name || '';
         document.getElementById('wechat-username').value = account.username || '';
         document.getElementById('wechat-phone').value = account.phone || '';
-        document.getElementById('wechat-day').value = account.wechat_created_day || 1;
-        document.getElementById('wechat-month').value = account.wechat_created_month || 1;
-        document.getElementById('wechat-year').value = account.wechat_created_year || 2024;
+        
+        // Format date for display
+        const day = account.wechat_created_day || 1;
+        const month = account.wechat_created_month || 1;
+        const year = account.wechat_created_year || 2024;
+        document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
         
         const primaryStatus = account.status || 'active';
         document.getElementById('wechat-status').value = primaryStatus;
@@ -2928,60 +2945,62 @@
                 const month = today.getMonth() + 1;
                 const year = today.getFullYear();
 
-                // Auto-fill date inputs only if they're empty
-                if (!document.getElementById('wechat-day').value) {
-                    document.getElementById('wechat-day').value = day;
-                }
-                if (!document.getElementById('wechat-month').value) {
-                    document.getElementById('wechat-month').value = month;
-                }
-                if (!document.getElementById('wechat-year').value) {
-                    document.getElementById('wechat-year').value = year;
+                // Auto-fill date input only if it's empty
+                if (!document.getElementById('wechat-date').value) {
+                    document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
                 }
             }
         });
     }
 
-    // ===== AUTO-TAB FOR DATE INPUTS =====
-    // Auto-tab when reaching maxlength for date inputs
+    // ===== AUTO-FORMAT DATE INPUT =====
     document.addEventListener('DOMContentLoaded', function() {
-        const dayInput = document.getElementById('wechat-day');
-        const monthInput = document.getElementById('wechat-month');
-        const yearInput = document.getElementById('wechat-year');
+        const dateInput = document.getElementById('wechat-date');
+        
+        if (dateInput) {
+            dateInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2);
+                }
+                if (value.length >= 5) {
+                    value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                }
+                
+                e.target.value = value;
+            });
 
-        if (dayInput && monthInput && yearInput) {
-            // Auto-tab from day to month
-            dayInput.addEventListener('input', function() {
-                if (this.value.length >= 2) {
-                    monthInput.focus();
+            // Handle backspace
+            dateInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace') {
+                    const cursorPos = this.selectionStart;
+                    const value = this.value;
+                    
+                    // If cursor is right after a slash, move it before the slash
+                    if (cursorPos > 0 && value[cursorPos - 1] === '/') {
+                        e.preventDefault();
+                        this.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                    }
                 }
             });
 
-            // Auto-tab from month to year
-            monthInput.addEventListener('input', function() {
-                if (this.value.length >= 2) {
-                    yearInput.focus();
-                }
-            });
-
-            // Prevent going back to previous field if current field has value
-            dayInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && this.value.length === 0) {
-                    e.preventDefault();
-                }
-            });
-
-            monthInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && this.value.length === 0) {
-                    dayInput.focus();
-                    e.preventDefault();
-                }
-            });
-
-            yearInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && this.value.length === 0) {
-                    monthInput.focus();
-                    e.preventDefault();
+            // Handle paste
+            dateInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                let pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+                
+                if (pastedData.length >= 8) {
+                    const day = pastedData.slice(0, 2);
+                    const month = pastedData.slice(2, 4);
+                    const year = pastedData.slice(4, 8);
+                    this.value = day + '/' + month + '/' + year;
+                } else if (pastedData.length >= 4) {
+                    const day = pastedData.slice(0, 2);
+                    const month = pastedData.slice(2, 4);
+                    this.value = day + '/' + month + '/';
+                } else {
+                    this.value = pastedData;
                 }
             });
         }
