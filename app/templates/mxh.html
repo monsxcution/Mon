@@ -1179,7 +1179,14 @@
             let activeAccount = primaryAccount;
             if (state.activeAccountId) {
                 const found = accounts.find(acc => acc.id === state.activeAccountId);
-                if (found) activeAccount = found;
+                if (found) {
+                    activeAccount = found;
+                } else {
+                    // DEBUG: Log when active account not found
+                    console.log(`⚠️ Active account ${state.activeAccountId} not found in card ${cardId}. Available:`, accounts.map(a => a.id));
+                    // Reset to primary if not found
+                    state.activeAccountId = primaryAccount.id;
+                }
             } else {
                 // Initialize state with primary account
                 state.activeAccountId = primaryAccount.id;
@@ -1722,6 +1729,14 @@
 
     // === NEW: Scan WeChat Account ===
     async function scanWeChatAccount(accountId) {
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
+            mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
+            renderMXHAccounts();
+        }
+
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
                 method: 'POST',
@@ -1729,17 +1744,15 @@
             });
 
             if (response.ok) {
-                // Update local state
-                const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-                if (accountIndex !== -1) {
-                    mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
-                    mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        renderMXHAccounts();
+                    }
                 }
-                
-                renderMXHAccounts();
-                
-                // Show scan QR modal
-                showScanQRModal(accountId);
                 
                 if (typeof showToast === 'function') {
                     showToast('✅ Đã ghi nhận quét WeChat!', 'success');
@@ -1755,58 +1768,6 @@
         }
     }
 
-    // Show Scan QR Modal with WeChat icon
-    function showScanQRModal(accountId) {
-        const account = mxhAccounts.find(acc => acc.id === accountId);
-        if (!account) return;
-
-        // Create modal HTML
-        const modalHtml = `
-            <div class="modal fade" id="scan-qr-modal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="bi bi-wechat me-2" style="color: #07c160;"></i>Quét WeChat
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                            <div style="font-size: 5rem; color: #07c160;">
-                                <i class="bi bi-qr-code"></i>
-                            </div>
-                            <h4 class="mt-3">${account.card_name}</h4>
-                            <p class="text-muted">${account.username || '...'}</p>
-                            <p class="text-muted">📞 ${account.phone || '...'}</p>
-                            <div class="mt-3">
-                                <p><strong>Lượt quét:</strong> ${account.wechat_scan_count || 0}</p>
-                                ${account.wechat_last_scan_date ? `<p class="text-muted small">Lần cuối: ${new Date(account.wechat_last_scan_date).toLocaleString('vi-VN')}</p>` : ''}
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Remove existing modal if any
-        const existingModal = document.getElementById('scan-qr-modal');
-        if (existingModal) existingModal.remove();
-
-        // Add modal to body
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('scan-qr-modal'));
-        modal.show();
-
-        // Remove modal from DOM when hidden
-        document.getElementById('scan-qr-modal').addEventListener('hidden.bs.modal', function () {
-            this.remove();
-        });
-    }
 
     // === NEW: Update Account Status với die_date persist ===
     async function updateAccountStatusNew(accountId, status) {
@@ -1994,8 +1955,8 @@
         if (accountIndex !== -1) {
             mxhAccounts[accountIndex].wechat_scan_count = 0;
             mxhAccounts[accountIndex].wechat_last_scan_date = null;
+            renderMXHAccounts();
         }
-        renderMXHAccounts();
 
         try {
             const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
@@ -2005,6 +1966,15 @@
             });
 
             if (response.ok) {
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        renderMXHAccounts();
+                    }
+                }
                 showToast('✅ Đã reset lượt quét!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2066,31 +2036,42 @@
     }
 
     async function resetAccount(accountId) {
-        // Instant local update - reset all data
+        // Find the account and its card_id
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-        if (accountIndex !== -1) {
-            // Keep only basic structure, reset everything else
-            const account = mxhAccounts[accountIndex];
-            mxhAccounts[accountIndex] = {
-                id: account.id,
-                platform: account.platform,
-                group_id: account.group_id,
-                card_name: account.card_name,
-                // Reset all other fields
-                username: '',
-                phone: '',
-                status: 'active',
-                wechat_created_day: null,
-                wechat_created_month: null,
-                wechat_created_year: null,
-                wechat_scan_count: 0,
-                wechat_last_scan_date: null,
-                die_date: null,
-                rescue_count: 0,
-                rescue_success_count: 0,
-                notice: null
-            };
+        if (accountIndex === -1) {
+            console.error(`Account ${accountId} not found for reset`);
+            return;
         }
+
+        const cardId = mxhAccounts[accountIndex].card_id;
+        
+        // Instant local update - reset all data
+        const account = mxhAccounts[accountIndex];
+        mxhAccounts[accountIndex] = {
+            ...account, // Keep all existing fields
+            id: account.id,
+            card_id: account.card_id,
+            platform: account.platform,
+            group_id: account.group_id,
+            card_name: account.card_name,
+            is_primary: account.is_primary,
+            // Reset these fields
+            username: '.',
+            phone: '.',
+            status: 'active',
+            wechat_scan_count: 0,
+            wechat_last_scan_date: null,
+            die_date: null,
+            rescue_count: 0,
+            rescue_success_count: 0,
+            notice: null,
+            muted_until: null
+        };
+        
+        // Ensure activeAccountId is preserved
+        const state = getCardState(cardId);
+        state.activeAccountId = accountId;
+        
         renderMXHAccounts();
 
         try {
@@ -2099,13 +2080,23 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // Ensure activeAccountId is still set
+                    state.activeAccountId = accountId;
+                    console.log(`✅ Reset account ${accountId}, keeping it as active for card ${cardId}`);
+                    renderMXHAccounts(); // Re-render with server data
+                }
                 showToast('✅ Đã reset card!', 'success');
-                
             } else {
                 showToast('Lỗi!', 'error');
                 await loadMXHData(false);
             }
         } catch (error) {
+            console.error('Error resetting account:', error);
             showToast('Lỗi kết nối!', 'error');
             await loadMXHData(false);
         }
@@ -2182,10 +2173,27 @@
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: selectedStatus === 'available' ? 'active' : (selectedStatus === 'die' ? 'disabled' : selectedStatus),
+            status: selectedStatus,  // Keep the status as-is: 'active', 'disabled', or 'die'
             wechat_status: selectedStatus
         };
 
+        // Find account and preserve card_id
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
+        }
+
+        const cardId = mxhAccounts[accountIndex].card_id;
+        
+        // Update local data immediately
+        Object.assign(mxhAccounts[accountIndex], data);
+        
+        // Ensure activeAccountId is preserved
+        const state = getCardState(cardId);
+        state.activeAccountId = currentContextAccountId;
+
+        // Hide modal and re-render (preserves active account)
         bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
         renderMXHAccounts();
 
@@ -2197,8 +2205,17 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // Ensure activeAccountId is still set
+                    state.activeAccountId = currentContextAccountId;
+                    console.log(`✅ Updated WeChat account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    renderMXHAccounts(); // Re-render with server data
+                }
                 showToast('✅ Đã cập nhật!', 'success');
-                
             } else {
                 const error = await response.json();
                 showToast(error.error || 'Lỗi!', 'error');
@@ -2222,15 +2239,25 @@
             url: document.getElementById('generic-url').value
         };
 
-        // Instant local update
+        // Find account and preserve card_id
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
-        if (accountIndex !== -1) {
-            Object.keys(data).forEach(key => {
-                if (data[key] !== undefined && data[key] !== null) {
-                    mxhAccounts[accountIndex][key] = data[key];
-                }
-            });
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
         }
+
+        const cardId = mxhAccounts[accountIndex].card_id;
+        
+        // Instant local update
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+                mxhAccounts[accountIndex][key] = data[key];
+            }
+        });
+        
+        // Ensure activeAccountId is preserved
+        const state = getCardState(cardId);
+        state.activeAccountId = currentContextAccountId;
 
         bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
         renderMXHAccounts();
@@ -2243,6 +2270,16 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // Ensure activeAccountId is still set
+                    state.activeAccountId = currentContextAccountId;
+                    console.log(`✅ Updated generic account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    renderMXHAccounts(); // Re-render with server data
+                }
                 showToast('✅ Đã cập nhật!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2277,6 +2314,15 @@
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Update all accounts with the same card_id to have the new card_name
+                const cardId = updatedAccount.card_id;
+                mxhAccounts.forEach((acc, idx) => {
+                    if (acc.card_id === cardId) {
+                        mxhAccounts[idx].card_name = newNumber;
+                    }
+                });
+                renderMXHAccounts();
                 showToast('✅ Đã đổi số hiệu!', 'success');
             } else {
                 showToast('Lỗi!', 'error');
@@ -2310,9 +2356,16 @@
     document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
         if (!currentContextAccountId) return;
         await resetAccount(currentContextAccountId);
-        bootstrap.Modal.getInstance(document.getElementById('reset-card-modal')).hide();
-        bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
-        bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
+        
+        // Safely hide modals - check if instance exists first
+        const resetModal = bootstrap.Modal.getInstance(document.getElementById('reset-card-modal'));
+        if (resetModal) resetModal.hide();
+        
+        const wechatModal = bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal'));
+        if (wechatModal) wechatModal.hide();
+        
+        const genericModal = bootstrap.Modal.getInstance(document.getElementById('generic-account-modal'));
+        if (genericModal) genericModal.hide();
     });
 
     document.getElementById('mxh-apply-view-mode-btn').addEventListener('click', () => {
@@ -2482,33 +2535,58 @@
     // Quick update field (instant local update, debounced API call)
     async function quickUpdateField(accountId, field, value) {
         try {
-            // INSTANT LOCAL UPDATE - Update UI immediately
+            // Find the account first
             const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
-            if (accountIndex !== -1) {
-                mxhAccounts[accountIndex][field] = value;
+            if (accountIndex === -1) {
+                console.error(`Account ${accountId} not found`);
+                return false;
             }
 
-            // API call in background
-            const response = await fetch(`/mxh/api/accounts/${accountId}/quick-update`, {
-                method: 'POST',
+            const oldValue = mxhAccounts[accountIndex][field];
+            
+            // INSTANT LOCAL UPDATE - Update UI immediately
+            mxhAccounts[accountIndex][field] = value;
+            renderMXHAccounts();
+
+            // API call in background using the existing PUT endpoint
+            const response = await fetch(`/mxh/api/accounts/${accountId}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    field: field,
-                    value: value
+                    [field]: value
                 })
             });
 
             if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    // Preserve the card_id before replacing
+                    const cardId = mxhAccounts[idx].card_id;
+                    mxhAccounts[idx] = updatedAccount;
+                    
+                    // Ensure activeAccountId is still set for this card
+                    const state = getCardState(cardId);
+                    if (!state.activeAccountId || state.activeAccountId === accountId) {
+                        state.activeAccountId = accountId;
+                    }
+                    
+                    console.log(`✅ Updated account ${accountId}, active account for card ${cardId}: ${state.activeAccountId}`);
+                    renderMXHAccounts(); // Re-render with server data (preserves activeAccountId)
+                }
                 showToast(`✅ Đã lưu ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
                 return true;
             } else {
                 // Revert on error
+                mxhAccounts[accountIndex][field] = oldValue;
                 const error = await response.json();
                 showToast(error.error || 'Lỗi khi cập nhật!', 'error');
-                await loadMXHData(false); // Reload to get correct data
+                renderMXHAccounts();
                 return false;
             }
         } catch (error) {
+            console.error('Error in quickUpdateField:', error);
             showToast('Lỗi kết nối!', 'error');
             await loadMXHData(false); // Reload to get correct data
             return false;

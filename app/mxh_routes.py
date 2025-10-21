@@ -297,12 +297,16 @@ def update_account_direct(account_id):
     """
     PUT /mxh/api/accounts/<account_id> - Update account fields
     Used by frontend to update account status, username, phone, etc.
+    Also handles card_name update (updates the card, not the account)
     """
     conn = get_db_connection()
     try:
         data = request.get_json() or {}
         
-        # Build dynamic UPDATE query
+        # Handle card_name separately (it's in mxh_cards table)
+        card_name = data.pop('card_name', None)
+        
+        # Build dynamic UPDATE query for account fields
         allowed_fields = {
             "status", "username", "phone", "url", "login_username", "login_password",
             "account_name", "wechat_created_day", "wechat_created_month", "wechat_created_year",
@@ -315,21 +319,27 @@ def update_account_direct(account_id):
             if field in data:
                 updates[field] = data[field]
         
-        if not updates:
-            # No fields to update - just return current account
-            account = conn.execute("SELECT a.*, c.card_name, c.group_id, c.platform FROM mxh_accounts a JOIN mxh_cards c ON a.card_id = c.id WHERE a.id = ?", (account_id,)).fetchone()
+        # Update card_name if provided
+        if card_name is not None:
+            # Get card_id for this account
+            account = conn.execute("SELECT card_id FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
             if account:
-                return jsonify(dict(account))
-            return jsonify({"error": "Account not found"}), 404
+                conn.execute(
+                    "UPDATE mxh_cards SET card_name = ?, updated_at = ? WHERE id = ?",
+                    (card_name, datetime.now().isoformat(), account['card_id'])
+                )
         
-        # Add updated_at
-        updates["updated_at"] = datetime.now().isoformat()
+        # Update account fields if any
+        if updates:
+            # Add updated_at
+            updates["updated_at"] = datetime.now().isoformat()
+            
+            # Build SQL
+            set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
+            values = list(updates.values()) + [account_id]
+            
+            conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", values)
         
-        # Build SQL
-        set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
-        values = list(updates.values()) + [account_id]
-        
-        conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", values)
         conn.commit()
         
         # Return updated account with joined data (card_name, group_id, platform)
@@ -484,6 +494,17 @@ def acc_scan(account_id):
             message = "Scan recorded"
 
         conn.commit()
+        
+        # Return updated account data
+        updated = conn.execute("""
+            SELECT a.*, c.card_name, c.group_id, c.platform 
+            FROM mxh_accounts a 
+            JOIN mxh_cards c ON a.card_id = c.id 
+            WHERE a.id = ?
+        """, (account_id,)).fetchone()
+        
+        if updated:
+            return jsonify(dict(updated))
         return jsonify({"message": message})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -553,6 +574,65 @@ def acc_mark_die(account_id):
         conn.commit()
         return jsonify({"message": "Account marked as die"})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@mxh_bp.route("/api/accounts/<int:account_id>/reset", methods=["POST"])
+def acc_reset(account_id):
+    """POST /mxh/api/accounts/<account_id>/reset - reset account về trạng thái mặc định"""
+    conn = get_db_connection()
+    try:
+        print(f"🔄 Resetting account {account_id}...")
+        now_iso = _now_iso()
+        
+        # Check if account exists first
+        existing = conn.execute("SELECT id, username, phone FROM mxh_accounts WHERE id = ?", (account_id,)).fetchone()
+        if not existing:
+            print(f"❌ Account {account_id} not found!")
+            return jsonify({"error": "Account not found"}), 404
+        
+        print(f"📝 Before reset: user={existing['username']}, phone={existing['phone']}")
+        
+        cursor = conn.execute("""
+            UPDATE mxh_accounts
+            SET username = '.',
+                phone = '.',
+                status = 'active',
+                die_date = NULL,
+                wechat_scan_count = 0,
+                wechat_last_scan_date = NULL,
+                rescue_count = 0,
+                rescue_success_count = 0,
+                notice = NULL,
+                muted_until = NULL,
+                updated_at = ?
+            WHERE id = ?
+        """, (now_iso, account_id))
+        
+        rows_affected = cursor.rowcount
+        print(f"📊 UPDATE affected {rows_affected} rows")
+        
+        conn.commit()
+        print(f"✅ Committed transaction")
+        
+        # Return updated account data
+        updated = conn.execute("""
+            SELECT a.*, c.card_name, c.group_id, c.platform 
+            FROM mxh_accounts a 
+            JOIN mxh_cards c ON a.card_id = c.id 
+            WHERE a.id = ?
+        """, (account_id,)).fetchone()
+        
+        if updated:
+            print(f"📤 After reset: user={updated['username']}, phone={updated['phone']}")
+            return jsonify(dict(updated))
+        return jsonify({"message": "Account reset successfully"})
+    except Exception as e:
+        print(f"❌ Error resetting account: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
