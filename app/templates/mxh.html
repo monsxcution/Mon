@@ -105,12 +105,15 @@
                         <label class="form-label mb-1">Ngày Tạo</label>
                         <div class="row g-0">
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px" required></div>
+                                    id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px"
+                                    required></div>
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px" required>
+                                    id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px"
+                                    required>
                             </div>
                             <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
-                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4" style="width:76px" required>
+                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4"
+                                    style="width:76px" required>
                             </div>
                         </div>
                     </div>
@@ -138,18 +141,21 @@
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content">
             <div class="modal-header" style="height: 50px; padding: 8px 16px;">
-                <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản WeChat</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
+                <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin
+                    Tài Khoản WeChat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
             </div>
             <div class="modal-body">
                 <div class="row mb-2">
                     <div style="width: 80px; display: inline-block; margin-right: 1px;">
                         <label class="form-label mb-1">Card</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3" required style="width: 100%;">
+                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3"
+                            required style="width: 100%;">
                     </div>
                     <div style="width: 140px; display: inline-block;">
                         <label class="form-label mb-1">Ngày Tạo</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-date" placeholder="dd/mm/yyyy" maxlength="10" required style="width: 80%;">
+                        <input type="text" class="form-control form-control-sm" id="wechat-date"
+                            placeholder="dd/mm/yyyy" maxlength="10" required style="width: 80%;">
                     </div>
                     <div style="width: 160px; display: inline-block;">
                         <label class="form-label mb-10">Trạng Thái</label>
@@ -163,11 +169,13 @@
                 <div class="row" style="margin-bottom: 1px;">
                     <div style="width: 200px; display: inline-block; margin-right: 1px;">
                         <label class="form-label mb-1" style="margin-bottom: 1ch;">Tên Người Dùng</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-username" required style="width: 100%;">
+                        <input type="text" class="form-control form-control-sm" id="wechat-username" required
+                            style="width: 100%;">
                     </div>
                     <div style="width: 180px; display: inline-block;">
                         <label class="form-label mb-1" style="margin-bottom: 1px;">Số Điện Thoại</label>
-                        <input type="text" class="form-control form-control-sm" id="wechat-phone" placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
+                        <input type="text" class="form-control form-control-sm" id="wechat-phone"
+                            placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
                     </div>
                 </div>
             </div>
@@ -214,7 +222,8 @@
                     </div>
                     <div class="mb-2">
                         <label for="generic-url" class="form-label mb-1">URL</label>
-                        <input type="url" class="form-control form-control-sm" id="generic-url" placeholder="Nhập URL...">
+                        <input type="url" class="form-control form-control-sm" id="generic-url"
+                            placeholder="Nhập URL...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -263,7 +272,8 @@
                 <div class="row g-2 align-items-end mb-3">
                     <div class="col-8">
                         <label for="noticeTitle" class="form-label">Tiêu Đề</label>
-                        <input type="text" class="form-control" id="noticeTitle" placeholder="Nhập tiêu đề..." value="Thông báo">
+                        <input type="text" class="form-control" id="noticeTitle" placeholder="Nhập tiêu đề..."
+                            value="Thông báo">
                     </div>
                     <div class="col-4">
                         <label for="noticeDays" class="form-label">Số ngày</label>
@@ -338,331 +348,345 @@
 </div>
 
 <style>
-/* ========================================
+    /* ========================================
    FLIP CARD 3D CSS
    ======================================== */
 
-/* Card wrapper với perspective */
-.mxh-card-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 140px;
-    perspective: 1200px;
-}
+    /* Card wrapper với perspective */
+    .mxh-card-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 140px;
+        perspective: 1200px;
+    }
 
-/* Card inner - container cho 2 mặt */
-.mxh-card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 140px;
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
+    /* Card inner - container cho 2 mặt */
+    .mxh-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 140px;
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
 
-/* Card face - front & back */
-.mxh-card-face {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
+    /* Card face - front & back */
+    .mxh-card-face {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
 
-/* Front face */
-.mxh-card-face.front {
-    transform: rotateY(0deg);
-    z-index: 2;
-}
+    /* Front face */
+    .mxh-card-face.front {
+        transform: rotateY(0deg);
+        z-index: 2;
+    }
 
-/* Click vào số card để flip */
-.card-number {
-    cursor: pointer;
-    transition: color 0.2s;
-}
+    /* Click vào số card để flip */
+    .card-number {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
 
-.card-number:hover {
-    color: #00e0ff !important;
-}
+    .card-number:hover {
+        color: #00e0ff !important;
+    }
 
-/* ========================================
+    /* ========================================
    CONTEXT MENU SUBMENU
    ======================================== */
 
-.mxh-context-menu {
-    position: fixed;
-    z-index: 10000;
-    background: #2c3340;
-    border: 1px solid #444a59;
-    border-radius: 8px;
-    padding: 4px;
-    min-width: 200px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
+    .mxh-context-menu {
+        position: fixed;
+        z-index: 10000;
+        background: #2c3340;
+        border: 1px solid #444a59;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 200px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
 
-.mxh-menu-item {
-    padding: 8px 12px;
-    color: #e6e6e6;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.2s;
-    position: relative;
-    white-space: nowrap;
-}
+    .mxh-menu-item {
+        padding: 8px 12px;
+        color: #e6e6e6;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s;
+        position: relative;
+        white-space: nowrap;
+    }
 
-.mxh-menu-item:hover {
-    background: rgba(0, 224, 255, 0.15);
-    color: #00e0ff;
-}
+    .mxh-menu-item:hover {
+        background: rgba(0, 224, 255, 0.15);
+        color: #00e0ff;
+    }
 
-.mxh-menu-item.has-submenu > span::after {
-    content: '▶';
-    float: right;
-    margin-left: 12px;
-    font-size: 0.8em;
-    opacity: 0.6;
-}
+    .mxh-menu-item.has-submenu>span::after {
+        content: '▶';
+        float: right;
+        margin-left: 12px;
+        font-size: 0.8em;
+        opacity: 0.6;
+    }
 
-.mxh-submenu {
-    position: absolute;
-    left: calc(100% - 2px); /* Overlap để giữ hover */
-    top: -4px;
-    margin-left: 0;
-    display: none;
-    background: #2c3340;
-    border: 1px solid #444a59;
-    border-radius: 8px;
-    padding: 4px;
-    min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 10001;
-}
+    .mxh-submenu {
+        position: absolute;
+        left: calc(100% - 2px);
+        /* Overlap để giữ hover */
+        top: -4px;
+        margin-left: 0;
+        display: none;
+        background: #2c3340;
+        border: 1px solid #444a59;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 10001;
+    }
 
-.mxh-menu-item.has-submenu:hover > .mxh-submenu,
-.mxh-submenu:hover {
-    display: block !important;
-}
+    .mxh-menu-item.has-submenu:hover>.mxh-submenu,
+    .mxh-submenu:hover {
+        display: block !important;
+    }
 
-.mxh-submenu .mxh-menu-item {
-    padding: 6px 10px;
-    font-size: 0.9em;
-}
+    .mxh-submenu .mxh-menu-item {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
 
-/* Nested submenu (submenu bên trong submenu) */
-.mxh-submenu .mxh-menu-item.has-submenu > .mxh-submenu {
-    position: absolute;
-    left: calc(100% - 2px);
-    top: -4px;
-    display: none;
-}
+    /* Nested submenu (submenu bên trong submenu) */
+    .mxh-submenu .mxh-menu-item.has-submenu>.mxh-submenu {
+        position: absolute;
+        left: calc(100% - 2px);
+        top: -4px;
+        display: none;
+    }
 
-.mxh-submenu .mxh-menu-item.has-submenu:hover > .mxh-submenu {
-    display: block !important;
-}
+    .mxh-submenu .mxh-menu-item.has-submenu:hover>.mxh-submenu {
+        display: block !important;
+    }
 
-/* ========================================
+    /* ========================================
    BORDER COLORS (Viền Card)
    ======================================== */
 
-.mxh-border-red {
-    border: 2px solid #ff4d4f !important;
-    box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.3), 0 0 12px rgba(255, 77, 79, 0.4) !important;
-}
+    .mxh-border-red {
+        border: 2px solid #ff4d4f !important;
+        box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.3), 0 0 12px rgba(255, 77, 79, 0.4) !important;
+    }
 
-.mxh-border-orange {
-    border: 2px solid #ffa500 !important;
-    box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.3), 0 0 12px rgba(255, 165, 0, 0.4) !important;
-}
+    .mxh-border-orange {
+        border: 2px solid #ffa500 !important;
+        box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.3), 0 0 12px rgba(255, 165, 0, 0.4) !important;
+    }
 
-.mxh-border-green {
-    border: 2px solid #07c160 !important;
-    box-shadow: 0 0 0 1px rgba(7, 193, 96, 0.3), 0 0 12px rgba(7, 193, 96, 0.4) !important;
-}
+    .mxh-border-green {
+        border: 2px solid #07c160 !important;
+        box-shadow: 0 0 0 1px rgba(7, 193, 96, 0.3), 0 0 12px rgba(7, 193, 96, 0.4) !important;
+    }
 
-.mxh-border-white {
-    border: 2px solid #ffffff !important;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 12px rgba(255, 255, 255, 0.4) !important;
-}
+    .mxh-border-white {
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 12px rgba(255, 255, 255, 0.4) !important;
+    }
 
-/* Hide number input spinners */
-.no-spinner {
-    appearance: textfield;
-}
+    /* Hide number input spinners */
+    .no-spinner {
+        appearance: textfield;
+    }
 
-.no-spinner::-webkit-outer-spin-button,
-.no-spinner::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
+    .no-spinner::-webkit-outer-spin-button,
+    .no-spinner::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
-/* Smart Group Badge Styles */
-.group-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background-color: #dc3545;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transition: all 0.3s ease;
-}
+    /* Smart Group Badge Styles */
+    .group-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
 
-.smart-badge {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(4px);
-}
+    .smart-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(4px);
+    }
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
 
-.group-btn:hover .smart-badge {
-    transform: scale(1.2);
-    box-shadow: 0 0 12px currentColor;
-}
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
 
-/* Card Badge Styles - giống hệt group badge */
-.card-top-badge {
-    z-index: 20;
-    /* Sử dụng cùng styling với .group-badge */
-    animation: pulse 2s infinite;
-    box-shadow: 0 0 8px currentColor;
-    transition: all 0.3s ease;
-}
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 
-.card-top-badge:hover {
-    transform: scale(1.2);
-    box-shadow: 0 0 12px currentColor;
-}
+    .group-btn:hover .smart-badge {
+        transform: scale(1.2);
+        box-shadow: 0 0 12px currentColor;
+    }
 
-/* Nav Badge Styles */
-.nav-badge-container {
-    position: absolute;
-    top: -4px;
-    right: -8px;
-    z-index: 10;
-}
+    /* Card Badge Styles - giống hệt group badge */
+    .card-top-badge {
+        z-index: 20;
+        /* Sử dụng cùng styling với .group-badge */
+        animation: pulse 2s infinite;
+        box-shadow: 0 0 8px currentColor;
+        transition: all 0.3s ease;
+    }
 
-.nav-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: #dc3545;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 8px #dc354540;
-    animation: pulse 2s infinite;
-    z-index: 10;
-}
+    .card-top-badge:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 12px currentColor;
+    }
 
-/* Mini preview cạnh badge */
-.notice-preview {
-    position: fixed;
-    width: auto;
-    min-width: 200px;
-    max-width: 280px;
-    background: var(--bs-body-bg, #121212);
-    color: var(--bs-body-color, #eee);
-    border: 1px solid var(--bs-border-color, #2a2a2a);
-    border-radius: 14px;
-    box-shadow: 0 16px 40px rgba(0,0,0,.45);
-    padding: 12px 12px 10px 12px;
-    opacity: 0;
-    transform: translateY(-2px) scale(.985);
-    transition: opacity .12s ease, transform .18s cubic-bezier(.2,.8,.2,1);
-    z-index: 1999;
-    pointer-events: auto;
-}
+    /* Nav Badge Styles */
+    .nav-badge-container {
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        z-index: 10;
+    }
 
-.notice-preview.show {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
+    .nav-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 8px #dc354540;
+        animation: pulse 2s infinite;
+        z-index: 10;
+    }
 
-.notice-preview::after {
-    content: "";
-    position: absolute;
-    top: var(--arrow-top, -8px);
-    left: var(--arrow-left, 16px);
-    width: 12px; 
-    height: 12px;
-    background: inherit;
-    border-left: 1px solid var(--bs-border-color, #2a2a2a);
-    border-top: 1px solid var(--bs-border-color, #2a2a2a);
-    transform: rotate(45deg);
-}
+    /* Mini preview cạnh badge */
+    .notice-preview {
+        position: fixed;
+        width: auto;
+        min-width: 200px;
+        max-width: 280px;
+        background: var(--bs-body-bg, #121212);
+        color: var(--bs-body-color, #eee);
+        border: 1px solid var(--bs-border-color, #2a2a2a);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+        padding: 12px 12px 10px 12px;
+        opacity: 0;
+        transform: translateY(-2px) scale(.985);
+        transition: opacity .12s ease, transform .18s cubic-bezier(.2, .8, .2, 1);
+        z-index: 1999;
+        pointer-events: auto;
+    }
 
-.notice-preview .title {
-    font-weight: 700;
-    font-size: 14px;
-    margin: 0 0 6px 0;
-}
+    .notice-preview.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 
-.notice-preview .meta {
-    font-size: 12px;
-    opacity: .75;
-    margin-bottom: 8px;
-}
+    .notice-preview::after {
+        content: "";
+        position: absolute;
+        top: var(--arrow-top, -8px);
+        left: var(--arrow-left, 16px);
+        width: 12px;
+        height: 12px;
+        background: inherit;
+        border-left: 1px solid var(--bs-border-color, #2a2a2a);
+        border-top: 1px solid var(--bs-border-color, #2a2a2a);
+        transform: rotate(45deg);
+    }
 
-.notice-preview .content {
-    font-size: 13px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    max-height: 180px;
-    overflow: auto;
-    margin-bottom: 10px;
-}
+    .notice-preview .title {
+        font-weight: 700;
+        font-size: 14px;
+        margin: 0 0 6px 0;
+    }
 
-.notice-preview .actions {
-    display: none;         /* ẩn ở chế độ hover */
-    gap: 8px;
-    justify-content: flex-end;
-}
+    .notice-preview .meta {
+        font-size: 12px;
+        opacity: .75;
+        margin-bottom: 8px;
+    }
 
-.notice-preview.action .actions { 
-    display: flex; 
-} /* hiện khi click */
+    .notice-preview .content {
+        font-size: 13px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        max-height: 180px;
+        overflow: auto;
+        margin-bottom: 10px;
+    }
 
-.notice-preview .btn {
-    border-radius: 10px;
-    padding: 6px 12px;
-    font-size: 13px;
-}
+    .notice-preview .actions {
+        display: none;
+        /* ẩn ở chế độ hover */
+        gap: 8px;
+        justify-content: flex-end;
+    }
 
-.notice-preview .btn-ok {
-    background: var(--bs-secondary-bg, #1e1e1e);
-    border: 1px solid var(--bs-border-color, #2a2a2a);
-    color: var(--bs-body-color, #eee);
-}
+    .notice-preview.action .actions {
+        display: flex;
+    }
 
-.notice-preview .btn-off {
-    background: var(--bs-danger, #dc3545);
-    border: 1px solid transparent;
-    color: #fff;
-}
+    /* hiện khi click */
 
+    .notice-preview .btn {
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .notice-preview .btn-ok {
+        background: var(--bs-secondary-bg, #1e1e1e);
+        border: 1px solid var(--bs-border-color, #2a2a2a);
+        color: var(--bs-body-color, #eee);
+    }
+
+    .notice-preview .btn-off {
+        background: var(--bs-danger, #dc3545);
+        border: 1px solid transparent;
+        color: #fff;
+    }
 </style>
 
 <script>
@@ -680,8 +704,8 @@
     let refreshAbortController;
 
     // Tự dừng/bật auto-refresh theo trạng thái tab
-    document.addEventListener('visibilitychange', () => { 
-        document.hidden ? stopAutoRefresh() : startAutoRefresh(); 
+    document.addEventListener('visibilitychange', () => {
+        document.hidden ? stopAutoRefresh() : startAutoRefresh();
     });
 
     // MXH Global State
@@ -694,12 +718,12 @@
     let pendingUpdates = false;
     let activeGroupId = null;
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
-    
+
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
     // State chỉ lưu trong memory, không persist qua reload
     const cardStates = new Map();
     const lockedStates = new Map(); // Lock state để prevent override trong quá trình edit
-    
+
     // NEW: always normalize cardId to Number for state keys
     function getCardState(cardId) {
         const key = Number(cardId); // <-- normalize
@@ -716,7 +740,7 @@
         }
         return raw;
     }
-    
+
     function setCardState(cardId, updates, lock = false) {
         const key = Number(cardId); // <-- normalize
         // console.log(`📝 setCardState(${key}):`, JSON.stringify(updates), lock ? '🔒' : '');
@@ -781,13 +805,13 @@
 
         try {
             // last_updated_at ⇒ tự build accountsUrl như hiện tại của Sếp
-            const accountsUrl = lastUpdateTime 
-                ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}` 
+            const accountsUrl = lastUpdateTime
+                ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}`
                 : '/mxh/api/accounts';
 
             // (2) giảm tần suất fetch groups
             const fetchGroupsNow = ((++_mxhGroupsTick % 4) === 1) || forceRender;
-            const groupsReq   = fetchGroupsNow ? fetch('/mxh/api/groups', { signal }) : Promise.resolve({ ok:false });
+            const groupsReq = fetchGroupsNow ? fetch('/mxh/api/groups', { signal }) : Promise.resolve({ ok: false });
             const accountsReq = fetch(accountsUrl, { signal });
 
             const [groupsResponse, accountsResponse] = await Promise.all([groupsReq, accountsReq]);
@@ -820,7 +844,7 @@
                 if (touchedAny) {
                     mxhAccounts = Array.from(accountMap.values());
                     dataChanged = true;
-                    
+
                     // Cập nhật lastUpdateTime sau khi merge delta thành công
                     lastUpdateTime = Math.max(
                         lastUpdateTime || 0,
@@ -922,7 +946,7 @@
             noticeExpired: 0,
             needHongKong: 0
         };
-        
+
         // 🟠 Cam: Check if notice countdown finished (causes blink)
         if (account.notice) {
             const noticeObj = ensureNoticeParsed(account.notice);
@@ -953,7 +977,7 @@
 
         // Return badge HTML if there are issues
         let badges = '';
-        
+
         // Badge ĐẾN HẠN (đỏ) - ưu tiên cao nhất
         if (badgeInfo.noticeExpired > 0) {
             let noticeCache = '';
@@ -973,7 +997,7 @@
                     console.error('Error parsing notice cache:', e);
                 }
             }
-            
+
             badges += `<span class="group-badge card-top-badge notice-badge" 
                             data-badge-type="due"
                             data-account-id="${account.id}"
@@ -983,7 +1007,7 @@
                             style="background-color: #fd7e14; color: white; box-shadow: 0 0 8px #fd7e1440;">
                     </span>`;
         }
-        
+
         // Badge ĐỦ 1 NĂM (trắng) - chỉ hiển thị nếu không có badge đỏ
         if (badgeInfo.needHongKong > 0 && badgeInfo.noticeExpired === 0) {
             badges += `<span class="group-badge card-top-badge notice-badge" 
@@ -994,7 +1018,7 @@
                         1Y
                     </span>`;
         }
-        
+
         return badges;
 
         return '';
@@ -1052,11 +1076,11 @@
                 let badgeHtml = '';
                 if (badgeInfo.total > 0) {
                     const badgeColor = badgeInfo.noticeExpired > 0 ? '#fd7e14' :  // 🟠 Cam: Thông báo hết hạn
-                                     badgeInfo.needHongKong > 0 ? '#ffffff' : group.color; // ⚪ Trắng: Cần đổi số HK
-                    
+                        badgeInfo.needHongKong > 0 ? '#ffffff' : group.color; // ⚪ Trắng: Cần đổi số HK
+
                     const badgeTooltip = `Cần chú ý: ${badgeInfo.total} tài khoản
 ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hết hạn\n` : ''}${badgeInfo.needHongKong > 0 ? `• ${badgeInfo.needHongKong} tài khoản cần đổi số Hong Kong\n` : ''}`.trim();
-                    
+
                     badgeHtml = `<span class="group-badge smart-badge" 
                                         style="background-color: ${badgeColor}; 
                                                color: ${badgeColor === '#ffffff' ? '#000000' : '#ffffff'};
@@ -1181,7 +1205,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         if (totalBadgeCount > 0) {
             const badgeContainer = document.createElement('div');
             badgeContainer.className = 'nav-badge-container';
-            
+
             // Create red badge similar to group badge
             const badge = document.createElement('span');
             badge.className = 'group-badge nav-badge';
@@ -1203,7 +1227,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 animation: pulse 2s infinite;
                 z-index: 10;
             `;
-            
+
             // Show count or priority indicator
             if (hasNoticeExpired) {
                 badge.textContent = '!';
@@ -1212,7 +1236,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 badge.textContent = totalBadgeCount > 99 ? '99+' : totalBadgeCount;
                 badge.title = `${totalBadgeCount} tài khoản cần chú ý`;
             }
-            
+
             badgeContainer.appendChild(badge);
             mxhNavLink.appendChild(badgeContainer);
         }
@@ -1327,7 +1351,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         let noticeHtml = '';
         let extraClass = '';
         let tipHtml = '';
-        
+
         try {
             const noticeObj = typeof account.notice === 'string' ? JSON.parse(account.notice || '{}') : (account.notice || {});
             const hasNotice = noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0);
@@ -1343,7 +1367,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     const today = new Date();
                     const remainTime = dueDate - today;
                     const remainDays = Math.ceil(remainTime / (1000 * 60 * 60 * 24));
-                    
+
                     if (remainTime > 0) {
                         let timeDisplay = '';
                         if (remainDays >= 30) {
@@ -1459,7 +1483,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     // Render MXH Accounts with performance optimizations and scroll position preservation
     function renderMXHAccounts() {
         console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
-        
+
         if (isRendering) {
             pendingUpdates = true;
             return;
@@ -1520,7 +1544,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         // === Batch Render Cards với RENDER_BATCH_SIZE ===
         const BATCH = MXH_CONFIG.RENDER_BATCH_SIZE || 50;
         const cards = Array.from(sortedCards);
-        let i = 0; 
+        let i = 0;
         container.innerHTML = '<div class="row g-2"></div>';
         const row = container.firstElementChild;
 
@@ -1566,12 +1590,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 row.insertAdjacentHTML('beforeend', cardHTML);
             }
             if (i < cards.length) requestIdleCallback(paintChunk, { timeout: 50 });
-            else { 
-                isRendering = false; 
-                if (pendingUpdates) { 
-                    pendingUpdates = false; 
-                    scheduleRender(); 
-                } 
+            else {
+                isRendering = false;
+                if (pendingUpdates) {
+                    pendingUpdates = false;
+                    scheduleRender();
+                }
             }
         }
         requestIdleCallback(paintChunk, { timeout: 50 });
@@ -1583,12 +1607,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     // Helper: Get border class based on account status
     function getAccountBorderClass(account) {
         const status = String(account.status || '').toLowerCase();
-        
+
         // Disabled = màu cam
         if (status === 'disabled') {
             return 'mxh-border-orange';
         }
-        
+
         // Die = màu đỏ
         if (status === 'die' || !!account.die_date) {
             return 'mxh-border-red';
@@ -1612,46 +1636,46 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         return ''; // Default - no special border
     }
 
-        // === NEW: Flip Card Function (Single Flip Animation) ===
-        function flipCardToAccount(cardId, accountId) {
-            const state = getCardState(cardId);
-            const wrapper = document.getElementById(`card-wrapper-${cardId}`);
-            const cardInner = wrapper?.querySelector('.mxh-card-inner');
-            if (!wrapper || !cardInner) return;
+    // === NEW: Flip Card Function (Single Flip Animation) ===
+    function flipCardToAccount(cardId, accountId) {
+        const state = getCardState(cardId);
+        const wrapper = document.getElementById(`card-wrapper-${cardId}`);
+        const cardInner = wrapper?.querySelector('.mxh-card-inner');
+        if (!wrapper || !cardInner) return;
 
-            // Do nothing if clicking the currently active account
-            if (state.activeAccountId === accountId) {
-                return;
-            }
-
-            // 1. Get the new account data
-            const accounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
-            const newActiveAccount = accounts.find(acc => acc.id === accountId);
-            if (!newActiveAccount) return;
-
-            // 2. Update the state (save to sessionStorage)
-            setCardState(cardId, { activeAccountId: accountId });
-
-            // 3. Start the flip-out animation
-            cardInner.style.transform = 'rotateY(90deg)';
-
-            // 4. After half the animation, swap the content and flip back in
-            setTimeout(() => {
-                // Render the new face directly into the inner container
-                cardInner.innerHTML = renderCardFace(newActiveAccount, accounts, 'front');
-
-                // Prepare for flip-in animation
-                cardInner.style.transform = 'rotateY(-90deg)';
-
-                // Force a reflow to apply the transform before the next animation frame
-                void cardInner.offsetWidth;
-
-                // 5. Flip back in to 0 degrees
-                cardInner.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                cardInner.style.transform = 'rotateY(0deg)';
-
-            }, 300); // Half of the total 0.6s animation
+        // Do nothing if clicking the currently active account
+        if (state.activeAccountId === accountId) {
+            return;
         }
+
+        // 1. Get the new account data
+        const accounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
+        const newActiveAccount = accounts.find(acc => acc.id === accountId);
+        if (!newActiveAccount) return;
+
+        // 2. Update the state (save to sessionStorage)
+        setCardState(cardId, { activeAccountId: accountId });
+
+        // 3. Start the flip-out animation
+        cardInner.style.transform = 'rotateY(90deg)';
+
+        // 4. After half the animation, swap the content and flip back in
+        setTimeout(() => {
+            // Render the new face directly into the inner container
+            cardInner.innerHTML = renderCardFace(newActiveAccount, accounts, 'front');
+
+            // Prepare for flip-in animation
+            cardInner.style.transform = 'rotateY(-90deg)';
+
+            // Force a reflow to apply the transform before the next animation frame
+            void cardInner.offsetWidth;
+
+            // 5. Flip back in to 0 degrees
+            cardInner.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+            cardInner.style.transform = 'rotateY(0deg)';
+
+        }, 300); // Half of the total 0.6s animation
+    }
 
     // Helper function for notice configuration
     function configureNoticeToggleFor(menuId, account) {
@@ -1671,7 +1695,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     window.handleCardContextMenu = function (event, cardId, accountId, platform) {
         event.preventDefault();
         event.stopPropagation();
-        
+
         currentContextCardId = cardId;
         currentContextAccountId = accountId;
         pauseAutoRefresh();
@@ -1702,14 +1726,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     <span>Tài Khoản (${cardAccounts.length})</span>
                     <div class="mxh-submenu">
                         ${cardAccounts.map((acc, idx) => {
-                            const isActive = acc.id === state.activeAccountId;
-                            const isPrimary = acc.is_primary;
-                            return `
+            const isActive = acc.id === state.activeAccountId;
+            const isPrimary = acc.is_primary;
+            return `
                             <div class="mxh-menu-item" data-action="switch-account" data-account-id="${acc.id}">
                                 ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}
                             </div>
                         `;
-                        }).join('')}
+        }).join('')}
                         <div class="mxh-menu-item" data-action="add-sub-account" style="border-top: 1px solid #444a59; margin-top: 4px; padding-top: 4px;">
                             <i class="bi bi-plus-circle me-2"></i>Thêm Tài Khoản
                         </div>
@@ -1764,9 +1788,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
                 <!-- 6. Thông báo -->
                 <div class="mxh-menu-item" data-action="${hasNotice ? 'cancel-notice' : 'toggle-notice'}">
-                    ${hasNotice 
-                        ? '<i class="bi bi-bell-slash-fill me-2"></i>Hủy Thông Báo' 
-                        : '<i class="bi bi-bell me-2"></i>Thông Báo'}
+                    ${hasNotice
+                ? '<i class="bi bi-bell-slash-fill me-2"></i>Hủy Thông Báo'
+                : '<i class="bi bi-bell me-2"></i>Thông Báo'}
                 </div>
 
                 <!-- Xóa -->
@@ -1782,7 +1806,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         // Add new menu
         document.body.insertAdjacentHTML('beforeend', menuHtml);
-        
+
         // Smart positioning
         const menu = document.getElementById('card-context-menu');
         positionContextMenuSmart(menu, event.clientX, event.clientY);
@@ -1795,7 +1819,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             document.addEventListener('click', hideCardContextMenu, { once: true });
         }, 100);
     }
-    
+
     // Smart anchor: flip trái/phải + trên/dưới theo mép màn hình, kèm offset 8px
     function positionContextMenuSmart(menu, x, y) {
         if (!menu) return;
@@ -1812,51 +1836,51 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         // Quyết định hướng
         const placeRight = (x + rect.width + m <= vw);       // đủ chỗ bên phải con trỏ?
-        const placeDown  = (y + rect.height + m <= vh);      // đủ chỗ phía dưới con trỏ?
+        const placeDown = (y + rect.height + m <= vh);      // đủ chỗ phía dưới con trỏ?
 
         // Tính toạ độ theo hướng đã chọn
         let left = placeRight ? (x + m) : (x - rect.width - m);
-        let top  = placeDown  ? (y + m) : (y - rect.height - m);
+        let top = placeDown ? (y + m) : (y - rect.height - m);
 
         // Clamp cứng để không vượt viewport (khi cực sát rìa)
-        left = Math.min(Math.max(left, m), vw - rect.width  - m);
-        top  = Math.min(Math.max(top , m), vh - rect.height - m);
+        left = Math.min(Math.max(left, m), vw - rect.width - m);
+        top = Math.min(Math.max(top, m), vh - rect.height - m);
 
         // Áp dụng
         menu.style.left = left + 'px';
-        menu.style.top  = top  + 'px';
+        menu.style.top = top + 'px';
 
         // Trả lại trạng thái hiển thị ban đầu (menu đã có vị trí đúng)
         menu.style.visibility = prevVis || '';
-        menu.style.display    = prevDisp || '';
+        menu.style.display = prevDisp || '';
     }
-    
+
     // Position all submenus for a menu
     function positionAllSubmenusForMenu(menu) {
         if (!menu) return;
-        
+
         const submenuItems = menu.querySelectorAll('.mxh-menu-item.has-submenu');
         submenuItems.forEach(item => {
             const submenu = item.querySelector('.mxh-submenu');
             if (!submenu) return;
-            
+
             const itemRect = item.getBoundingClientRect();
             const submenuRect = submenu.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
-            
+
             // Default: right side
             submenu.style.left = '100%';
             submenu.style.right = 'auto';
             submenu.style.top = '0';
             submenu.style.bottom = 'auto';
-            
+
             // Check right overflow - show on left
             if (itemRect.right + submenuRect.width > viewportWidth) {
                 submenu.style.left = 'auto';
                 submenu.style.right = '100%';
             }
-            
+
             // Check bottom overflow - show upward
             if (itemRect.top + submenuRect.height > viewportHeight) {
                 submenu.style.top = 'auto';
@@ -1872,7 +1896,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     }
 
     // Context menu click handler
-    document.addEventListener('click', async function(e) {
+    document.addEventListener('click', async function (e) {
         const menuItem = e.target.closest('.mxh-menu-item[data-action]');
         if (!menuItem) return;
 
@@ -1975,10 +1999,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             if (response.ok) {
                 const newAccount = await response.json();
                 mxhAccounts.push(newAccount);
-                
+
                 // Flip to new account
                 flipCardToAccount(cardId, newAccount.id);
-                
+
                 if (typeof showToast === 'function') {
                     showToast('Đã tạo tài khoản phụ!', 'success');
                 }
@@ -2069,7 +2093,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
                     }
                 }
-                
+
                 scheduleRender();
                 const message = result === 'success' ? '✅ Cứu thành công!' : '📝 Đã ghi nhận cứu thất bại!';
                 if (typeof showToast === 'function') {
@@ -2112,7 +2136,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         scheduleRender();
                     }
                 }
-                
+
                 if (typeof showToast === 'function') {
                     showToast('✅ Đã ghi nhận quét WeChat!', 'success');
                 }
@@ -2132,7 +2156,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     async function updateAccountStatusNew(accountId, status) {
         try {
             const payload = { status };
-            
+
             // If status is die, set die_date
             if (status === 'die') {
                 payload.die_date = new Date().toISOString().split('T')[0];
@@ -2148,13 +2172,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
             if (response.ok) {
                 const updatedAccount = await response.json();
-                
+
                 // Update local state
                 const index = mxhAccounts.findIndex(acc => acc.id === accountId);
                 if (index !== -1) {
                     mxhAccounts[index] = updatedAccount;
                 }
-                
+
                 scheduleRender();
                 if (typeof showToast === 'function') {
                     showToast(`Đã cập nhật trạng thái: ${status}`, 'success');
@@ -2220,7 +2244,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     const startDate = new Date();
                     const dueDate = new Date(startDate);
                     dueDate.setDate(dueDate.getDate() + days);
-                    
+
                     account.notice = {
                         enabled: true,
                         title: title,
@@ -2287,7 +2311,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             startAutoRefresh(); // Resume even on error
         }
     }
-    
+
     // Alias for cancel notice from context menu
     async function cancelNotice(accountId) {
         currentContextAccountId = accountId;
@@ -2349,9 +2373,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     function openAccountModalForEdit(accountId) {
         currentContextAccountId = accountId;
         const account = mxhAccounts.find(acc => acc.id === accountId);
-        
+
         if (!account) return;
-        
+
         // Nếu là WeChat → mở WeChat modal, không thì mở generic modal
         if (account.platform === 'wechat') {
             openWeChatModal(accountId);
@@ -2383,7 +2407,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
             if (response.ok) {
                 showToast('✅ Đã xóa card!', 'success');
-                
+
             } else {
                 showToast('Lỗi!', 'error');
                 await loadMXHData(false);
@@ -2403,7 +2427,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
 
         const cardId = mxhAccounts[accountIndex].card_id;
-        
+
         // Instant local update - reset all data
         const account = mxhAccounts[accountIndex];
         mxhAccounts[accountIndex] = {
@@ -2426,10 +2450,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             notice: null,
             muted_until: null
         };
-        
+
         // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
         setCardState(cardId, { activeAccountId: accountId });
-        
+
         scheduleRender();
 
         try {
@@ -2516,14 +2540,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         if (!currentContextAccountId) return;
 
         const selectedStatus = document.getElementById('wechat-status').value;
-        
+
         // Get date value from single input and parse it
         const dateValue = document.getElementById('wechat-date').value;
         const dateParts = dateValue.split('/');
         const day = parseInt(dateParts[0]) || 1;
         const month = parseInt(dateParts[1]) || 1;
         const year = parseInt(dateParts[2]) || 2024;
-        
+
         const data = {
             card_name: document.getElementById('wechat-card-name').value,
             username: document.getElementById('wechat-username').value,
@@ -2543,10 +2567,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
 
         const cardId = Number(mxhAccounts[accountIndex].card_id);
-        
+
         // Update local data immediately - preserve ALL existing properties
         Object.assign(mxhAccounts[accountIndex], data);
-        
+
         // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
         setCardState(cardId, { activeAccountId: currentContextAccountId });
         console.log(`🔧 WeChat Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
@@ -2607,14 +2631,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
 
         const cardId = Number(mxhAccounts[accountIndex].card_id);
-        
+
         // Instant local update
         Object.keys(data).forEach(key => {
             if (data[key] !== undefined && data[key] !== null) {
                 mxhAccounts[accountIndex][key] = data[key];
             }
         });
-        
+
         // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
         setCardState(cardId, { activeAccountId: currentContextAccountId });
         console.log(`🔧 Generic Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
@@ -2718,14 +2742,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
         if (!currentContextAccountId) return;
         await resetAccount(currentContextAccountId);
-        
+
         // Safely hide modals - check if instance exists first
         const resetModal = bootstrap.Modal.getInstance(document.getElementById('reset-card-modal'));
         if (resetModal) resetModal.hide();
-        
+
         const wechatModal = bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal'));
         if (wechatModal) wechatModal.hide();
-        
+
         const genericModal = bootstrap.Modal.getInstance(document.getElementById('generic-account-modal'));
         if (genericModal) genericModal.hide();
     });
@@ -2775,13 +2799,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         // Initial load
         await loadMXHData(true);
-        
+
         // Ensure groups are rendered after initial load
         renderGroupsNav();
-        
+
         // Update main nav badge immediately
         updateMainNavBadge();
-        
+
         // Backup: Force render groups after a short delay to ensure DOM is ready
         setTimeout(() => {
             renderGroupsNav();
@@ -2824,7 +2848,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     window.openWeChatModal = function (accountId) {
         if (_openWeChatModalLock) return;
         _openWeChatModalLock = true;
-        
+
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (!account) {
             _openWeChatModalLock = false;
@@ -2839,54 +2863,54 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         document.getElementById('wechat-card-name').value = account.card_name || '';
         document.getElementById('wechat-username').value = account.username || '';
         document.getElementById('wechat-phone').value = account.phone || '';
-        
+
         // Format date for display
         const day = account.wechat_created_day || 1;
         const month = account.wechat_created_month || 1;
         const year = account.wechat_created_year || 2024;
         document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-        
+
         const primaryStatus = account.status || 'active';
         document.getElementById('wechat-status').value = primaryStatus;
-        
+
         const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));
         modal.show();
-        
+
         setTimeout(() => { _openWeChatModalLock = false; }, 300);
     };
 
     // ===== INLINE EDITING FUNCTIONS WITH INSTANT UPDATES =====
-    
+
     // Save inline edit when user clicks away or presses Enter
-    window.saveInlineEdit = async function(element, accountId, field) {
+    window.saveInlineEdit = async function (element, accountId, field) {
         const newValue = element.textContent.trim();
-        
+
         // Remove emoji and extra characters for phone field
         let cleanValue = newValue;
         if (field === 'phone') {
             cleanValue = newValue.replace(/[📞\s]/g, '');
         }
-        
+
         // Get original value from account data
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (!account) return;
-        
+
         const originalValue = account[field] || '.';
-        
+
         // If empty or just "...", set to "."
         if (!cleanValue || cleanValue === '...' || cleanValue === '...') {
             cleanValue = '.';
         }
-        
+
         // If unchanged, do nothing
         if (cleanValue === originalValue) {
             element.style.borderBottom = '1px dashed transparent';
             return;
         }
-        
+
         // Update via API
         const success = await quickUpdateField(accountId, field, cleanValue);
-        
+
         if (success) {
             // Update display with proper format
             if (field === 'phone') {
@@ -2904,10 +2928,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 element.textContent = originalValue;
             }
         }
-        
+
         element.style.borderBottom = '1px dashed transparent';
     };
-    
+
     // Quick update field (instant local update, debounced API call)
     async function quickUpdateField(accountId, field, value) {
         try {
@@ -2922,14 +2946,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
             // ✅ normalize here
             const cardId = Number(mxhAccounts[accountIndex].card_id);
-            
+
             // INSTANT LOCAL UPDATE - Update UI immediately
             mxhAccounts[accountIndex][field] = value;
-            
+
             // *** CRITICAL: Set active account BEFORE rendering AND LOCK IT ***
             setCardState(cardId, { activeAccountId: accountId }, true); // Lock state for 2 seconds
             console.log(`🔧 Inline Edit (before API): Set card ${cardId} to show account ${accountId}`);
-            
+
             // Render mục tiêu cho 1 card khi chỉnh sửa nhanh
             flipCardToAccount(cardId, accountId);
 
@@ -2948,9 +2972,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     const normalizedCardId = Number(mxhAccounts[idx].card_id); // ✅ normalize again
                     const updatedAccount = await response.json();
                     updatedAccount.card_id = normalizedCardId;                 // ensure card_id kept
-                    
+
                     mxhAccounts[idx] = updatedAccount;
-                    
+
                     setCardState(normalizedCardId, { activeAccountId: accountId }, true);
                     scheduleRender();
                 }
@@ -3007,12 +3031,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 if (fieldName === 'phone') {
                     newValue = newValue.replace(/^📞\s*/, '').trim();
                 }
-                
+
                 // Check if value is the same or if it's just the placeholder being edited (and not real data)
-                const isNoChange = newValue === field.dataset.originalValue || 
-                                    (newValue === '' && field.dataset.originalValue === '.') || 
-                                    (newValue === 'Click để nhập' && field.dataset.originalValue === ''); // NEW CHECK
-                                    
+                const isNoChange = newValue === field.dataset.originalValue ||
+                    (newValue === '' && field.dataset.originalValue === '.') ||
+                    (newValue === 'Click để nhập' && field.dataset.originalValue === ''); // NEW CHECK
+
                 if (isNoChange) {
                     // Restore the visual placeholder if needed
                     if (fieldName === 'phone') {
@@ -3022,7 +3046,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     }
                     return;
                 }
-                
+
                 // If the value is a placeholder 'Click để nhập', treat as empty string '.'
                 if (newValue === 'Click để nhập') {
                     newValue = '.'; // Use '.' as the internal empty value marker, as seen in POST requests
@@ -3130,32 +3154,32 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             // Show background context menu
             const contextMenu = document.getElementById('mxh-background-context-menu');
             contextMenu.style.display = 'block';
-            
+
             // Smart positioning to avoid overflow
             contextMenu.style.left = event.pageX + 'px';
             contextMenu.style.top = event.pageY + 'px';
-            
+
             // Calculate menu size and viewport
             let menuRect = contextMenu.getBoundingClientRect();
             const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
             const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
             const margin = 8;
-            
+
             let left = event.pageX;
             let top = event.pageY;
-            
+
             // Horizontal positioning: Smart left/right positioning
             if (menuRect.right > viewportWidth - margin) {
                 // Menu will overflow right side of screen
                 // Show menu to the left of mouse
                 left = event.pageX - menuRect.width;
-                
+
                 // If still overflows left, clamp to left margin
                 if (left < margin) {
                     left = margin;
                 }
             }
-            
+
             // Vertical positioning
             if (menuRect.bottom > viewportHeight) {
                 // Nếu đủ chỗ phía trên chuột thì show lên trên
@@ -3167,7 +3191,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     if (top < margin + window.scrollY) top = margin + window.scrollY;
                 }
             }
-            
+
             contextMenu.style.left = left + 'px';
             contextMenu.style.top = top + 'px';
         }
@@ -3198,7 +3222,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             document.querySelectorAll('.custom-context-menu').forEach(menu => {
                 menu.style.display = 'none';
             });
-            
+
             // Hide all submenus and clear state
             document.querySelectorAll('.submenu').forEach(submenu => {
                 submenu.classList.remove('show');
@@ -3216,20 +3240,20 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     function positionSubmenu(menuItem) {
         const submenu = menuItem.querySelector('.submenu');
         if (!submenu) return;
-        
+
         // Temporarily show submenu to measure it
         submenu.style.display = 'block';
         submenu.style.visibility = 'hidden';
-        
+
         const submenuRect = submenu.getBoundingClientRect();
         const parentMenu = menuItem.closest('.custom-context-menu');
         const parentMenuRect = parentMenu.getBoundingClientRect();
         const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
         const margin = 8;
-        
+
         // Calculate where submenu would appear if positioned normally (right side)
         const normalSubmenuRight = parentMenuRect.right + submenuRect.width;
-        
+
         // Check if submenu would overflow right side of viewport
         if (normalSubmenuRight > viewportWidth - margin) {
             // Show submenu on the left side
@@ -3240,16 +3264,16 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             submenu.classList.remove('submenu-left');
             // console.log('Submenu positioned RIGHT - fits in viewport');
         }
-        
+
         // Hide submenu again (CSS hover will show it)
         submenu.style.display = '';
         submenu.style.visibility = '';
     }
-    
+
     // Enhanced submenu hover handling with bridge support
     let currentSubmenu = null;
     let hideTimeout = null;
-    
+
     // Function to create bridge element
     function createSubmenuBridge(submenu, isLeft = false) {
         // Remove existing bridge
@@ -3257,7 +3281,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         if (existingBridge) {
             existingBridge.remove();
         }
-        
+
         // Create new bridge
         const bridge = document.createElement('div');
         bridge.className = 'submenu-bridge';
@@ -3268,7 +3292,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         submenu.appendChild(bridge);
         return bridge;
     }
-    
+
     // Function to show submenu
     function showSubmenu(menuItem) {
         // Hide previous submenu
@@ -3278,26 +3302,26 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 prevSubmenu.classList.remove('show');
             }
         }
-        
+
         // Show new submenu
         const submenuEl = menuItem.querySelector('.submenu');
         if (submenuEl) {
             positionSubmenu(menuItem);
             submenuEl.classList.add('show');
             currentSubmenu = menuItem;
-            
+
             // Create bridge based on position
             const isLeft = submenuEl.classList.contains('submenu-left');
             createSubmenuBridge(submenuEl, isLeft);
         }
-        
+
         // Clear any pending hide timeout
         if (hideTimeout) {
             clearTimeout(hideTimeout);
             hideTimeout = null;
         }
     }
-    
+
     // Function to hide submenu with delay
     function hideSubmenu(delay = 100) {
         if (hideTimeout) {
@@ -3313,13 +3337,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
         }, delay);
     }
-    
+
     // Event listeners
-    document.addEventListener('mouseover', function(event) {
+    document.addEventListener('mouseover', function (event) {
         const menuItem = event.target.closest('.menu-item.has-submenu');
         const submenu = event.target.closest('.submenu');
         const bridge = event.target.closest('.submenu-bridge');
-        
+
         if (menuItem) {
             showSubmenu(menuItem);
         } else if (submenu || bridge) {
@@ -3336,18 +3360,18 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
         }
     });
-    
-    document.addEventListener('mouseout', function(event) {
+
+    document.addEventListener('mouseout', function (event) {
         const menuItem = event.target.closest('.menu-item.has-submenu');
         const submenu = event.target.closest('.submenu');
         const bridge = event.target.closest('.submenu-bridge');
-        
+
         if (!menuItem && !submenu && !bridge) {
             // Hide submenu when leaving all related elements
             hideSubmenu();
         }
     });
-    
+
     // Also position submenus when context menu is shown
     function positionAllSubmenus(menuId) {
         setTimeout(() => {
@@ -3358,7 +3382,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
         }, 10);
     }
-    
+
     // ===== AUTO-FILL DATE WHEN OPENING ADD ACCOUNT MODAL =====
     const mxhAddAccountModal = document.getElementById('mxh-addAccountModal');
     if (mxhAddAccountModal) {
@@ -3407,29 +3431,29 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     }
 
     // ===== AUTO-FORMAT DATE INPUT =====
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('wechat-date');
-        
+
         if (dateInput) {
-            dateInput.addEventListener('input', function(e) {
+            dateInput.addEventListener('input', function (e) {
                 let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                
+
                 if (value.length >= 2) {
                     value = value.slice(0, 2) + '/' + value.slice(2);
                 }
                 if (value.length >= 5) {
                     value = value.slice(0, 5) + '/' + value.slice(5, 9);
                 }
-                
+
                 e.target.value = value;
             });
 
             // Handle backspace
-            dateInput.addEventListener('keydown', function(e) {
+            dateInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Backspace') {
                     const cursorPos = this.selectionStart;
                     const value = this.value;
-                    
+
                     // If cursor is right after a slash, move it before the slash
                     if (cursorPos > 0 && value[cursorPos - 1] === '/') {
                         e.preventDefault();
@@ -3439,10 +3463,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             });
 
             // Handle paste
-            dateInput.addEventListener('paste', function(e) {
+            dateInput.addEventListener('paste', function (e) {
                 e.preventDefault();
                 let pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
-                
+
                 if (pastedData.length >= 8) {
                     const day = pastedData.slice(0, 2);
                     const month = pastedData.slice(2, 4);
@@ -3488,14 +3512,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const LEAVE_DELAY = 160;  // ms: cho phép di từ badge -> preview
 
         // ===== Utils =====
-        const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-        function clearTimers(){
-            if (hoverEnterTimer){ clearTimeout(hoverEnterTimer); hoverEnterTimer=null; }
-            if (hoverLeaveTimer){ clearTimeout(hoverLeaveTimer); hoverLeaveTimer=null; }
+        function clearTimers() {
+            if (hoverEnterTimer) { clearTimeout(hoverEnterTimer); hoverEnterTimer = null; }
+            if (hoverLeaveTimer) { clearTimeout(hoverLeaveTimer); hoverLeaveTimer = null; }
         }
 
-        function closePreview(force=false){
+        function closePreview(force = false) {
             clearTimers();
             if (!$preview) return;
             // nếu đang action mode, chỉ đóng khi force hoặc click outside
@@ -3504,20 +3528,20 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             $preview = null;
             $badge = null;
             setTimeout(() => el.remove(), 120);
-            if (actionDocClickBound){
+            if (actionDocClickBound) {
                 document.removeEventListener('click', onDocumentClick, true);
                 actionDocClickBound = false;
             }
         }
 
-        function onDocumentClick(e){
+        function onDocumentClick(e) {
             if (!$preview || !$badge) return;
             if (e.target.closest('.notice-preview') || e.target.closest('.notice-badge')) return;
             // click ngoài khi đang action -> đóng
             closePreview(true);
         }
 
-        function placePreview(box, badge){
+        function placePreview(box, badge) {
             const r = badge.getBoundingClientRect();
             const boxH = box.offsetHeight || 200;
             const boxW = box.offsetWidth || 200;
@@ -3534,11 +3558,11 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
 
             // Arrow positioning relative to badge center
-            const arrowLeft = Math.min(Math.max(r.left + r.width/2 - desiredLeft - 6, 10), boxW - 22);
+            const arrowLeft = Math.min(Math.max(r.left + r.width / 2 - desiredLeft - 6, 10), boxW - 22);
             box.style.setProperty('--arrow-left', arrowLeft + 'px');
 
             box.style.left = desiredLeft + 'px';
-            box.style.top  = top + 'px';
+            box.style.top = top + 'px';
         }
 
         async function tryFetch(urls, init) {
@@ -3550,18 +3574,18 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     lastErr = new Error(`HTTP ${res.status} @ ${url}`);
                     if (res.status === 404) continue;
                     throw lastErr;
-                } catch(e){ lastErr = e; continue; }
+                } catch (e) { lastErr = e; continue; }
             }
             throw lastErr || new Error('No endpoint matched');
         }
 
         async function getNoticeData(accountId, badge) {
             const raw = badge?.dataset?.noticeCache;
-            if (raw){ try { return JSON.parse(raw); } catch{} }
+            if (raw) { try { return JSON.parse(raw); } catch { } }
             const q = `?account_id=${encodeURIComponent(accountId)}`;
             const urls = cachedGetURL ? [cachedGetURL + q] : ENDPOINTS.getNotice.map(u => u + q);
-            const { res, url } = await tryFetch(urls, { headers: { 'Accept':'application/json' } });
-            cachedGetURL = url.replace(q,'');
+            const { res, url } = await tryFetch(urls, { headers: { 'Accept': 'application/json' } });
+            cachedGetURL = url.replace(q, '');
             return await res.json();
         }
 
@@ -3570,7 +3594,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             const urls = cachedDisableURL ? [cachedDisableURL] : ENDPOINTS.disableNotice;
             const { res, url } = await tryFetch(urls, {
                 method: 'POST',
-                headers: { 'Content-Type':'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             cachedDisableURL = url;
@@ -3580,13 +3604,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         function buildPreviewDOM(data, badgeType, mode /* 'hover' | 'action' */) {
             const box = document.createElement('div');
-            box.className = 'notice-preview' + (mode==='action' ? ' action' : '');
+            box.className = 'notice-preview' + (mode === 'action' ? ' action' : '');
 
             const title = data?.title || (badgeType === 'anniversary' ? 'Đủ tuổi 1 năm' : 'Thông báo đến hạn');
-            const meta  = data?.due_human ? `Đến hạn: ${data.due_human}` :
-                          (data?.due_at ? `Đến hạn: ${new Date(data.due_at).toLocaleString()}` :
-                           (badgeType==='anniversary' ? 'Mốc tuổi tài khoản: 1 năm' : ''));
-            const msg   = data?.message || (badgeType === 'anniversary' ? 'Tài khoản đã đủ tuổi 1 năm' : '(Không có nội dung)');
+            const meta = data?.due_human ? `Đến hạn: ${data.due_human}` :
+                (data?.due_at ? `Đến hạn: ${new Date(data.due_at).toLocaleString()}` :
+                    (badgeType === 'anniversary' ? 'Mốc tuổi tài khoản: 1 năm' : ''));
+            const msg = data?.message || (badgeType === 'anniversary' ? 'Tài khoản đã đủ tuổi 1 năm' : '(Không có nội dung)');
 
             box.innerHTML = `
                 <div class="title">${escapeHtml(title)}</div>
@@ -3608,14 +3632,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     // Ẩn badge
                     $badge.style.display = 'none';
                     closePreview(true);
-                } catch(err){
+                } catch (err) {
                     console.error(err);
                     alert('Tắt thông báo thất bại (kiểm tra route backend)');
                 }
             });
 
             // hover-intent: không đóng khi rê chuột vào preview
-            box.addEventListener('mouseover', () => { if (hoverLeaveTimer){ clearTimeout(hoverLeaveTimer); hoverLeaveTimer=null; } });
+            box.addEventListener('mouseover', () => { if (hoverLeaveTimer) { clearTimeout(hoverLeaveTimer); hoverLeaveTimer = null; } });
             box.addEventListener('mouseout', (e) => {
                 if (!box.contains(e.relatedTarget) && (!$badge || !$badge.contains(e.relatedTarget))) {
                     scheduleClose();
@@ -3625,7 +3649,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             return box;
         }
 
-        function scheduleOpen(badge, mode){
+        function scheduleOpen(badge, mode) {
             clearTimers();
             hoverEnterTimer = setTimeout(async () => {
                 // nếu đã mở cho badge khác -> đóng
@@ -3646,8 +3670,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
 
                 // nếu đã có preview -> chỉ chuyển mode
-                if ($preview){
-                    $preview.classList.toggle('action', mode==='action');
+                if ($preview) {
+                    $preview.classList.toggle('action', mode === 'action');
                 } else {
                     $preview = buildPreviewDOM(data, badgeType, mode);
                     document.body.appendChild($preview);
@@ -3660,14 +3684,14 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 $preview.style.visibility = '';
 
                 // khi đang action, bật click-outside
-                if (mode==='action' && !actionDocClickBound) {
+                if (mode === 'action' && !actionDocClickBound) {
                     document.addEventListener('click', onDocumentClick, true);
                     actionDocClickBound = true;
                 }
             }, ENTER_DELAY);
         }
 
-        function scheduleClose(){
+        function scheduleClose() {
             clearTimers();
             hoverLeaveTimer = setTimeout(() => {
                 // chỉ đóng tự động nếu không ở action mode
@@ -3719,8 +3743,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }, true);
 
         // viewport thay đổi -> reposition
-        window.addEventListener('scroll', () => { if($preview && $badge) placePreview($preview, $badge); }, true);
-        window.addEventListener('resize', () => { if($preview && $badge) placePreview($preview, $badge); }, true);
+        window.addEventListener('scroll', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
+        window.addEventListener('resize', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
     })();
 
 </script>

@@ -7,3 +7,7 @@ Quan trọng:
 1. Tạo báo cáo chi tiết về tiến độ và lỗi hiện tại , và mục tiêu người dùng mong muốn.
 2. Đóng gói chỉ các file liên quan đến lỗi/chức năng đang làm vào .zip (không phải toàn bộ thư mục),  ví dụ đang làm chức năng hoặc giao diện của MXH.html, thì đóng gói các file khác liên quan đến MXH.html như là mxh_routes.py, mxh_api.py..... ( không đóng gói các file Backup )
 3. Xóa file báo cáo sau khi đóng gói xong
+
+Rule khi code:
+1. Không bao giờ thêm spinner của input type number hoặc Text.
+

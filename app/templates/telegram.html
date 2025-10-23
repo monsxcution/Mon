@@ -34,14 +34,76 @@
                         <label for="delay" class="form-label mb-0">Delay:</label>
                         <input type="text" class="form-control" id="delay" style="width: 44px; height: 25px; padding: 2px 6px; display: inline-block; vertical-align: bottom;" placeholder="0">
                     </div>
-                    <div style="display: inline-block; margin-left: auto; margin-right: auto;">
-                        <button type="button" class="btn btn-primary" style="height: 25px; padding: 0 12px; font-size: 12px;">Start</button>
+                    <div style="display: inline-block;">
+                        <button type="button" class="btn btn-primary" style="height: 40px; padding: 0 12px; font-size: 20px;">Run <i class="bi bi-rocket-takeoff"></i></button>
+                    </div>
+                    <div style="display: inline-block;">
+                        <button type="button" class="btn btn-success">Save <i class="bi bi-floppy"></i></button>
+                    </div>
+                    <div style="display: inline-block; margin-left: auto;">
+                        <button type="button" class="btn btn-info">Thêm Session</button>
                     </div>
                 </div>
                 
+                <!-- Data Table -->
                 <div class="mt-4">
-                    <button type="button" class="btn btn-secondary me-2">Dừng</button>
-                    <button type="button" class="btn btn-success">Lưu Cài Đặt</button>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>SĐT</th>
+                                    <th>Tên Người Dùng</th>
+                                    <th>Username</th>
+                                    <th style="text-align: center;">Trạng Thái</th>
+                                    <th style="text-align: center;">Kết Quả</th>
+                                    <th>Hành Động</th>
+                                    <th><button class="btn btn-sm btn-outline-light">Check Live</button></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>+84901234567</td>
+                                    <td>Nguyễn Thị Bích Ngân</td>
+                                    <td>Kimbaothanhthienmain</td>
+                                    <td>Đang tham gia nhóm @https://t.me/massagehcmluxury</td>
+                                    <td style="text-align: center;"><i class="bi bi-check-circle-fill text-success"></i></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary me-1">Sửa</button>
+                                        <button class="btn btn-sm btn-danger">Xóa</button>
+                                    </td>
+                                    <td><span class="badge bg-success">Live</span></td>
+                                </tr>
+                                <tr>
+                                    <td>12</td>
+                                    <td>+84987654321</td>
+                                    <td>Nguyễn Thị Bích Ngân</td>
+                                    <td>Kimbaothanhthienmain</td>
+                                    <td>Đang tham gia nhóm @https://t.me/massagehcmluxury</td>
+                                    <td style="text-align: center;"><i class="bi bi-x-circle-fill text-danger"></i></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary me-1">Sửa</button>
+                                        <button class="btn btn-sm btn-danger">Xóa</button>
+                                    </td>
+                                    <td><span class="badge bg-danger">Die</span></td>
+                                </tr>
+                                <tr>
+                                    <td>123</td>
+                                    <td>+84123456789</td>
+                                    <td>Nguyễn Thị Bích Ngân</td>
+                                    <td>Kimbaothanhthienmain</td>
+                                    <td>Đang tham gia nhóm @https://t.me/massagehcmluxury</td>
+                                    <td style="text-align: center;"><i class="bi bi-check-circle-fill text-success"></i></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary me-1">Sửa</button>
+                                        <button class="btn btn-sm btn-danger">Xóa</button>
+                                    </td>
+                                    <td><span class="badge bg-warning">Freeze</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -82,6 +144,45 @@
     display: inline-block !important;
     margin-bottom: 0 !important;
 }
+
+/* Căn giữa cột Live */
+table th:nth-child(8),
+table td:nth-child(8) {
+    text-align: center !important;
+}
+
+/* Thêm đường viền phân biệt cột */
+table th,
+table td {
+    border-right: 1px solid #444 !important;
+}
+
+table th:last-child,
+table td:last-child {
+    border-right: none !important;
+}
+
+/* Giảm chiều rộng các cột */
+table th:nth-child(1),
+table td:nth-child(1) {
+    width: 5% !important; /* ID - giảm 10% */
+}
+
+table th:nth-child(2),
+table td:nth-child(2) {
+    width: 15% !important; /* SĐT - giảm 20% */
+}
+
+table th:nth-child(4),
+table td:nth-child(4) {
+    width: 15% !important; /* Username - giảm 20% */
+}
+
+table th:nth-child(6),
+table td:nth-child(6) {
+    width: 3% !important; /* Kết Quả - giảm 50% */
+}
+
 </style>
 
 <script>

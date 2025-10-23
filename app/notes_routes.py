@@ -4,8 +4,12 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, send_from_directory
 from app.database import get_db_connection, DATA_DIR
 from bs4 import BeautifulSoup
+from PIL import Image
+import io
+import base64
 
 SOUNDS_FOLDER = os.path.join(DATA_DIR, "sounds")
+NOTES_IMAGES_FOLDER = os.path.join(DATA_DIR, "notes_images")
 
 # --- BLUEPRINT DEFINITION ---
 notes_bp = Blueprint("notes_feature", __name__, url_prefix="/notes")
@@ -185,3 +189,49 @@ def api_check_notifications():
 @notes_bp.route("/sounds/<path:filename>")
 def serve_sound(filename):
     return send_from_directory(os.path.join(DATA_DIR, "sounds"), filename)
+
+@notes_bp.route("/api/upload-image", methods=["POST"])
+def api_upload_image():
+    """Upload image for profile, resize to max 1024px width, return URL"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+        
+        # Create notes_images folder if not exists
+        os.makedirs(NOTES_IMAGES_FOLDER, exist_ok=True)
+        
+        # Generate unique filename
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+            ext = '.png'
+        
+        unique_filename = f"{uuid.uuid4()}{ext}"
+        file_path = os.path.join(NOTES_IMAGES_FOLDER, unique_filename)
+        
+        # Open and resize image
+        img = Image.open(file.stream)
+        
+        # Resize if width > 1024px
+        if img.width > 1024:
+            ratio = 1024 / img.width
+            new_height = int(img.height * ratio)
+            img = img.resize((1024, new_height), Image.Resampling.LANCZOS)
+        
+        # Save image
+        img.save(file_path, optimize=True, quality=85)
+        
+        # Return URL
+        image_url = f"/notes/images/{unique_filename}"
+        return jsonify({"success": True, "url": image_url}), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@notes_bp.route("/images/<path:filename>")
+def serve_note_image(filename):
+    """Serve uploaded note images"""
+    return send_from_directory(NOTES_IMAGES_FOLDER, filename)
