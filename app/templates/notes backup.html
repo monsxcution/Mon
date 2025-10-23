@@ -1178,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!payload.title_html && !payload.content_html) {
-            alert('Ghi chú không được để trống.');
+            showAlert('Ghi chú không được để trống.');
             return;
         }
 
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#context-profile').addEventListener('click', () => {
         const selection = window.getSelection();
         if (selection.toString().length === 0) {
-            alert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
+            showAlert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
             return;
         }
         
@@ -1329,7 +1329,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const profileContent = profileContentInput.value.trim();
         
         if (!profileId) {
-            alert('Vui lòng nhập ID.');
+            showAlert('Vui lòng nhập ID.');
             return;
         }
         
@@ -1358,8 +1358,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     
     // Profile: Delete button
-    deleteProfileBtn.addEventListener('click', () => {
-        if (currentProfileSpan && confirm('Xóa profile này?')) {
+    deleteProfileBtn.addEventListener('click', async () => {
+        if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
             // Unwrap the span, replacing it with its own text content
             const parent = currentProfileSpan.parentNode;
             while (currentProfileSpan.firstChild) {
@@ -1390,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyFeedback(this);
             }).catch(err => {
                 console.error('Failed to copy ID: ', err);
-                alert('Lỗi khi sao chép ID.');
+                showAlert('Lỗi khi sao chép ID.');
             });
         }
     });
@@ -1402,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyFeedback(this);
             }).catch(err => {
                 console.error('Failed to copy password: ', err);
-                alert('Lỗi khi sao chép mật khẩu.');
+                showAlert('Lỗi khi sao chép mật khẩu.');
             });
         }
     });
@@ -1457,8 +1457,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     
     // Profile Span: Delete
-    document.querySelector('#context-delete-profile').addEventListener('click', () => {
-        if (currentProfileSpan && confirm('Xóa profile này?')) {
+    document.querySelector('#context-delete-profile').addEventListener('click', async () => {
+        if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
             // Unwrap the span, replacing it with its own text content
             const parent = currentProfileSpan.parentNode;
             while (currentProfileSpan.firstChild) {

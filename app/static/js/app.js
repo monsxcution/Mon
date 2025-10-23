@@ -1791,7 +1791,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const note = notesList.find(n => n.id === id);
 
             if (!note) {
-                alert("Không thể tìm thấy ghi chú để sửa.");
+                showAlert("Không thể tìm thấy ghi chú để sửa.");
                 return;
             }
 
@@ -1851,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const title_html = titleInput.innerHTML.trim();
             const content_html = contentEditor.innerHTML.trim();
             if (!title_html && !content_html) {
-                alert('Tiêu đề hoặc Nội dung không được để trống.');
+                showAlert('Tiêu đề hoặc Nội dung không được để trống.');
                 return;
             }
             const payload = {
@@ -1867,7 +1867,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) {
-                alert('Lỗi: ' + (await response.json()).error);
+                showAlert('Lỗi: ' + (await response.json()).error);
                 return;
             }
             notesModal.hide();

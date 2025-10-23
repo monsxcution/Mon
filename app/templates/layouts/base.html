@@ -41,6 +41,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Global Confirmation Modal -->
+    <div class="modal fade" id="globalDeleteConfirmModal" tabindex="-1" aria-labelledby="globalDeleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="globalDeleteConfirmModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Xác Nhận
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="globalDeleteConfirmText">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="globalDeleteConfirmBtn">Xác Nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Alert Modal -->
+    <div class="modal fade" id="globalAlertModal" tabindex="-1" aria-labelledby="globalAlertModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="globalAlertModalLabel">
+                        <i class="bi bi-info-circle me-2 text-info"></i>Thông Báo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="globalAlertText">Nội dung thông báo</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script>
         // Hàm hiển thị thông báo toàn cục
@@ -55,6 +96,47 @@
             else { h.classList.add('bg-info', 'text-white'); i.textContent = title; }
             new bootstrap.Toast(e).show();
         }
+
+        // Hàm thay thế alert() bằng modal dashboard
+        function showAlert(message, title = 'Thông Báo') {
+            document.getElementById('globalAlertText').textContent = message;
+            document.getElementById('globalAlertModalLabel').innerHTML = `<i class="bi bi-info-circle me-2 text-info"></i>${title}`;
+            new bootstrap.Modal(document.getElementById('globalAlertModal')).show();
+        }
+
+        // Hàm thay thế confirm() bằng modal dashboard
+        function showConfirm(message, title = 'Xác Nhận') {
+            return new Promise((resolve) => {
+                document.getElementById('globalDeleteConfirmText').textContent = message;
+                document.getElementById('globalDeleteConfirmModalLabel').innerHTML = `<i class="bi bi-exclamation-triangle me-2 text-warning"></i>${title}`;
+                
+                const modal = new bootstrap.Modal(document.getElementById('globalDeleteConfirmModal'));
+                const confirmBtn = document.getElementById('globalDeleteConfirmBtn');
+                const cancelBtn = document.querySelector('#globalDeleteConfirmModal .btn-secondary');
+                
+                // Xóa event listeners cũ
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                
+                newConfirmBtn.onclick = () => {
+                    modal.hide();
+                    resolve(true);
+                };
+                
+                newCancelBtn.onclick = () => {
+                    modal.hide();
+                    resolve(false);
+                };
+                
+                modal.show();
+            });
+        }
+
+        // Override các hàm global
+        window.alert = showAlert;
+        window.confirm = showConfirm;
 
         // Dashboard Context Menu Logic
         (function() {

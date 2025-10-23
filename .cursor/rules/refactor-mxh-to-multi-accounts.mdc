@@ -10,4 +10,4 @@ Quan trọng:
 
 Rule khi code:
 1. Không bao giờ thêm spinner của input type number hoặc Text.
-
+2. Thông báo của các modal như Xóa , xác nhận.... phải là thông báo modal dashboard, không thông báo qua web

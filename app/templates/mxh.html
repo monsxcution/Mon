@@ -2019,7 +2019,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
     // === NEW: Delete Card (và tất cả accounts) ===
     async function deleteCard(cardId) {
-        if (!confirm('Xóa card này và tất cả tài khoản trên card?')) return;
+        if (!(await showConfirm('Xóa card này và tất cả tài khoản trên card?'))) return;
 
         try {
             const response = await fetch(`/mxh/api/cards/${cardId}`, {
@@ -2047,7 +2047,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
     // === NEW: Delete Sub-Account ===
     async function deleteSubAccount(accountId) {
-        if (!confirm('Xóa tài khoản phụ này?')) return;
+        if (!(await showConfirm('Xóa tài khoản phụ này?'))) return;
 
         try {
             const response = await fetch(`/mxh/api/sub_accounts/${accountId}`, {
@@ -3634,7 +3634,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     closePreview(true);
                 } catch (err) {
                     console.error(err);
-                    alert('Tắt thông báo thất bại (kiểm tra route backend)');
+                    showAlert('Tắt thông báo thất bại (kiểm tra route backend)');
                 }
             });
 

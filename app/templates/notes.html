@@ -1302,7 +1302,7 @@
             }
 
             if (!payload.title_html && !payload.content_html) {
-                alert('Ghi chú không được để trống.');
+                showAlert('Ghi chú không được để trống.');
                 return;
             }
 
@@ -1667,7 +1667,7 @@
         document.querySelector('#context-profile').addEventListener('click', () => {
             const selection = window.getSelection();
             if (selection.toString().length === 0) {
-                alert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
+                showAlert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
                 return;
             }
 
@@ -1719,7 +1719,7 @@
             }
             
             if (!profileId && !finalContent && thumbnailImages.length === 0) {
-                alert('Nhập ít nhất 1 trường: Nội dung hoặc ID hoặc ảnh.');
+                showAlert('Nhập ít nhất 1 trường: Nội dung hoặc ID hoặc ảnh.');
                 return;
             }
 
@@ -1750,8 +1750,8 @@
         });
 
         // Profile: Delete button
-        deleteProfileBtn.addEventListener('click', () => {
-            if (currentProfileSpan && confirm('Xóa profile này?')) {
+        deleteProfileBtn.addEventListener('click', async () => {
+            if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
                 // Unwrap the span, replacing it with its own text content
                 const parent = currentProfileSpan.parentNode;
                 while (currentProfileSpan.firstChild) {
@@ -1782,7 +1782,7 @@
                     copyFeedback(this);
                 }).catch(err => {
                     console.error('Failed to copy ID: ', err);
-                    alert('Lỗi khi sao chép ID.');
+                    showAlert('Lỗi khi sao chép ID.');
                 });
             }
         });
@@ -1794,7 +1794,7 @@
                     copyFeedback(this);
                 }).catch(err => {
                     console.error('Failed to copy password: ', err);
-                    alert('Lỗi khi sao chép mật khẩu.');
+                    showAlert('Lỗi khi sao chép mật khẩu.');
                 });
             }
         });
@@ -1909,8 +1909,8 @@
         });
 
         // Profile Span: Delete
-        document.querySelector('#context-delete-profile').addEventListener('click', () => {
-            if (currentProfileSpan && confirm('Xóa profile này?')) {
+        document.querySelector('#context-delete-profile').addEventListener('click', async () => {
+            if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
                 // Unwrap the span, replacing it with its own text content
                 const parent = currentProfileSpan.parentNode;
                 while (currentProfileSpan.firstChild) {
