@@ -1493,14 +1493,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                                     ${totalAccounts > 1 ? `<span class="badge bg-secondary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
-                                    ${accountAgeDisplay ? `
-                                        <small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;"
-                                               data-bs-toggle="tooltip"
-                                               data-bs-html="true"
-                                               title="${formatCreationDisableInfo(account)}">
-                                            ${accountAgeDisplay}
-                                        </small>
-                                    ` : ''}
+                                    ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
                                 </div>
                             </div>
                             
@@ -1533,14 +1526,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         <div>
                             ${platform === 'wechat' ? `
                                 <div class="text-center mt-1">
-                                    ${isDisabled ? disabledInfo : `
-                                        <small style="font-size: 0.75rem;"
-                                               data-bs-toggle="tooltip"
-                                               data-bs-html="true"
-                                               title="${formatScanHistory(account.wechat_scan_history)}">
-                                            ${scanCountdown}
-                                        </small>
-                                    `}
+                                    ${isDisabled ? disabledInfo : `<small style="font-size: 0.75rem;">${scanCountdown}</small>`}
                                 </div>
                             ` : ''}
                             ${noticeHtml}
@@ -3030,58 +3016,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
     });
 
-    // ===== TOOLTIP FORMATTING FUNCTIONS =====
-    
-    // Định dạng lịch sử quét QR
-    function formatScanHistory(scanHistory) {
-        if (!scanHistory || !Array.isArray(scanHistory) || scanHistory.length === 0) {
-            return "Chưa có lịch sử quét";
-        }
-        // Giả sử scanHistory là một mảng các chuỗi ISO date string
-        let html = '<strong>Lịch sử quét:</strong><br>';
-        scanHistory.forEach((scanDateStr, index) => {
-            try {
-                const date = new Date(scanDateStr);
-                const formattedDate = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                html += `- Đã quét lần ${index + 1}, ${formattedDate}<br>`;
-            } catch (e) {
-                console.error("Error formatting scan date:", scanDateStr, e);
-            }
-        });
-        return html;
-    }
-
-    // Định dạng thông tin Ngày tạo và Vô hiệu hóa
-    function formatCreationDisableInfo(account) {
-        let html = '';
-        // Lấy ngày tạo từ các trường riêng lẻ
-        const createdDay = account.wechat_created_day || account.created_day || '??';
-        const createdMonth = account.wechat_created_month || account.created_month || '??';
-        const createdYear = account.wechat_created_year || account.created_year || '????';
-        html += `<strong>Ngày tạo tài khoản:</strong> ${createdDay}/${createdMonth}/${createdYear}<br>`;
-
-        // Lấy số lần bị vô hiệu hóa (disable)
-        // Giả sử có trường disable_count hoặc rescue_count
-        const disableCount = account.disable_count || account.rescue_count || 0;
-        html += `<strong>Số lần bị vô hiệu hóa:</strong> <span style="color: red;">${disableCount}</span>`;
-
-        return html;
-    }
-
     // Initialize tooltips function
     function initializeTooltips() {
         // Initialize Bootstrap tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) {
-            // Hủy tooltip cũ nếu có để tránh lỗi
-            const existingTooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
-            if (existingTooltip) {
-                existingTooltip.dispose();
-            }
-            // Tạo tooltip mới
-            return new bootstrap.Tooltip(tooltipTriggerEl, {
-                boundary: document.body // Giúp tooltip không bị cắt bởi container
-            });
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
 
