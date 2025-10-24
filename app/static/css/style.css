@@ -1166,3 +1166,26 @@ body .container-fluid {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     /* <-- ADD THIS LINE */
 }
+
+/* === Notes internal scroll === */
+.notes-layout-container {
+    height: calc(100vh - 120px);
+}
+
+#notes-list-wrapper,
+#notes-detail-wrapper {
+    min-height: 0;
+    overflow: hidden;
+}
+
+#notes-detail-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#notes-detail-content-wrapper {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
