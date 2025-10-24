@@ -899,6 +899,25 @@
         window.addEventListener('scroll', hideAllContextMenus, { passive: true });
         window.addEventListener('resize', hideAllContextMenus);
 
+        // Fix: Ensure thumbnail menu items are in correct wrapper
+        (() => {
+            const ensure = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                let m = document.getElementById('tg-thumb-context-menu');
+                if (!m) {
+                    m = document.createElement('div');
+                    m.id = 'tg-thumb-context-menu';
+                    m.className = 'custom-context-menu';
+                    document.body.appendChild(m);
+                }
+                if (!m.contains(el)) m.appendChild(el);
+            };
+            ['context-copy-thumb', 'context-delete-thumb'].forEach(ensure);
+            const thumbMenu = document.getElementById('tg-thumb-context-menu');
+            if (thumbMenu) thumbMenu.style.display = 'none';
+        })();
+
         // ===== SMART CONTEXT MENU POSITIONING =====
 
         // ===== CONTEXT MENU ACTION HANDLER =====

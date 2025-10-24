@@ -1,5 +1,3 @@
-import { initToolbar } from '@stagewise/toolbar';
-
 document.addEventListener('DOMContentLoaded', function () {
       // --- GLOBAL SCRIPT ---
       const urlParams = new URLSearchParams(window.location.search);
@@ -18,14 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   history.pushState({}, '', newUrl);
             });
       });
-      function showToast(m, t = 'success', title = 'Thông báo') {
-            const e = document.getElementById('liveToast'), h = document.getElementById('toastHeader'),
-                  i = document.getElementById('toastTitle'), b = document.getElementById('toastBody');
-            if (!e) return;
-            b.textContent = m;
-            h.className = 'toast-header';
-            if (t === 'success') { h.classList.add('bg-success', 'text-white'); i.textContent = 'Thành công'; }
-            else if (t === 'error') { h.classList.add('bg-danger', 'text-white'); i.textContent = 'Lỗi'; }
+      else if (t === 'error') { h.classList.add('bg-danger', 'text-white'); i.textContent = 'Lỗi'; }
             else { h.classList.add('bg-info', 'text-white'); i.textContent = title; }
             new bootstrap.Toast(e).show();
       }

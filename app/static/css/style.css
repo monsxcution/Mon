@@ -445,14 +445,27 @@ body .container-fluid {
 #notes-container.notes-list-view .card .card-note-body {
     font-size: 0.75rem;
     /* Giảm kích thước font body */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     /* Chỉ hiển thị 1 dòng */
     line-clamp: 1;
+    overflow: hidden;
 }
 
 #notes-container.notes-list-view .card .card-body {
     padding: 0.5rem;
     /* Giảm padding của card body */
+}
+
+/* Grid view - also truncate content */
+#notes-container.notes-grid-view .card .card-note-body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.8rem;
 }
 
 /* Compact notes container */
@@ -1188,4 +1201,10 @@ body .container-fluid {
     flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Hotfix: Hide orphaned menu items */
+.menu-item#context-copy-thumb,
+.menu-item#context-delete-thumb {
+    display: none;
 }
