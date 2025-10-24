@@ -1907,38 +1907,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // --- Rich Text Context Menu Logic ---
-        contentEditor.addEventListener('contextmenu', e => {
-            e.preventDefault();
-            e.stopPropagation(); // Prevent bubbling to document
-            const selection = window.getSelection();
-            if (selection.toString().length > 0) {
-                contextMenu.style.top = `${e.clientY}px`;
-                contextMenu.style.left = `${e.clientX}px`;
-                contextMenu.style.display = 'block';
-            }
-        });
-
-        document.addEventListener('click', () => contextMenu.style.display = 'none');
-        
-        contextCopy.addEventListener('click', () => document.execCommand('copy'));
-        document.getElementById('context-bold').addEventListener('mousedown', e => e.preventDefault());
-        document.getElementById('context-bold').addEventListener('click', () => document.execCommand('bold', false, null));
-        document.getElementById('context-italic').addEventListener('mousedown', e => e.preventDefault());
-        document.getElementById('context-italic').addEventListener('click', () => document.execCommand('italic', false, null));
-        document.getElementById('context-underline').addEventListener('mousedown', e => e.preventDefault());
-        document.getElementById('context-underline').addEventListener('click', () => document.execCommand('underline', false, null));
-        colorPalette.addEventListener('mousedown', e => e.preventDefault());
-        colorPalette.addEventListener('click', e => {
-            e.preventDefault();
-            if(e.target.tagName === 'SPAN') {
-                document.execCommand('styleWithCSS', false, true);
-                document.execCommand('foreColor', false, e.target.style.backgroundColor);
-                document.execCommand('styleWithCSS', false, false);
-                contextMenu.style.display = 'none';
-            }
-        });
-
         // --- Notification Polling ---
         setInterval(async () => {
             try {

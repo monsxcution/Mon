@@ -841,38 +841,63 @@
         // Hiển thị menu theo vị trí chuột, dùng smart flip.
         // Tự xử lý khác nhau giữa menu kiểu .custom-context-menu và menu thumbnail (#tg-thumb-context-menu)
         function showSmartMenu(menu, x, y) {
-            // Tính toạ độ trước
-            positionContextMenuSmart(menu, x, y);
+            if (!menu) return;
 
-            // Bật menu
-            if (menu.classList && menu.classList.contains('custom-context-menu')) {
-                // Các menu chính trong Notes: tab, card, editor, profile-span
-                menu.classList.add('show'); // CSS .custom-context-menu.show = display:block, opacity:1 ...
-            } else {
-                // Thumbnail menu trong modal (tg-thumb-context-menu) không có class .custom-context-menu
-                menu.style.display = 'block';
+            // 1) Đảm bảo menu nằm trực tiếp trong <body> để né overflow/transform stacking
+            if (menu.parentNode !== document.body) {
+                document.body.appendChild(menu);
             }
 
-            // Chỉnh lại tất cả submenu con của cái menu vừa mở (flip trái/phải / trên/dưới)
+            // 2) Gỡ mọi cờ ẩn có thể gây "mù" menu
+            menu.removeAttribute('hidden');
+            menu.classList.remove('hidden','d-none','is-hidden','invisible');
+
+            // 3) TẠM bật để đo kích thước: dùng !important để thắng mọi CSS cứng đầu
+            menu.style.setProperty('position', 'fixed', 'important');
+            menu.style.setProperty('z-index', '2147483647', 'important');
+            menu.style.setProperty('display', 'block', 'important');
+            menu.style.setProperty('visibility', 'hidden', 'important');
+            menu.style.removeProperty('left');
+            menu.style.removeProperty('top');
+
+            // 4) Đo và tính toạ độ thông minh
+            const M = 8;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const rect = menu.getBoundingClientRect();
+            let left = x + M;
+            let top  = y + M;
+            if (left + rect.width > vw - M) left = x - rect.width - M;
+            if (left < M) left = M;
+            if (top + rect.height > vh - M) top = y - rect.height - M;
+            if (top < M) top = M;
+
+            // 5) Áp toạ độ
+            menu.style.left = left + 'px';
+            menu.style.top  = top  + 'px';
+
+            // 6) Mở menu: vừa dùng class .show, vừa ép inline !important cho chắc
+            menu.classList.add('show');
+            menu.style.setProperty('visibility', 'visible', 'important');
+            menu.style.setProperty('display', 'block', 'important');
+
+            // 7) Căn submenu con (flip trái/phải & trên/dưới)
             positionAllSubmenusForMenu(menu);
         }
 
         // Ẩn tất cả context menu (tab/card/editor/profile-span + menu thumbnail ảnh)
         // Gọi mỗi lần click ra ngoài, scroll, resize.
         function hideAllContextMenus() {
-            // Ẩn các menu chính bằng class, KHÔNG set inline display
             document.querySelectorAll('.custom-context-menu').forEach(menu => {
                 menu.classList.remove('show');
+                // xoá mọi inline có thể giữ trạng thái "ẩn" sau lần trước
                 menu.style.removeProperty('display');
                 menu.style.removeProperty('visibility');
-                menu.style.removeProperty('opacity');
+                menu.style.removeProperty('left');
+                menu.style.removeProperty('top');
             });
-
-            // Ẩn menu thumbnail ảnh (menu này KHÔNG dùng .custom-context-menu)
-            const thumbMenu = document.getElementById('tg-thumb-context-menu');
-            if (thumbMenu) {
-                thumbMenu.style.display = 'none';
-            }
+            const thumb = document.getElementById('tg-thumb-context-menu');
+            if (thumb) thumb.style.display = 'none'; // menu thumbnail vẫn dùng inline
         }
 
         // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
@@ -1393,7 +1418,6 @@
 
 
         function handleEditorContextMenu(e) {
-            console.log('handleEditorContextMenu triggered');
             e.preventDefault();
             e.stopPropagation();
             hideAllContextMenus();
@@ -1406,8 +1430,6 @@
         }
 
         function handleTabContextMenu(e) {
-            console.log('handleTabContextMenu triggered at:', e.clientX, e.clientY);
-
             const noteCard = e.target.closest('.card[data-note-id]');
             if (!noteCard) {
                 e.preventDefault();
