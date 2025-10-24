@@ -442,7 +442,7 @@
             <span style="background-color: #FF7043;" data-color="#FF7043"></span>
         </div>
     </div>
-    <div class="menu-divider"></div>
+    <hr>
     <div class="menu-item" id="context-link"><i class="bi bi-link-45deg me-2"></i> Gán Link</div>
     <div class="menu-item" id="context-profile"><i class="bi bi-person-badge me-2"></i> Gán Profile</div>
 </div>
@@ -722,11 +722,11 @@
 </div>
 
 <!-- Context menu cho thumbnail -->
-<div id="tg-thumb-context-menu" class="tg-thumb-context-menu">
-    <div class="menu-item" id="context-copy-thumb">
+<div id="tg-thumb-context-menu" class="custom-context-menu tg-thumb-context-menu">
+    <div class="menu-item" data-action="copy-thumb">
         <i class="bi bi-clipboard me-2"></i> Copy
     </div>
-    <div class="menu-item delete" id="context-delete-thumb">
+    <div class="menu-item delete" data-action="delete-thumb">
         <i class="bi bi-trash-fill me-2"></i> Xóa
     </div>
 </div>
@@ -892,6 +892,7 @@
             });
             const thumb = document.getElementById('tg-thumb-context-menu');
             if (thumb) thumb.style.display = 'none'; // menu thumbnail vẫn dùng inline
+            savedSelection = null; // Xóa vùng chọn đã lưu khi ẩn menu
         }
 
         // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
@@ -913,50 +914,13 @@
                 }
                 if (!m.contains(el)) m.appendChild(el);
             };
-            ['context-copy-thumb', 'context-delete-thumb'].forEach(ensure);
+            // Không cần ensure các element cũ vì đã chuyển sang data-action
             const thumbMenu = document.getElementById('tg-thumb-context-menu');
             if (thumbMenu) thumbMenu.style.display = 'none';
         })();
 
         // ===== SMART CONTEXT MENU POSITIONING =====
 
-        // ===== CONTEXT MENU ACTION HANDLER =====
-        function handleNoteMenuAction(action, noteId) {
-            console.log(`Action: ${action}, Note ID: ${noteId}`);
-            
-            switch (action) {
-                case 'mark':
-                    // Đánh dấu/bỏ đánh dấu
-                    if (noteId) {
-                        // TODO: Implement mark/unmark functionality
-                        console.log('Toggle mark for note:', noteId);
-                    }
-                    break;
-                    
-                case 'copy-id':
-                    // Copy ID ghi chú
-                    if (noteId) {
-                        navigator.clipboard.writeText(noteId).then(() => {
-                            // TODO: Show toast notification
-                            console.log('Note ID copied:', noteId);
-                        });
-                    }
-                    break;
-                    
-                case 'delete':
-                    // Xóa ghi chú với confirm
-                    if (noteId) {
-                        if (confirm('Bạn có chắc chắn muốn xóa ghi chú này?')) {
-                            // TODO: Implement delete functionality
-                            console.log('Delete note:', noteId);
-                        }
-                    }
-                    break;
-                    
-                default:
-                    console.log('Unknown action:', action);
-            }
-        }
         const addLinkModal = new bootstrap.Modal(document.getElementById('notes-addLinkModal'));
         const linkUrlInput = document.getElementById('notes-link-url');
         const saveLinkBtn = document.getElementById('notes-save-link-btn');
@@ -1828,9 +1792,15 @@
         });
 
 
-        // Copy thumbnail
-        document.getElementById('context-copy-thumb')?.addEventListener('click', () => {
-            if (currentThumb) {
+        // === Xử lý click trên menu thumbnail ảnh ===
+        thumbContextMenu?.addEventListener('click', (e) => {
+            const item = e.target.closest('.menu-item[data-action]');
+            if (!item || !currentThumb) return;
+
+            const action = item.dataset.action;
+            hideAllContextMenus(); // Ẩn menu sau khi click
+
+            if (action === 'copy-thumb') {
                 const fullData = currentThumb.getAttribute('data-full');
                 if (fullData) {
                     navigator.clipboard.writeText(fullData).then(() => {
@@ -1840,18 +1810,13 @@
                         showToast('Lỗi khi copy ảnh.', 'error');
                     });
                 }
-            }
-            hideAllContextMenus();
-        });
-
-        // Xóa thumbnail
-        document.getElementById('context-delete-thumb')?.addEventListener('click', () => {
-            if (currentThumb) {
+            } else if (action === 'delete-thumb') {
                 currentThumb.remove();
                 showToast('Đã xóa ảnh.', 'success');
             }
-            hideAllContextMenus();
+            currentThumb = null; // Reset currentThumb
         });
+        // === Kết thúc xử lý click menu thumbnail ===
 
         // Profile: Click "Gán Profile" in context menu
         document.querySelector('#context-profile').addEventListener('click', () => {
@@ -2379,7 +2344,7 @@
             });
 
             // Click vào item trong menu card
-            cardMenuEl.addEventListener("click", function (ev) {
+            cardMenuEl.addEventListener("click", async function (ev) {
                 const item = ev.target.closest(".menu-item[data-action]");
                 if (!item) return;
 
@@ -2387,7 +2352,63 @@
                 const noteId = cardMenuEl.dataset.noteId;
                 hideAllContextMenus();
 
-                handleNoteMenuAction(action, noteId); // dùng hàm sẵn có trong file
+                // Xử lý action trực tiếp thay vì dùng hàm handleNoteMenuAction
+                switch (action) {
+                    case 'mark':
+                        // Đánh dấu/bỏ đánh dấu
+                        if (noteId) {
+                            try {
+                                const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
+                                if (!response.ok) throw new Error('Server error when marking');
+                                
+                                const data = await response.json();
+                                if (data.success) {
+                                    await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                                    showToast('Đã cập nhật đánh dấu!', 'success');
+                                }
+                            } catch (error) {
+                                console.error('Error toggling mark:', error);
+                                showToast('Lỗi khi cập nhật đánh dấu. Vui lòng thử lại.', 'error');
+                            }
+                        }
+                        break;
+                        
+                    case 'copy-id':
+                        // Copy ID ghi chú
+                        if (noteId) {
+                            navigator.clipboard.writeText(noteId).then(() => {
+                                showToast('Đã copy ID ghi chú!', 'success');
+                            }).catch(err => {
+                                console.error('Failed to copy ID:', err);
+                                showToast('Lỗi khi copy ID.', 'error');
+                            });
+                        }
+                        break;
+                        
+                    case 'delete':
+                        // Xóa ghi chú với confirm
+                        if (noteId) {
+                            if (confirm('Bạn có chắc chắn muốn xóa ghi chú này?')) {
+                                try {
+                                    const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${noteId}`, { method: 'DELETE' });
+                                    if (!response.ok) throw new Error('Server error when deleting');
+                                    
+                                    const data = await response.json();
+                                    if (data.success) {
+                                        await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                                        showToast('Đã xóa ghi chú!', 'success');
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting note:', error);
+                                    showToast('Lỗi khi xóa ghi chú. Vui lòng thử lại.', 'error');
+                                }
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        console.log('Unknown action:', action);
+                }
             });
         })();
 

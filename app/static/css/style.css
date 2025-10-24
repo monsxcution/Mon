@@ -1021,11 +1021,6 @@ body .container-fluid {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.menu-divider {
-    height: 1px;
-    background: #333a4a;
-    margin: 8px 0;
-}
 
 #profile-span-context-menu .submenu {
     padding: 8px;
@@ -1094,43 +1089,6 @@ body .container-fluid {
     transform: scale(1.15);
 }
 
-/* START: Styles for Password Badge Context Menu */
-#password-badge-context-menu .menu-item {
-    position: relative;
-}
-
-#password-badge-context-menu .color-palette {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: -8px;
-    background: #2c3340;
-    padding: 8px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    width: 150px;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-}
-
-#password-badge-context-menu .menu-item:hover>.color-palette {
-    display: grid;
-}
-
-#password-badge-context-menu .color-palette span {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 1px solid #555;
-    transition: transform 0.2s;
-}
-
-#password-badge-context-menu .color-palette span:hover {
-    transform: scale(1.15);
-}
-
-/* END: Styles for Password Badge Context Menu */
 
 /* --- Animation cho thẻ Ghi chú mới --- */
 @keyframes noteCardEnterAnimation {
