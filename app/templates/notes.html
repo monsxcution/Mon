@@ -411,14 +411,8 @@
 </div>
 
 <div id="note-card-context-menu" class="custom-context-menu">
-    <div class="menu-item" data-action="open">
-        <i class="bi bi-eye me-2"></i> Mở ghi chú
-    </div>
     <div class="menu-item" data-action="mark">
         <i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu
-    </div>
-    <div class="menu-item" data-action="duplicate">
-        <i class="bi bi-files me-2"></i> Nhân bản
     </div>
     <hr>
     <div class="menu-item" data-action="copy-id">
@@ -912,27 +906,11 @@
             console.log(`Action: ${action}, Note ID: ${noteId}`);
             
             switch (action) {
-                case 'open':
-                    // Mở ghi chú - tìm card và click vào nó
-                    const noteCard = document.querySelector(`[data-note-id="${noteId}"], #${noteId}`);
-                    if (noteCard) {
-                        noteCard.click();
-                    }
-                    break;
-                    
                 case 'mark':
                     // Đánh dấu/bỏ đánh dấu
                     if (noteId) {
                         // TODO: Implement mark/unmark functionality
                         console.log('Toggle mark for note:', noteId);
-                    }
-                    break;
-                    
-                case 'duplicate':
-                    // Nhân bản ghi chú
-                    if (noteId) {
-                        // TODO: Implement duplicate functionality
-                        console.log('Duplicate note:', noteId);
                     }
                     break;
                     
