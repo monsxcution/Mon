@@ -55,9 +55,45 @@ def handle_auto_start_os_config(enabled):
         # Get the absolute path to run.pyw (assuming run.py was renamed and is in the root directory)
         app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         
-        # The command to execute the Python script using pythonw.exe (to suppress console window)
-        # We construct the full command with pythonw.exe
-        run_command = f'"{sys.executable.replace("python.exe", "pythonw.exe")}" "{os.path.join(app_root, "run.pyw")}"'
+        # Find pythonw.exe more reliably
+        pythonw_path = None
+        
+        # Method 1: Try to find pythonw.exe in the same directory as python.exe
+        if sys.executable:
+            python_dir = os.path.dirname(sys.executable)
+            pythonw_candidate = os.path.join(python_dir, "pythonw.exe")
+            if os.path.exists(pythonw_candidate):
+                pythonw_path = pythonw_candidate
+        
+        # Method 2: Try to find pythonw.exe in sys.base_prefix
+        if not pythonw_path and hasattr(sys, 'base_prefix'):
+            base_prefix = sys.base_prefix
+            pythonw_candidate = os.path.join(base_prefix, "pythonw.exe")
+            if os.path.exists(pythonw_candidate):
+                pythonw_path = pythonw_candidate
+        
+        # Method 3: Try to find pythonw.exe in sys.prefix
+        if not pythonw_path and hasattr(sys, 'prefix'):
+            prefix = sys.prefix
+            pythonw_candidate = os.path.join(prefix, "pythonw.exe")
+            if os.path.exists(pythonw_candidate):
+                pythonw_path = pythonw_candidate
+        
+        # Method 4: Fallback to replacing python.exe with pythonw.exe
+        if not pythonw_path and sys.executable:
+            pythonw_path = sys.executable.replace("python.exe", "pythonw.exe")
+        
+        if not pythonw_path:
+            raise Exception("Could not find pythonw.exe")
+        
+        # Ensure the run.pyw file exists
+        run_pyw_path = os.path.join(app_root, "run.pyw")
+        if not os.path.exists(run_pyw_path):
+            raise Exception(f"run.pyw not found at {run_pyw_path}")
+        
+        # Create command with proper working directory and error handling
+        # Use cmd /c to ensure proper working directory and environment
+        run_command = f'cmd /c "cd /d "{app_root}" && "{pythonw_path}" "{run_pyw_path}""'
 
         # Windows Registry path for startup programs
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"

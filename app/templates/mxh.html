@@ -960,11 +960,13 @@
             }
         }
 
-        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
+        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
         if (account.platform === 'wechat' && account.wechat_created_year) {
             const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 365) {
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            
+            if (totalDays >= 365) {
                 // Check if Hong Kong number
                 const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                 const isHongKongNumber = primaryPhone.startsWith('852');
@@ -1144,11 +1146,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
             }
 
-            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
+            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
             if (account.platform === 'wechat' && account.wechat_created_year) {
                 const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-                const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-                if (diffDays >= 365) {
+                const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                const totalDays = Math.floor(totalHours / 24);
+                
+                if (totalDays >= 365) {
                     // Check if Hong Kong number
                     const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = primaryPhone.startsWith('852');
@@ -1159,11 +1163,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
             }
 
-            // Check secondary account for WeChat (only if blinks)
+            // Check secondary account for WeChat (only if blinks) (IMPROVED with precise time calculation)
             if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
                 const secCreatedDate = new Date(account.secondary_wechat_created_year, account.secondary_wechat_created_month - 1, account.secondary_wechat_created_day);
-                const secDiffDays = Math.ceil((now - secCreatedDate) / (1000 * 60 * 60 * 24));
-                if (secDiffDays >= 365) {
+                const secTotalHours = calculateTimeDifferenceInHours(secCreatedDate, now);
+                const secTotalDays = Math.floor(secTotalHours / 24);
+                
+                if (secTotalDays >= 365) {
                     // Check if Hong Kong number
                     const secondaryPhone = (account.secondary_phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = secondaryPhone.startsWith('852');
@@ -1269,6 +1275,86 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         return n;
     }
 
+    // ===== TIME CALCULATION HELPERS =====
+    // Helper function to calculate precise time differences in hours
+    function calculateTimeDifferenceInHours(startDate, endDate) {
+        const diffMilliseconds = endDate.getTime() - startDate.getTime();
+        return diffMilliseconds / (1000 * 60 * 60); // Convert to hours
+    }
+
+    // Helper function to format account age display (DISPLAY ONLY - keep original format)
+    function formatAccountAge(createdDate, now) {
+        const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+        const totalDays = Math.floor(totalHours / 24);
+
+        if (totalDays >= 365) {
+            const years = Math.floor(totalDays / 365);
+            const months = Math.floor((totalDays % 365) / 30);
+            return {
+                display: `${years}năm ${months}th`,
+                color: '#07c160'
+            };
+        } else if (totalDays >= 30) {
+            const months = Math.floor(totalDays / 30);
+            const days = totalDays % 30;
+            return {
+                display: `${months}th ${days}d`,
+                color: '#fff'
+            };
+        } else {
+            return {
+                display: `${totalDays}d`,
+                color: '#fff'
+            };
+        }
+    }
+
+    // Helper function to calculate scan countdown
+    function calculateScanCountdown(account, now) {
+        const currentScanCount = account.wechat_scan_count || 0;
+        const maxScans = 3;
+
+        if (currentScanCount >= maxScans) {
+            // Đã hết lượt - QR đỏ
+            return `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
+        }
+
+        if (account.wechat_last_scan_date) {
+            // Có lịch sử quét - kiểm tra thời gian chính xác
+            const lastScanDate = new Date(account.wechat_last_scan_date);
+            const hoursSinceScan = calculateTimeDifferenceInHours(lastScanDate, now);
+            const totalHoursWait = 30 * 24; // 30 ngày * 24 giờ
+            const remainingHours = Math.max(0, totalHoursWait - hoursSinceScan);
+
+            if (remainingHours > 0) {
+                // Còn thời gian chờ - hiển thị countdown (DISPLAY ONLY - keep original format)
+                const remainingDays = Math.floor(remainingHours / 24);
+                if (remainingDays > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                } else {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${Math.floor(remainingHours)}h)</small>`;
+                }
+            } else {
+                // Đủ điều kiện quét tiếp - QR xanh
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        } else {
+            // Chưa quét lần nào - kiểm tra tuổi tài khoản
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            const remainingHours = Math.floor(totalHours % 24);
+
+            if (totalDays < 90) {
+                const remainingDays = 90 - totalDays;
+                return `Còn ${remainingDays} ngày`;
+            } else {
+                // Đủ điều kiện quét lần đầu - QR xanh
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        }
+    }
+
     // ===== CARD FACE RENDERING =====
     // Render individual card face with all account details
     function renderCardFace(account, allAccounts, side) {
@@ -1280,63 +1366,19 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const borderClass = getAccountBorderClass(account);
         const now = new Date();
 
-        // === MXH OLD LOGIC: Calculate age and scan countdown ===
+        // === IMPROVED LOGIC: Calculate age and scan countdown with precise time ===
         let accountAgeDisplay = '';
         let ageColor = '#fff';
         let scanCountdown = '';
 
         if (platform === 'wechat' && account.wechat_created_year) {
             const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+            const ageInfo = formatAccountAge(createdDate, now);
+            accountAgeDisplay = ageInfo.display;
+            ageColor = ageInfo.color;
 
-            if (diffDays >= 365) {
-                const years = Math.floor(diffDays / 365);
-                const months = Math.floor((diffDays % 365) / 30);
-                accountAgeDisplay = `${years}năm ${months}th`;
-                ageColor = '#07c160';
-            } else if (diffDays >= 30) {
-                const months = Math.floor(diffDays / 30);
-                accountAgeDisplay = `${months}th ${diffDays % 30}d`;
-            } else {
-                accountAgeDisplay = `${diffDays}d`;
-            }
-
-            // Calculate scan countdown với QR icon (MXH OLD logic)
-            const currentScanCount = account.wechat_scan_count || 0;
-            const maxScans = 3;
-
-            if (currentScanCount >= maxScans) {
-                // Đã hết lượt - QR đỏ
-                scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
-            } else if (account.wechat_last_scan_date) {
-                // Có lịch sử quét - kiểm tra thời gian
-                const lastScanDate = new Date(account.wechat_last_scan_date);
-                const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
-                const remainingDays = 30 - daysSinceScan;
-
-                if (remainingDays > 0) {
-                    // Còn thời gian chờ - hiển thị countdown
-                    const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
-                    const remainingHours = (30 * 24) - hoursSinceScan;
-
-                    if (remainingHours < 24) {
-                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
-                    } else {
-                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
-                    }
-                } else {
-                    // Đủ điều kiện quét tiếp - QR xanh
-                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                }
-            } else {
-                // Chưa quét lần nào
-                if (diffDays < 90) {
-                    scanCountdown = `Còn ${90 - diffDays} ngày`;
-                } else {
-                    // Đủ điều kiện quét lần đầu - QR xanh
-                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                }
-            }
+            // Calculate scan countdown với QR icon (IMPROVED logic)
+            scanCountdown = calculateScanCountdown(account, now);
         }
 
         // Determine status icon
@@ -1366,7 +1408,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 if (dueDate instanceof Date && !isNaN(dueDate)) {
                     const today = new Date();
                     const remainTime = dueDate - today;
-                    const remainDays = Math.ceil(remainTime / (1000 * 60 * 60 * 24));
+                    const remainHours = Math.floor(remainTime / (1000 * 60 * 60));
+                    const remainDays = Math.floor(remainHours / 24);
 
                     if (remainTime > 0) {
                         let timeDisplay = '';
@@ -1382,7 +1425,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         extraClass = 'notice-expired-blink';
                     }
 
-                    // Tooltip
+                    // Tooltip (DISPLAY ONLY - keep original format)
                     let tooltipTime;
                     if (remainDays >= 30) {
                         const months = Math.floor(remainDays / 30);
@@ -1403,7 +1446,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         if (isDisabled && platform === 'wechat') {
             let disableDays = 0;
             if (account.die_date) {
-                disableDays = Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24));
+                const disableHours = Math.floor((now - new Date(account.die_date)) / (1000 * 60 * 60));
+                disableDays = Math.floor(disableHours / 24);
             }
             disabledInfo = `
                 <div style="font-size: 0.75rem; margin-top: 4px;">
@@ -1626,8 +1670,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 (account.wechat_created_month || 1) - 1,
                 account.wechat_created_day || 1
             );
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 365) {
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            if (totalDays >= 365) {
                 const isHK = /^\+?852/.test(account.phone || '');
                 return isHK ? 'mxh-border-green' : 'mxh-border-white';
             }
