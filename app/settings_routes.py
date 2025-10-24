@@ -93,7 +93,7 @@ def handle_auto_start_os_config(enabled):
         
         # Create command with proper working directory and error handling
         # Use cmd /c to ensure proper working directory and environment
-        run_command = f'cmd /c "cd /d "{app_root}" && "{pythonw_path}" "{run_pyw_path}""'
+        run_command = f'cmd /c "cd /d \\"{app_root}\\" && \\"{pythonw_path}\\" \\"{run_pyw_path}\\""'
 
         # Windows Registry path for startup programs
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
