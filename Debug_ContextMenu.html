@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Context Menu</title>
+    <style>
+        .custom-context-menu {
+            position: fixed;
+            z-index: 9999;
+            min-width: 200px;
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            background: #23272f;
+            color: #e6e6e6;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+            padding: 8px 0;
+        }
+
+        .custom-context-menu.show {
+            display: block;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .custom-context-menu .menu-item {
+            padding: 10px 22px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: inherit;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .custom-context-menu .menu-item:hover {
+            background: #313846;
+            color: #00e0ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Context Menu</h1>
+    <p>Click chuột phải vào đây để test context menu</p>
+    
+    <div id="test-context-menu" class="custom-context-menu">
+        <div class="menu-item">Test Item 1</div>
+        <div class="menu-item">Test Item 2</div>
+        <div class="menu-item">Test Item 3</div>
+    </div>
+
+    <script>
+        // Test functions
+        function hideAllContextMenus() {
+            document.querySelectorAll('.custom-context-menu').forEach(menu => {
+                menu.classList.remove('show');
+                menu.style.removeProperty('display');
+                menu.style.removeProperty('visibility');
+                menu.style.removeProperty('opacity');
+            });
+        }
+
+        function showSmartMenu(menu, x, y) {
+            // Set position
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            
+            // Show menu
+            menu.classList.add('show');
+        }
+
+        // Test context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            hideAllContextMenus();
+            showSmartMenu(document.getElementById('test-context-menu'), e.clientX, e.clientY);
+        });
+
+        // Test buttons
+        function testMenu() {
+            hideAllContextMenus();
+            showSmartMenu(document.getElementById('test-context-menu'), 100, 100);
+        }
+
+        // Add test button
+        const button = document.createElement('button');
+        button.textContent = 'Test Menu';
+        button.onclick = testMenu;
+        document.body.appendChild(button);
+    </script>
+</body>
+</html>

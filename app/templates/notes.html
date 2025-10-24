@@ -200,26 +200,47 @@
     /* Context Menu Styles */
     .custom-context-menu {
         position: fixed;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 8px 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-        display: none;
+        top: 0;
+        left: 0;
+        z-index: 9999;
         min-width: 180px;
+        max-width: 260px;
+
+        background: #1f1f1f;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+
+        font-size: 13px;
+        line-height: 1.4;
+        padding: 4px 0;
+        user-select: none;
+
+        /* Ẩn mặc định */
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .custom-context-menu.show {
+        display: block;
+        visibility: visible;
+        opacity: 1;
     }
 
     .menu-item {
-        padding: 8px 16px;
+        padding: 8px 12px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        transition: background-color 0.2s;
+        white-space: nowrap;
     }
-
     .menu-item:hover {
-        background-color: var(--hover-color);
+        background: rgba(255,255,255,0.08);
+    }
+    .custom-context-menu hr {
+        border: 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        margin: 4px 0;
     }
 
     .menu-divider {
@@ -390,10 +411,20 @@
 </div>
 
 <div id="note-card-context-menu" class="custom-context-menu">
-    <div class="menu-item" id="context-mark-note">
+    <div class="menu-item" data-action="open">
+        <i class="bi bi-eye me-2"></i> Mở ghi chú
+    </div>
+    <div class="menu-item" data-action="mark">
         <i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu
     </div>
-    <div class="menu-item" id="context-delete-note" style="color: #dc3545;">
+    <div class="menu-item" data-action="duplicate">
+        <i class="bi bi-files me-2"></i> Nhân bản
+    </div>
+    <hr>
+    <div class="menu-item" data-action="copy-id">
+        <i class="bi bi-clipboard me-2"></i> Copy ID ghi chú
+    </div>
+    <div class="menu-item" data-action="delete" style="color: #dc3545;">
         <i class="bi bi-trash-fill me-2"></i> Xóa Ghi Chú
     </div>
 </div>
@@ -733,6 +764,177 @@
         const noteCardMenu = document.getElementById('note-card-context-menu');
         const editorContextMenu = document.getElementById('notes-context-menu');
         const notesTabMenu = document.getElementById('notes-tab-context-menu');
+
+        // === SMART CONTEXT MENU (port từ MXH sang Notes) ===
+
+        // Tính toán vị trí menu sao cho không tràn màn hình.
+        // Tự flip trái/phải và trên/dưới nếu sát mép.
+        function positionContextMenuSmart(menu, x, y) {
+            if (!menu) return;
+
+            // Tạm bật kiểu "có mặt trên DOM" để đo kích thước thực
+            const prevVis = menu.style.visibility;
+            const prevDisp = menu.style.display;
+            menu.style.visibility = 'hidden';
+            menu.style.display = 'block';
+
+            const rect = menu.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const MARGIN = 8; // tránh dính sát chuột và mép màn hình
+
+            // Xem có đủ chỗ bên phải / bên dưới không
+            const placeRight = (x + rect.width + MARGIN <= vw);
+            const placeDown  = (y + rect.height + MARGIN <= vh);
+
+            // Nếu không đủ chỗ thì lật qua trái / lật lên trên
+            let left = placeRight ? (x + MARGIN) : (x - rect.width - MARGIN);
+            let top  = placeDown  ? (y + MARGIN) : (y - rect.height - MARGIN);
+
+            // Clamp để menu không chọc lọt ra ngoài khi quá sát mép
+            left = Math.min(Math.max(left, MARGIN), vw - rect.width - MARGIN);
+            top  = Math.min(Math.max(top , MARGIN), vh - rect.height - MARGIN);
+
+            // Ghi vị trí cuối
+            menu.style.left = left + 'px';
+            menu.style.top  = top  + 'px';
+
+            // Khôi phục trạng thái hiển thị trước đó
+            menu.style.visibility = prevVis || '';
+            menu.style.display = ''; // luôn clear inline display để .show hoạt động
+        }
+
+        // Căn submenu con (.has-submenu > .submenu) sao cho submenu không bay ra ngoài mép
+        function positionAllSubmenusForMenu(menu) {
+            if (!menu) return;
+
+            const submenuItems = menu.querySelectorAll('.has-submenu');
+            submenuItems.forEach(item => {
+                const submenu = item.querySelector('.submenu');
+                if (!submenu) return;
+
+                // reset mặc định: submenu mở về bên phải, từ trên xuống
+                submenu.style.left = '100%';
+                submenu.style.right = 'auto';
+                submenu.style.top = '0';
+                submenu.style.bottom = 'auto';
+
+                const itemRect = item.getBoundingClientRect();
+                const submenuRect = submenu.getBoundingClientRect();
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                // Nếu tràn phải -> bung sang trái
+                if (itemRect.right + submenuRect.width > vw) {
+                    submenu.style.left = 'auto';
+                    submenu.style.right = '100%';
+                }
+
+                // Nếu tràn dưới -> đính đáy lên trên (bung ngược lên)
+                if (itemRect.top + submenuRect.height > vh) {
+                    submenu.style.top = 'auto';
+                    submenu.style.bottom = '0';
+                }
+            });
+        }
+
+        // Hiển thị menu theo vị trí chuột, dùng smart flip.
+        // Tự xử lý khác nhau giữa menu kiểu .custom-context-menu và menu thumbnail (#tg-thumb-context-menu)
+        function showSmartMenu(menu, x, y) {
+            // Tính toạ độ trước
+            positionContextMenuSmart(menu, x, y);
+
+            // Bật menu
+            if (menu.classList && menu.classList.contains('custom-context-menu')) {
+                // Các menu chính trong Notes: tab, card, editor, profile-span
+                menu.classList.add('show'); // CSS .custom-context-menu.show = display:block, opacity:1 ...
+            } else {
+                // Thumbnail menu trong modal (tg-thumb-context-menu) không có class .custom-context-menu
+                menu.style.display = 'block';
+            }
+
+            // Chỉnh lại tất cả submenu con của cái menu vừa mở (flip trái/phải / trên/dưới)
+            positionAllSubmenusForMenu(menu);
+        }
+
+        // Ẩn tất cả context menu (tab/card/editor/profile-span + menu thumbnail ảnh)
+        // Gọi mỗi lần click ra ngoài, scroll, resize.
+        function hideAllContextMenus() {
+            // Ẩn các menu chính bằng class, KHÔNG set inline display
+            document.querySelectorAll('.custom-context-menu').forEach(menu => {
+                menu.classList.remove('show');
+                menu.style.removeProperty('display');
+                menu.style.removeProperty('visibility');
+                menu.style.removeProperty('opacity');
+            });
+
+            // Ẩn menu thumbnail ảnh (menu này KHÔNG dùng .custom-context-menu)
+            const thumbMenu = document.getElementById('tg-thumb-context-menu');
+            if (thumbMenu) {
+                thumbMenu.style.display = 'none';
+            }
+        }
+
+        // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
+        document.addEventListener('click', hideAllContextMenus);
+        window.addEventListener('scroll', hideAllContextMenus, { passive: true });
+        window.addEventListener('resize', hideAllContextMenus);
+
+        // ===== SMART CONTEXT MENU POSITIONING =====
+
+        // ===== CONTEXT MENU ACTION HANDLER =====
+        function handleNoteMenuAction(action, noteId) {
+            console.log(`Action: ${action}, Note ID: ${noteId}`);
+            
+            switch (action) {
+                case 'open':
+                    // Mở ghi chú - tìm card và click vào nó
+                    const noteCard = document.querySelector(`[data-note-id="${noteId}"], #${noteId}`);
+                    if (noteCard) {
+                        noteCard.click();
+                    }
+                    break;
+                    
+                case 'mark':
+                    // Đánh dấu/bỏ đánh dấu
+                    if (noteId) {
+                        // TODO: Implement mark/unmark functionality
+                        console.log('Toggle mark for note:', noteId);
+                    }
+                    break;
+                    
+                case 'duplicate':
+                    // Nhân bản ghi chú
+                    if (noteId) {
+                        // TODO: Implement duplicate functionality
+                        console.log('Duplicate note:', noteId);
+                    }
+                    break;
+                    
+                case 'copy-id':
+                    // Copy ID ghi chú
+                    if (noteId) {
+                        navigator.clipboard.writeText(noteId).then(() => {
+                            // TODO: Show toast notification
+                            console.log('Note ID copied:', noteId);
+                        });
+                    }
+                    break;
+                    
+                case 'delete':
+                    // Xóa ghi chú với confirm
+                    if (noteId) {
+                        if (confirm('Bạn có chắc chắn muốn xóa ghi chú này?')) {
+                            // TODO: Implement delete functionality
+                            console.log('Delete note:', noteId);
+                        }
+                    }
+                    break;
+                    
+                default:
+                    console.log('Unknown action:', action);
+            }
+        }
         const addLinkModal = new bootstrap.Modal(document.getElementById('notes-addLinkModal'));
         const linkUrlInput = document.getElementById('notes-link-url');
         const saveLinkBtn = document.getElementById('notes-save-link-btn');
@@ -865,7 +1067,6 @@
                 showNoteDetail(note);
             });
 
-            cardElement.addEventListener('contextmenu', (e) => handleNoteCardContextMenu(e, note));
             return col;
         }
 
@@ -1190,18 +1391,6 @@
             }
         }
 
-        function handleNoteCardContextMenu(e, note) {
-            console.log('handleNoteCardContextMenu triggered for note:', note.id);
-            e.preventDefault();
-            e.stopPropagation();
-            hideAllContextMenus();
-
-            const markBtn = noteCardMenu.querySelector('#context-mark-note');
-            markBtn.innerHTML = note.is_marked ? '<i class="bi bi-star me-2"></i> Bỏ Đánh Dấu' : '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
-
-            noteCardMenu.dataset.noteId = note.id;
-            showMenu(noteCardMenu, e.clientX, e.clientY);
-        }
 
         function handleEditorContextMenu(e) {
             console.log('handleEditorContextMenu triggered');
@@ -1212,38 +1401,23 @@
             const selection = window.getSelection();
             if (selection.toString().length > 0) {
                 savedSelection = selection.getRangeAt(0).cloneRange();
-                showMenu(editorContextMenu, e.clientX, e.clientY);
+                showSmartMenu(editorContextMenu, e.clientX, e.clientY);
             }
         }
 
         function handleTabContextMenu(e) {
             console.log('handleTabContextMenu triggered at:', e.clientX, e.clientY);
 
-            // Only check if NOT clicking on a note card
             const noteCard = e.target.closest('.card[data-note-id]');
-
             if (!noteCard) {
-                console.log('Condition met: showing notesTabMenu');
                 e.preventDefault();
                 e.stopPropagation();
                 hideAllContextMenus();
-                showMenu(notesTabMenu, e.clientX, e.clientY);
-            } else {
-                console.log('Condition not met: click was on a note card');
+                showSmartMenu(notesTabMenu, e.clientX, e.clientY);
             }
         }
 
-        function hideAllContextMenus() {
-            console.log('hideAllContextMenus called');
-            document.querySelectorAll('.custom-context-menu').forEach(menu => menu.style.display = 'none');
-        }
 
-        function showMenu(menu, x, y) {
-            console.log('showMenu called for menu:', menu.id, 'at', x, y);
-            menu.style.left = `${x}px`;
-            menu.style.top = `${y}px`;
-            menu.style.display = 'block';
-        }
 
         // --- Event Listeners ---
 
@@ -1626,17 +1800,14 @@
                 
                 e.preventDefault();
                 e.stopPropagation();
+                hideAllContextMenus();
                 
                 currentThumb = thumb;
-                thumbContextMenu.style.left = `${e.clientX}px`;
-                thumbContextMenu.style.top = `${e.clientY}px`;
-                thumbContextMenu.style.display = 'block';
-            });
 
-        // Ẩn context menu khi click ra ngoài
-        document.addEventListener('click', () => {
-            thumbContextMenu.style.display = 'none';
+                // Dùng smart menu (nó sẽ tự set display block cho menu thumbnail)
+                showSmartMenu(thumbContextMenu, e.clientX, e.clientY);
         });
+
 
         // Copy thumbnail
         document.getElementById('context-copy-thumb')?.addEventListener('click', () => {
@@ -1651,7 +1822,7 @@
                     });
                 }
             }
-            thumbContextMenu.style.display = 'none';
+            hideAllContextMenus();
         });
 
         // Xóa thumbnail
@@ -1660,7 +1831,7 @@
                 currentThumb.remove();
                 showToast('Đã xóa ảnh.', 'success');
             }
-            thumbContextMenu.style.display = 'none';
+            hideAllContextMenus();
         });
 
         // Profile: Click "Gán Profile" in context menu
@@ -1807,7 +1978,7 @@
                 e.stopPropagation();
                 hideAllContextMenus();
                 currentProfileSpan = profileSpan;
-                showMenu(profileSpanMenu, e.clientX, e.clientY);
+                showSmartMenu(profileSpanMenu, e.clientX, e.clientY);
             }
         });
 
@@ -1975,7 +2146,6 @@
         }
 
         // Global clicks
-        document.addEventListener('click', hideAllContextMenus);
         notesPane.addEventListener('contextmenu', handleTabContextMenu);
 
         // --- Countdown Functions ---
@@ -2141,6 +2311,66 @@
                 }
             });
         }
+
+        // ===== CONTEXT MENU CHUỘT PHẢI TRÊN CARD GHI CHÚ =====
+        (function setupNoteCardContextMenu() {
+            const notesRoot = document.querySelector("#notes-container"); // nơi chứa danh sách card
+            const cardMenuEl = document.getElementById("note-card-context-menu");
+
+            if (!notesRoot || !cardMenuEl) {
+                console.warn("Context menu Ghi Chú: thiếu phần tử cần thiết (notesRoot/cardMenuEl)");
+                return;
+            }
+
+            // Chuột phải vào card
+            notesRoot.addEventListener("contextmenu", function (ev) {
+                // tìm card gần nhất
+                const noteCardEl = ev.target.closest(".card[data-note-id]");
+                if (!noteCardEl) {
+                    // click phải vùng trống -> ẩn menu
+                    hideAllContextMenus();
+                    return;
+                }
+
+                ev.preventDefault();
+                ev.stopPropagation();
+                hideAllContextMenus();
+
+                // Lấy ID ghi chú
+                const noteId = noteCardEl.getAttribute("data-note-id") || noteCardEl.id || "";
+                cardMenuEl.dataset.noteId = noteId;
+
+                // Cập nhật text "Đánh dấu / Bỏ đánh dấu" dựa trên trạng thái hiện tại
+                const noteObj = window.notesData.find(n => String(n.id) === String(noteId));
+                const markBtn = cardMenuEl.querySelector('[data-action="mark"]');
+                if (noteObj && markBtn) {
+                    markBtn.innerHTML = noteObj.is_marked
+                        ? '<i class="bi bi-star-fill me-2"></i> Bỏ Đánh Dấu'
+                        : '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
+                }
+
+                // Hiển thị menu với định vị thông minh kiểu MXH
+                showSmartMenu(cardMenuEl, ev.clientX, ev.clientY);
+            });
+
+            // Ngăn chuột phải vào chính menu gây menu hệ thống
+            cardMenuEl.addEventListener("contextmenu", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+            });
+
+            // Click vào item trong menu card
+            cardMenuEl.addEventListener("click", function (ev) {
+                const item = ev.target.closest(".menu-item[data-action]");
+                if (!item) return;
+
+                const action = item.getAttribute("data-action"); // open / mark / duplicate / copy-id / delete
+                const noteId = cardMenuEl.dataset.noteId;
+                hideAllContextMenus();
+
+                handleNoteMenuAction(action, noteId); // dùng hàm sẵn có trong file
+            });
+        })();
 
         // Handle alarm type radio buttons
         alarmTypeRadios.forEach(radio => {
