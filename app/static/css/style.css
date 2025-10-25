@@ -1161,3 +1161,15 @@ body .container-fluid {
     -webkit-overflow-scrolling: touch;
 }
 
+/* === Smart Token CSS === */
+.smart-token {
+    color: #0d6efd; /* Màu xanh dương */
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.smart-token:hover {
+    text-decoration: underline;
+}
+/* ======================= */
+

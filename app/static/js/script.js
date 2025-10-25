@@ -93,3 +93,193 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+/* === Smart Token Feature === */
+
+/**
+ * 📋 Hàm copy text vào clipboard
+ * @param {string} textToCopy - Đoạn text cần copy
+ */
+async function copyToClipboard(textToCopy) {
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        
+        // (Optional) Tạo thông báo "Đã copy"
+        const tempDiv = document.createElement('div');
+        tempDiv.textContent = `Đã copy: ${textToCopy}`;
+        tempDiv.style.cssText = `
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7); color: white; padding: 8px 15px;
+            border-radius: 5px; font-size: 14px; z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        `;
+        document.body.appendChild(tempDiv);
+        setTimeout(() => {
+            tempDiv.style.opacity = '0';
+            setTimeout(() => tempDiv.remove(), 500);
+        }, 1500);
+
+    } catch (err) {
+        console.error('Không thể copy:', err);
+    }
+}
+
+/**
+ * 🚀 Hàm chính để tìm và thay thế các token
+ * @param {HTMLElement} container - Phần tử HTML (ví dụ: div) chứa nội dung cần xử lý
+ */
+function processSmartTokens(container) {
+    if (!container) return;
+
+    // Định nghĩa Regular Expressions
+    const mentionRegex = /(^|\s|[\.,;!?()])(@[a-zA-Z0-9_]{3,32})(?![a-zA-Z0-9_])/g;
+    const numberRegex = /(?<![a-zA-Z0-9])(\d{4,})(?![a-zA-Z0-9])/g; // >= 4 chữ số
+
+    // Dùng TreeWalker để chỉ duyệt qua các Text Node (hiệu quả nhất)
+    const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                // Bỏ qua các node đã xử lý hoặc trong script/style
+                if (node.parentElement.closest('script, style, .smart-token')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                // Chỉ xử lý node có ký tự @ hoặc số (tối ưu)
+                if (node.nodeValue.includes('@') || /\d{4,}/.test(node.nodeValue)) {
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+                return NodeFilter.FILTER_REJECT;
+            }
+        }
+    );
+
+    const nodesToProcess = [];
+    while (walker.nextNode()) {
+        nodesToProcess.push(walker.currentNode);
+    }
+
+    // Xử lý các node (phải làm sau khi duyệt xong để tránh lỗi)
+    nodesToProcess.forEach(textNode => {
+        const parent = textNode.parentNode;
+        const text = textNode.nodeValue;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+
+        // Tạo mảng chứa tất cả các vị trí khớp (@ và số)
+        const matches = [];
+        let match;
+
+        // Tìm @username
+        while ((match = mentionRegex.exec(text)) !== null) {
+            const startIndex = match.index + match[1].length;
+            matches.push({
+                start: startIndex,
+                end: startIndex + match[2].length,
+                text: match[2]
+            });
+        }
+        mentionRegex.lastIndex = 0; // Reset
+
+        // Tìm số
+        while ((match = numberRegex.exec(text)) !== null) {
+            matches.push({
+                start: match.index,
+                end: match.index + match[1].length,
+                text: match[1]
+            });
+        }
+        numberRegex.lastIndex = 0; // Reset
+
+        // Sắp xếp các match theo vị trí bắt đầu
+        matches.sort((a, b) => a.start - b.start);
+
+        // Bọc các match bằng <span>
+        matches.forEach(m => {
+            if (m.start > lastIndex) {
+                fragment.appendChild(document.createTextNode(text.substring(lastIndex, m.start)));
+            }
+            const span = document.createElement('span');
+            span.className = 'smart-token';
+            span.textContent = m.text;
+            span.dataset.copyValue = m.text; // Lưu giá trị vào data- attribute
+            fragment.appendChild(span);
+            lastIndex = m.end;
+        });
+
+        // Thêm phần text còn lại
+        if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+        }
+
+        // Thay thế text node cũ bằng fragment mới
+        if (fragment.childNodes.length > 0) {
+            parent.replaceChild(fragment, textNode);
+        }
+    });
+}
+
+/* === Kết thúc Smart Token Feature === */
+
+/* === Kích hoạt Smart Token === */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Xác định vùng chứa nội dung cho Notes
+    const notesContainer = document.getElementById('notes-container');
+    const notesDetailWrapper = document.getElementById('notes-detail-content-wrapper');
+    
+    // 2. Xác định vùng chứa nội dung cho MXH
+    const mxhContainer = document.getElementById('mxh-accounts-container');
+
+    // 3. Chạy hàm xử lý cho các container
+    if (notesContainer) {
+        processSmartTokens(notesContainer);
+    }
+    
+    if (notesDetailWrapper) {
+        processSmartTokens(notesDetailWrapper);
+    }
+    
+    if (mxhContainer) {
+        processSmartTokens(mxhContainer);
+    }
+
+    // 4. Thêm trình nghe sự kiện Click (dùng event delegation)
+    document.addEventListener('click', (event) => {
+        const target = event.target;
+        
+        // Kiểm tra xem có click đúng vào .smart-token không
+        if (target.classList.contains('smart-token') && target.dataset.copyValue) {
+            event.preventDefault();
+            copyToClipboard(target.dataset.copyValue);
+        }
+    });
+    
+    // 5. Observer để xử lý nội dung động (AJAX load)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // Xử lý smart token cho nội dung mới được thêm
+                        processSmartTokens(node);
+                    }
+                });
+            }
+        });
+    });
+
+    // Quan sát các thay đổi trong các container chính
+    if (notesContainer) {
+        observer.observe(notesContainer, { childList: true, subtree: true });
+    }
+    
+    if (notesDetailWrapper) {
+        observer.observe(notesDetailWrapper, { childList: true, subtree: true });
+    }
+    
+    if (mxhContainer) {
+        observer.observe(mxhContainer, { childList: true, subtree: true });
+    }
+});
+
