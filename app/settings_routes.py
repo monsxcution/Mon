@@ -46,75 +46,58 @@ def save_dashboard_settings(settings):
 
 # NEW FUNCTION: Handle OS-level auto-start configuration (Windows-centric)
 def handle_auto_start_os_config(enabled):
-    """Adds or removes the application from the Windows startup list (via Registry)."""
+    """Creates or removes shortcut in Windows Startup folder (simple and effective)."""
     if platform.system() != 'Windows':
         print("Auto-start feature is only implemented for Windows.")
         return
 
     try:
-        # Get the absolute path to run.pyw (assuming run.py was renamed and is in the root directory)
+        # Get the absolute path to run.pyw
         app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        
-        # Find pythonw.exe more reliably
-        pythonw_path = None
-        
-        # Method 1: Try to find pythonw.exe in the same directory as python.exe
-        if sys.executable:
-            python_dir = os.path.dirname(sys.executable)
-            pythonw_candidate = os.path.join(python_dir, "pythonw.exe")
-            if os.path.exists(pythonw_candidate):
-                pythonw_path = pythonw_candidate
-        
-        # Method 2: Try to find pythonw.exe in sys.base_prefix
-        if not pythonw_path and hasattr(sys, 'base_prefix'):
-            base_prefix = sys.base_prefix
-            pythonw_candidate = os.path.join(base_prefix, "pythonw.exe")
-            if os.path.exists(pythonw_candidate):
-                pythonw_path = pythonw_candidate
-        
-        # Method 3: Try to find pythonw.exe in sys.prefix
-        if not pythonw_path and hasattr(sys, 'prefix'):
-            prefix = sys.prefix
-            pythonw_candidate = os.path.join(prefix, "pythonw.exe")
-            if os.path.exists(pythonw_candidate):
-                pythonw_path = pythonw_candidate
-        
-        # Method 4: Fallback to replacing python.exe with pythonw.exe
-        if not pythonw_path and sys.executable:
-            pythonw_path = sys.executable.replace("python.exe", "pythonw.exe")
-        
-        if not pythonw_path:
-            raise Exception("Could not find pythonw.exe")
-        
-        # Ensure the run.pyw file exists
         run_pyw_path = os.path.join(app_root, "run.pyw")
+        
         if not os.path.exists(run_pyw_path):
             raise Exception(f"run.pyw not found at {run_pyw_path}")
         
-        # Create command with proper working directory and error handling
-        # Use cmd /c to ensure proper working directory and environment
-        run_command = f'cmd /c "cd /d \\"{app_root}\\" && \\"{pythonw_path}\\" \\"{run_pyw_path}\\""'
-
-        # Windows Registry path for startup programs
-        key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        app_name = "MonDashboard"
-
-        # NOTE: winreg is imported conditionally in the global scope
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS) as key:
-            if enabled:
-                # Add to startup
-                winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, run_command)
-                print(f"[SUCCESS] Added to Windows startup: {run_command}")
+        # Windows Startup folder path
+        startup_path = os.path.join(os.environ['APPDATA'], 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup')
+        shortcut_path = os.path.join(startup_path, "MonDashboard.lnk")
+        
+        if enabled:
+            # Create startup folder if it doesn't exist
+            os.makedirs(startup_path, exist_ok=True)
+            
+            # Create shortcut using PowerShell (simple and reliable)
+            ps_command = f'''
+            $WshShell = New-Object -ComObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut("{shortcut_path}")
+            $Shortcut.TargetPath = "{run_pyw_path}"
+            $Shortcut.WorkingDirectory = "{app_root}"
+            $Shortcut.Description = "MonDashboard - Khởi động cùng Windows"
+            $Shortcut.WindowStyle = 7
+            $Shortcut.Save()
+            '''
+            
+            # Execute PowerShell command
+            result = subprocess.run([
+                'powershell', '-Command', ps_command
+            ], capture_output=True, text=True, shell=True)
+            
+            if result.returncode == 0:
+                print(f"[SUCCESS] Created startup shortcut: {shortcut_path}")
             else:
-                # Remove from startup
-                try:
-                    winreg.DeleteValue(key, app_name)
-                    print("[SUCCESS] Removed from Windows startup.")
-                except FileNotFoundError:
-                    pass  # Already removed
+                raise Exception(f"PowerShell error: {result.stderr}")
+        else:
+            # Remove shortcut if it exists
+            if os.path.exists(shortcut_path):
+                os.remove(shortcut_path)
+                print(f"[SUCCESS] Removed startup shortcut: {shortcut_path}")
+            else:
+                print("[INFO] Startup shortcut not found (already removed)")
+                
     except Exception as e:
         print(f"[ERROR] Error configuring Windows startup: {e}")
-        # NOTE: The subordinate AI must ensure the main application path/command is correctly determined.
+        raise e
 
 # ===== PAGE ROUTES =====
 @settings_bp.route('/')
