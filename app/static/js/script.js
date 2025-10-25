@@ -231,18 +231,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Xác định vùng chứa nội dung cho MXH
     const mxhContainer = document.getElementById('mxh-accounts-container');
 
-    // 3. Chạy hàm xử lý cho các container
-    if (notesContainer) {
-        processSmartTokens(notesContainer);
+    // 3. Chạy hàm xử lý cho các container - CHỈ ÁP DỤNG CHO TRANG NOTES
+    const isNotesPage = window.location.pathname.includes('/notes') || 
+                       document.querySelector('#notes-container') !== null;
+    
+    if (isNotesPage) {
+        if (notesContainer) {
+            processSmartTokens(notesContainer);
+        }
+        
+        if (notesDetailWrapper) {
+            processSmartTokens(notesDetailWrapper);
+        }
     }
     
-    if (notesDetailWrapper) {
-        processSmartTokens(notesDetailWrapper);
-    }
-    
-    if (mxhContainer) {
-        processSmartTokens(mxhContainer);
-    }
+    // Chức năng smart tokens KHÔNG áp dụng cho MXH
+    // if (mxhContainer) {
+    //     processSmartTokens(mxhContainer);
+    // }
 
     // 4. Thêm trình nghe sự kiện Click (dùng event delegation)
     document.addEventListener('click', (event) => {
@@ -261,8 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mutation.type === 'childList') {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
-                        // Xử lý smart token cho nội dung mới được thêm
-                        processSmartTokens(node);
+                        // CHỈ xử lý smart token cho nội dung mới trong trang Notes
+                        const isNotesPage = window.location.pathname.includes('/notes') || 
+                                           document.querySelector('#notes-container') !== null;
+                        if (isNotesPage) {
+                            processSmartTokens(node);
+                        }
                     }
                 });
             }
@@ -278,8 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(notesDetailWrapper, { childList: true, subtree: true });
     }
     
-    if (mxhContainer) {
-        observer.observe(mxhContainer, { childList: true, subtree: true });
-    }
+    // KHÔNG observe MXH container để tránh áp dụng smart tokens cho MXH
+    // if (mxhContainer) {
+    //     observer.observe(mxhContainer, { childList: true, subtree: true });
+    // }
 });
 

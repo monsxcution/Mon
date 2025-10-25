@@ -1055,7 +1055,36 @@
                 </div>
             </div>`;
 
-            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
+            // --- ⭐ BẮT ĐẦU THÊM CODE MỚI TỪ ĐÂY ---
+            let titleHtml = note.title_html || '';
+            let contentHtml = note.content_html || '';
+            const searchInput = document.getElementById('notes-search-input');
+            const searchTerm = searchInput ? searchInput.value.trim() : ''; // Lấy giá trị từ ô tìm kiếm
+            
+            // Debug: log để kiểm tra
+            console.log('Search term:', searchTerm);
+            console.log('Title HTML:', titleHtml);
+            console.log('Content HTML:', contentHtml);
+
+            if (searchTerm) {
+                // Tạo regex để tìm kiếm (không phân biệt hoa thường, toàn cục)
+                // Escape các ký tự đặc biệt trong search term để tránh lỗi regex
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+
+                // Highlight text như Telegram (background màu xanh đậm)
+                // Sử dụng replace với $1 để giữ nguyên cách viết hoa/thường của từ gốc
+                titleHtml = titleHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+                contentHtml = contentHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+                
+                // Debug: log kết quả sau khi replace
+                console.log('Title after highlight:', titleHtml);
+                console.log('Content after highlight:', contentHtml);
+            }
+            // --- ⭐ KẾT THÚC CODE MỚI ---
+
+            // Sử dụng titleHtml và contentHtml đã được xử lý
+            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${titleHtml}<br>${contentHtml}</div>`;
             const editorEl = document.getElementById('detail-editable-full');
 
             // Force disable spellcheck via JavaScript
