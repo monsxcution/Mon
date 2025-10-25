@@ -354,6 +354,28 @@
   max-width:200px;max-height:200px;object-fit:contain;
 }
 
+/* Clickable username and number styles */
+.clickable-username,
+.clickable-number {
+    color: #0d6efd; /* Màu xanh dương */
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+}
+.clickable-username:hover,
+.clickable-number:hover {
+    color: #0dcaf0; /* Màu xanh sáng hơn khi hover */
+    background-color: rgba(13, 202, 240, 0.1);
+}
+
+/* Search highlight styles */
+mark.search-highlight {
+    background-color: #ffc107; /* Màu vàng highlight */
+    color: #000; /* Chữ đen */
+    padding: 0.1em;
+    border-radius: 3px;
+    font-weight: bold; /* In đậm */
+}
 
 </style>
 {% endblock %}
@@ -1029,6 +1051,94 @@
             if (detailPlaceholder) detailPlaceholder.classList.remove('d-none');
         };
 
+        // --- Copy to Clipboard Helper Function ---
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Đã copy: ${text}`, 'success');
+                // Optional: Thêm hiệu ứng nhấp nháy ngắn
+                if (element) {
+                    element.style.transition = 'background-color 0.1s ease-in-out';
+                    element.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                    }, 200);
+                }
+            }).catch(err => {
+                console.error('Lỗi copy:', err);
+                showToast('Lỗi khi copy!', 'error');
+            });
+        }
+
+        // --- Highlight Clickables Function ---
+        function highlightClickables(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const usernameRegex = /@(\w+)/g; // Tìm @username (chữ, số, _)
+            const numberRegex = /(\d{4,})/g; // Tìm dãy số có 4 chữ số trở lên
+
+            // Sử dụng TreeWalker để duyệt qua các text node một cách an toàn
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            const nodesToProcess = [];
+            while(node = walker.nextNode()) {
+                // Bỏ qua các node text bên trong các span đã xử lý hoặc thẻ a
+                if (node.parentElement.closest('.clickable-username, .clickable-number, a')) {
+                    continue;
+                }
+                nodesToProcess.push(node);
+            }
+
+            nodesToProcess.forEach(textNode => {
+                const text = textNode.nodeValue;
+                const fragment = document.createDocumentFragment();
+                let lastIndex = 0;
+                let match;
+
+                // Xử lý username trước
+                const combinedRegex = new RegExp(`(${usernameRegex.source})|(${numberRegex.source})`, 'g');
+
+                while ((match = combinedRegex.exec(text)) !== null) {
+                    const matchedText = match[0];
+                    const startIndex = match.index;
+
+                    // Thêm phần text trước match
+                    if (startIndex > lastIndex) {
+                        fragment.appendChild(document.createTextNode(text.substring(lastIndex, startIndex)));
+                    }
+
+                    // Tạo span cho phần tử khớp
+                    const span = document.createElement('span');
+                    let typeClass = '';
+
+                    if (match[1]) { // Khớp username (@...)
+                        typeClass = 'clickable-username';
+                        const username = match[2]; // Chỉ lấy phần username sau dấu @
+                        span.textContent = matchedText; // Hiển thị cả dấu @
+                        span.onclick = (e) => { e.stopPropagation(); copyToClipboard(username, span); };
+                    } else if (match[3]) { // Khớp number (4+ digits)
+                        typeClass = 'clickable-number';
+                        span.textContent = matchedText;
+                        span.onclick = (e) => { e.stopPropagation(); copyToClipboard(matchedText, span); };
+                    }
+
+                    span.className = typeClass;
+                    fragment.appendChild(span);
+                    lastIndex = combinedRegex.lastIndex;
+                }
+
+                // Thêm phần text còn lại sau match cuối cùng
+                if (lastIndex < text.length) {
+                    fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                }
+
+                // Chỉ thay thế nếu có thay đổi
+                if (fragment.childNodes.length > 1 || (fragment.childNodes.length === 1 && fragment.firstChild.nodeType !== Node.TEXT_NODE)) {
+                   textNode.parentNode.replaceChild(fragment, textNode);
+                }
+            });
+        }
+
         function showNoteDetail(note) {
             activeNoteId = note.id;
 
@@ -1063,6 +1173,87 @@
 
             // Set initial content for comparison
             editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
+
+            // --- Search Highlighting and Scrolling ---
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            if (searchTerm && editorEl) {
+                let contentHTML = editorEl.innerHTML; // Get the raw HTML content
+
+                // Regex để tìm kiếm không phân biệt hoa thường, chỉ tìm ngoài thẻ HTML
+                 // Only match outside of tags and not inside attributes
+                const regex = new RegExp(searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+                let firstMatchFound = false;
+
+                // Function to recursively search and replace in text nodes
+                function highlightTextNodes(node) {
+                    if (firstMatchFound) return; // Stop after first highlight
+
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const nodeValue = node.nodeValue;
+                        const match = nodeValue.match(regex);
+
+                        if (match) {
+                            const firstMatchIndex = nodeValue.toLowerCase().indexOf(searchTerm);
+                            if (firstMatchIndex !== -1) {
+                                const beforeText = nodeValue.substring(0, firstMatchIndex);
+                                const matchedText = nodeValue.substring(firstMatchIndex, firstMatchIndex + searchTerm.length);
+                                const afterText = nodeValue.substring(firstMatchIndex + searchTerm.length);
+
+                                const mark = document.createElement('mark');
+                                mark.className = 'search-highlight';
+                                mark.textContent = matchedText;
+
+                                const fragment = document.createDocumentFragment();
+                                if (beforeText) fragment.appendChild(document.createTextNode(beforeText));
+                                fragment.appendChild(mark);
+                                if (afterText) fragment.appendChild(document.createTextNode(afterText));
+
+                                node.parentNode.replaceChild(fragment, node);
+                                firstMatchFound = true; // Mark as found
+
+                                // Scroll to the highlighted element
+                                mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'MARK' && node.childNodes.length > 0) {
+                         // Check if it's already highlighted or is a script/style tag
+                        if (node.classList.contains('search-highlight') || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') {
+                            return;
+                        }
+                        // Recursively process child nodes
+                        // Need to convert NodeList to array to avoid issues when replacing nodes
+                        const children = Array.from(node.childNodes);
+                        for(let i = 0; i < children.length; i++) {
+                             if (firstMatchFound) break; // Check again inside the loop
+                             highlightTextNodes(children[i]);
+                        }
+                    }
+                }
+
+                 // Start the highlighting process from the editor element
+                highlightTextNodes(editorEl);
+
+                // If scrolling didn't happen via highlightTextNodes (e.g., match was already wrapped), try scrolling again
+                 if (firstMatchFound) {
+                     const firstHighlight = editorEl.querySelector('mark.search-highlight');
+                     if (firstHighlight && typeof firstHighlight.scrollIntoView === 'function') {
+                          // Small delay to ensure rendering is complete before scrolling
+                         setTimeout(() => {
+                             firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                         }, 100);
+                     }
+                }
+            }
+            // --- End Search Highlighting ---
+
+            // Apply click-to-copy highlighting
+            highlightClickables('detail-editable-full');
+
+            // Apply saved font size when showing detail
+            const currentSavedSize = localStorage.getItem('notesEditorFontSize') || '16';
+            if (editorEl) {
+                editorEl.style.fontSize = `${currentSavedSize}px`;
+            }
 
             // Focus handler - update initial content
             editorEl.addEventListener('focus', () => {
@@ -1198,6 +1389,9 @@
                 editorEl.setAttribute('data-initial-content', currentContent);
 
                 showToast('Đã lưu thay đổi!', 'success');
+
+                // Re-apply click-to-copy highlighting after saving
+                highlightClickables('detail-editable-full');
 
                 // Update only the specific card without full re-render
                 const cardWrapper = document.querySelector(`[data-note-id="${noteId}"]`);
@@ -2233,6 +2427,9 @@
                 }
             });
         });
+
+        // Also apply highlights when profile interactions are initialized/updated
+        highlightClickables('detail-editable-full');
         }
 
         // --- Alarm System Functions ---
@@ -2406,6 +2603,37 @@
             }
         }, 10000); // Check every 10 seconds
 
+        // --- Font Size Setting Logic ---
+        const fontSizeSlider = document.getElementById('notes-font-size-slider');
+        const fontSizeValueSpan = document.getElementById('notes-font-size-value');
+        const editorElementForSize = document.getElementById('detail-editable-full'); // Reference editor
+
+        // Function to apply font size
+        function applyNoteFontSize(size) {
+            if (editorElementForSize) {
+                editorElementForSize.style.fontSize = `${size}px`;
+            }
+            if (fontSizeValueSpan) {
+                fontSizeValueSpan.textContent = size;
+            }
+            if (fontSizeSlider) {
+                 fontSizeSlider.value = size; // Sync slider value
+            }
+        }
+
+        // Load saved font size on init
+        const savedFontSize = localStorage.getItem('notesEditorFontSize') || '16'; // Default 16px
+        applyNoteFontSize(savedFontSize);
+
+        // Update on slider change and save to localStorage
+        if (fontSizeSlider) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                const newSize = e.target.value;
+                applyNoteFontSize(newSize);
+                localStorage.setItem('notesEditorFontSize', newSize);
+            });
+        }
+
         // --- Initial Setup ---
         async function initializeNotesView() {
             // Requirement 1: Set default to list view (như phiên bản cũ)
@@ -2447,4 +2675,28 @@
         initializeNotesView();
     });
 </script>
+
+<!-- Modal cài đặt font size cho ghi chú -->
+<div class="modal fade" id="notes-settings-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-sliders me-2"></i>Cài Đặt Ghi Chú</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="notes-font-size-slider" class="form-label">Kích cỡ chữ (Nội dung):
+                        <span id="notes-font-size-value">16</span>px
+                    </label>
+                    <input type="range" class="form-range" id="notes-font-size-slider" min="10" max="32" step="1" value="16">
+                </div>
+            </div>
+            <div class="modal-footer">
+                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

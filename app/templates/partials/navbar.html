@@ -136,7 +136,12 @@
         // Add tab-specific items
         switch (tabId) {
             case 'notes':
-                items += `<li><a class="dropdown-item" href="#"><i class="bi bi-journal-gear me-2"></i>Cài đặt Ghi chú</a></li>`; // Placeholder
+                items += `
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#notes-settings-modal">
+                            <i class="bi bi-fonts me-2"></i>Cài đặt ghi chú
+                        </a>
+                    </li>`;
                 break;
             case 'mxh':
                 items += `<li><a class="dropdown-item" href="#"><i class="bi bi-share-gear me-2"></i>Cài đặt MXH</a></li>`; // Placeholder
