@@ -354,35 +354,6 @@
   max-width:200px;max-height:200px;object-fit:contain;
 }
 
-/* Context menu cho thumbnail */
-#tg-thumb-context-menu {
-  position: fixed;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  z-index: 10000;
-  display: none;
-  min-width: 120px;
-}
-
-#tg-thumb-context-menu .menu-item {
-  padding: 8px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.2s;
-  color: var(--text-color);
-}
-
-#tg-thumb-context-menu .menu-item:hover {
-  background-color: var(--hover-color);
-}
-
-#tg-thumb-context-menu .menu-item.delete {
-  color: #dc3545;
-}
 
 </style>
 {% endblock %}
@@ -721,15 +692,13 @@
     </div>
 </div>
 
-<!-- Context menu cho thumbnail -->
-<div id="tg-thumb-context-menu" class="custom-context-menu tg-thumb-context-menu">
-    <div class="menu-item" data-action="copy-thumb">
-        <i class="bi bi-clipboard me-2"></i> Copy
-    </div>
-    <div class="menu-item delete" data-action="delete-thumb">
-        <i class="bi bi-trash-fill me-2"></i> Xóa
+<!-- Context Menu cho Modal Ảnh -->
+<div id="image-modal-context-menu" class="custom-context-menu">
+    <div class="menu-item" id="context-copy-image">
+        <i class="bi bi-clipboard me-2"></i> Copy Ảnh
     </div>
 </div>
+
 {% endblock %}
 
 
@@ -833,7 +802,7 @@
         }
 
         // Hiển thị menu theo vị trí chuột, dùng smart flip.
-        // Tự xử lý khác nhau giữa menu kiểu .custom-context-menu và menu thumbnail (#tg-thumb-context-menu)
+        // Tự xử lý menu kiểu .custom-context-menu
         function showSmartMenu(menu, x, y) {
             if (!menu) return;
 
@@ -890,8 +859,6 @@
                 menu.style.removeProperty('left');
                 menu.style.removeProperty('top');
             });
-            const thumb = document.getElementById('tg-thumb-context-menu');
-            if (thumb) thumb.style.display = 'none'; // menu thumbnail vẫn dùng inline
             savedSelection = null; // Xóa vùng chọn đã lưu khi ẩn menu
         }
 
@@ -900,24 +867,6 @@
         window.addEventListener('scroll', hideAllContextMenus, { passive: true });
         window.addEventListener('resize', hideAllContextMenus);
 
-        // Fix: Ensure thumbnail menu items are in correct wrapper
-        (() => {
-            const ensure = (id) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                let m = document.getElementById('tg-thumb-context-menu');
-                if (!m) {
-                    m = document.createElement('div');
-                    m.id = 'tg-thumb-context-menu';
-                    m.className = 'custom-context-menu';
-                    document.body.appendChild(m);
-                }
-                if (!m.contains(el)) m.appendChild(el);
-            };
-            // Không cần ensure các element cũ vì đã chuyển sang data-action
-            const thumbMenu = document.getElementById('tg-thumb-context-menu');
-            if (thumbMenu) thumbMenu.style.display = 'none';
-        })();
 
         // ===== SMART CONTEXT MENU POSITIONING =====
 
@@ -1585,6 +1534,55 @@
         const profileSpanMenu = document.getElementById('profile-span-context-menu');
         let currentProfileSpan = null;
 
+        // Image Modal Context Menu
+        const imageModal = document.getElementById('np-imagePreviewModal');
+        const imagePreview = document.getElementById('np-imagePreview');
+        const imageModalContextMenu = document.getElementById('image-modal-context-menu');
+        let currentImageData = null;
+
+        // Function để copy ảnh
+        async function copyImageToClipboard() {
+            if (!currentImageData) {
+                showToast('Không có ảnh để copy', 'error');
+                return;
+            }
+
+            try {
+                // Convert data URL to blob
+                const response = await fetch(currentImageData);
+                const blob = await response.blob();
+                
+                // Copy to clipboard
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                
+                showToast('Đã copy ảnh vào clipboard', 'success');
+                hideAllContextMenus();
+            } catch (error) {
+                console.error('Error copying image:', error);
+                showToast('Lỗi khi copy ảnh', 'error');
+            }
+        }
+
+        // Event listener cho modal ảnh
+        if (imagePreview) {
+            imagePreview.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                hideAllContextMenus();
+                
+                // Lưu data của ảnh hiện tại
+                currentImageData = imagePreview.src;
+                showSmartMenu(imageModalContextMenu, e.clientX, e.clientY);
+            });
+        }
+
+        // Event listener cho context menu copy
+        document.getElementById('context-copy-image')?.addEventListener('click', copyImageToClipboard);
+
         // Image compression and paste functionality
         async function compressImageFile(file, { maxW = 900, maxH = 900, quality = 0.76 } = {}) {
             return new Promise((resolve, reject) => {
@@ -1771,52 +1769,6 @@
                 }
             });
 
-        // Context menu cho thumbnail
-        const thumbContextMenu = document.getElementById('tg-thumb-context-menu');
-        let currentThumb = null;
-
-        // Hiện context menu khi click chuột phải vào thumbnail
-        document.getElementById('notes-addProfileModal')
-            ?.addEventListener('contextmenu', (e) => {
-                const thumb = e.target.closest('.tg-thumb');
-                if (!thumb) return;
-                
-                e.preventDefault();
-                e.stopPropagation();
-                hideAllContextMenus();
-                
-                currentThumb = thumb;
-
-                // Dùng smart menu (nó sẽ tự set display block cho menu thumbnail)
-                showSmartMenu(thumbContextMenu, e.clientX, e.clientY);
-        });
-
-
-        // === Xử lý click trên menu thumbnail ảnh ===
-        thumbContextMenu?.addEventListener('click', (e) => {
-            const item = e.target.closest('.menu-item[data-action]');
-            if (!item || !currentThumb) return;
-
-            const action = item.dataset.action;
-            hideAllContextMenus(); // Ẩn menu sau khi click
-
-            if (action === 'copy-thumb') {
-                const fullData = currentThumb.getAttribute('data-full');
-                if (fullData) {
-                    navigator.clipboard.writeText(fullData).then(() => {
-                        showToast('Đã copy ảnh vào clipboard!', 'success');
-                    }).catch(err => {
-                        console.error('Failed to copy image: ', err);
-                        showToast('Lỗi khi copy ảnh.', 'error');
-                    });
-                }
-            } else if (action === 'delete-thumb') {
-                currentThumb.remove();
-                showToast('Đã xóa ảnh.', 'success');
-            }
-            currentThumb = null; // Reset currentThumb
-        });
-        // === Kết thúc xử lý click menu thumbnail ===
 
         // Profile: Click "Gán Profile" in context menu
         document.querySelector('#context-profile').addEventListener('click', () => {

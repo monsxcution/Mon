@@ -1161,8 +1161,3 @@ body .container-fluid {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Hotfix: Hide orphaned menu items */
-.menu-item#context-copy-thumb,
-.menu-item#context-delete-thumb {
-    display: none;
-}
