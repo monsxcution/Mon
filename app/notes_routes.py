@@ -8,7 +8,6 @@ from PIL import Image
 import io
 import base64
 
-SOUNDS_FOLDER = os.path.join(DATA_DIR, "sounds")
 NOTES_IMAGES_FOLDER = os.path.join(DATA_DIR, "notes_images")
 
 # --- BLUEPRINT DEFINITION ---
@@ -31,25 +30,14 @@ def check_and_queue_reminders():
         conn.close()
         return
 
-    sound_files = []
-    if os.path.exists(SOUNDS_FOLDER):
-        sound_files = [f for f in os.listdir(SOUNDS_FOLDER) if f.endswith((".wav", ".mp3", ".ogg"))]
-    
     ids_to_update = []
     for note in due_notes:
         note_dict = dict(note)
-        title_lower = (note_dict.get("title_html") or "").lower() # Use title_html
-        sound_url = "/notes/sounds/notification.wav" # Default
-        for sf in sound_files:
-            if os.path.splitext(sf)[0].lower() in title_lower:
-                sound_url = f"/notes/sounds/{sf}"
-                break
         
         notification_payload = {
             "id": note_dict["id"],
             "title": BeautifulSoup(note_dict["title_html"], "html.parser").get_text(),
-            "notes": note_dict.get("content_html", ""),
-            "sound_url": sound_url
+            "notes": note_dict.get("content_html", "")
         }
         if not any(q['id'] == note_dict['id'] for q in NOTIFICATIONS_QUEUE):
             NOTIFICATIONS_QUEUE.append(notification_payload)
@@ -186,9 +174,6 @@ def api_check_notifications():
         return jsonify(notification_to_send)
     return jsonify(None) # Trả về null nếu không có gì
 
-@notes_bp.route("/sounds/<path:filename>")
-def serve_sound(filename):
-    return send_from_directory(os.path.join(DATA_DIR, "sounds"), filename)
 
 @notes_bp.route("/api/upload-image", methods=["POST"])
 def api_upload_image():

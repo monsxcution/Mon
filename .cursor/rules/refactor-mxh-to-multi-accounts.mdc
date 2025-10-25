@@ -1,15 +1,34 @@
 ---
 alwaysApply: true
 ---
-Phạm vi & Mục tiêu
-Quan trọng:
- Khi người dùng nói "đóng gói .zip":
-1. Tạo báo cáo chi tiết về tiến độ và lỗi hiện tại , và mục tiêu người dùng mong muốn.
-2. Đóng gói chỉ các file liên quan đến lỗi/chức năng đang làm vào .zip (không phải toàn bộ thư mục),  ví dụ đang làm chức năng hoặc giao diện của MXH.html, thì đóng gói các file khác liên quan đến MXH.html như là mxh_routes.py, mxh_api.py..... ( không đóng gói các file Backup )
-3. Xóa file báo cáo sau khi đóng gói xong
-4. Khi người dùng đưa ra yêu cầu mới, tự động xóa file đã đóng gói cũ ( vì người dùng đã gửi file đóng gói cho AI khác xem và đã có câu trả lời)
-5. Ở cuộc trò chuyện tiếp theo, không tự ý đóng gói, chỉ khi nào người dùng yêu cầu đóng gói thì mới làm
 
-Rule khi code:
-1. Không bao giờ thêm spinner của input type number hoặc Text.
-2. Thông báo của các modal như Xóa , xác nhận.... phải là thông báo modal dashboard, không thông báo qua web
+# 📋 Phạm vi & Mục tiêu
+
+## 🎯 Quan trọng: Đóng gói .zip
+
+Khi người dùng nói **"đóng gói .zip"**:
+
+1. **📊 Tạo báo cáo chi tiết** về tiến độ và lỗi hiện tại, và mục tiêu người dùng mong muốn
+2. **📦 Đóng gói chỉ các file liên quan** đến lỗi/chức năng đang làm vào .zip (không phải toàn bộ thư mục)
+   - Ví dụ: đang làm chức năng hoặc giao diện của `MXH.html`
+   - Đóng gói các file liên quan: `mxh_routes.py`, `mxh_api.py`...
+   - **❌ Không đóng gói các file Backup**
+3. **🗑️ Xóa file báo cáo** sau khi đóng gói xong
+4. **🔄 Tự động xóa file đóng gói cũ** khi người dùng đưa ra yêu cầu mới
+5. **⏸️ Ở cuộc trò chuyện tiếp theo**, không tự ý đóng gói, chỉ khi nào người dùng yêu cầu đóng gói thì mới làm
+
+---
+
+# 💻 Rule khi code
+
+## 🚫 Cấm kỵ
+1. **❌ Không bao giờ thêm spinner** của input type `number` hoặc `Text`
+2. **📱 Thông báo modal** như Xóa, xác nhận... phải là thông báo modal dashboard, **không thông báo qua web**
+
+## 🐛 Debug & Phát triển
+3. **🔍 Bắt buộc thêm debug rõ ràng** khi viết code phát triển hoặc fix lỗi chức năng
+   - Trước mỗi dòng debug đều phải có icon **🔍** để dễ nhận biết
+   - Các log debug sẽ được xóa sau khi có xác nhận từ người dùng code đã thành công
+
+## 🛡️ Bảo vệ dữ liệu
+4. **🚫 Cấm tự ý xóa** các file Backup của dự án
