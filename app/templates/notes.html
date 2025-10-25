@@ -372,9 +372,10 @@
 mark.search-highlight {
     background-color: #ffc107; /* Màu vàng highlight */
     color: #000; /* Chữ đen */
-    padding: 0.1em;
+    padding: 0.1em 0.2em; /* Thêm chút padding */
     border-radius: 3px;
-    font-weight: bold; /* In đậm */
+    font-weight: bold; /* Bôi đậm */
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* Viền nhẹ */
 }
 
 </style>
@@ -730,6 +731,10 @@ mark.search-highlight {
         const notesPane = document.getElementById('notes-tool-pane');
         if (!notesPane) return;
 
+        // --- Global variables for search highlighting ---
+        let currentHighlightIndex = 0;
+        let highlightedElements = [];
+
         // --- DOM Elements ---
         const container = document.getElementById('notes-container');
         const searchInput = document.getElementById('notes-search-input');
@@ -1051,17 +1056,24 @@ mark.search-highlight {
             if (detailPlaceholder) detailPlaceholder.classList.remove('d-none');
         };
 
+        // --- Helper function to escape regex special characters ---
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        }
+
         // --- Copy to Clipboard Helper Function ---
         function copyToClipboard(text, element) {
             navigator.clipboard.writeText(text).then(() => {
                 showToast(`Đã copy: ${text}`, 'success');
-                // Optional: Thêm hiệu ứng nhấp nháy ngắn
                 if (element) {
+                    // Hiệu ứng feedback ngắn
+                    const originalColor = element.style.backgroundColor;
                     element.style.transition = 'background-color 0.1s ease-in-out';
-                    element.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+                    element.style.backgroundColor = 'rgba(0, 224, 255, 0.3)'; // Màu xanh sáng
                     setTimeout(() => {
-                        element.style.backgroundColor = '';
-                    }, 200);
+                        element.style.backgroundColor = originalColor || '';
+                        element.style.transition = ''; // Reset transition
+                    }, 300);
                 }
             }).catch(err => {
                 console.error('Lỗi copy:', err);
@@ -1074,29 +1086,36 @@ mark.search-highlight {
             const container = document.getElementById(containerId);
             if (!container) return;
 
-            const usernameRegex = /@(\w+)/g; // Tìm @username (chữ, số, _)
-            const numberRegex = /(\d{4,})/g; // Tìm dãy số có 4 chữ số trở lên
+            const usernameRegex = /@(\w[\w.-]*\w)/g; // Tìm @username (cho phép . và - ở giữa)
+            const numberRegex = /(\d{4,})/g;     // Tìm dãy số có 4 chữ số trở lên
 
-            // Sử dụng TreeWalker để duyệt qua các text node một cách an toàn
-            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            // Regex kết hợp để tìm hiệu quả
+            const combinedRegex = new RegExp(`(${usernameRegex.source})|(${numberRegex.source})`, 'g');
+
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
             let node;
-            const nodesToProcess = [];
-            while(node = walker.nextNode()) {
-                // Bỏ qua các node text bên trong các span đã xử lý hoặc thẻ a
-                if (node.parentElement.closest('.clickable-username, .clickable-number, a')) {
-                    continue;
+            const nodesToReplace = []; // Thu thập các node cần xử lý
+
+            while (node = walker.nextNode()) {
+                // Chỉ xử lý text node không nằm trong thẻ A, MARK, hoặc các span clickable đã tạo
+                 if (node.nodeValue.trim() !== '' && !node.parentElement.closest('A, MARK, .clickable-username, .clickable-number, [contenteditable="false"]')) {
+                    if (combinedRegex.test(node.nodeValue)) {
+                        nodesToReplace.push(node);
+                    }
+                     // Đặt lại lastIndex của regex toàn cục sau mỗi lần kiểm tra
+                    combinedRegex.lastIndex = 0;
                 }
-                nodesToProcess.push(node);
             }
 
-            nodesToProcess.forEach(textNode => {
-                const text = textNode.nodeValue;
+            nodesToReplace.forEach(textNode => {
+                const parent = textNode.parentNode;
+                if (!parent) return;
+
                 const fragment = document.createDocumentFragment();
                 let lastIndex = 0;
                 let match;
-
-                // Xử lý username trước
-                const combinedRegex = new RegExp(`(${usernameRegex.source})|(${numberRegex.source})`, 'g');
+                const text = textNode.nodeValue;
+                combinedRegex.lastIndex = 0; // Reset regex index
 
                 while ((match = combinedRegex.exec(text)) !== null) {
                     const matchedText = match[0];
@@ -1110,19 +1129,26 @@ mark.search-highlight {
                     // Tạo span cho phần tử khớp
                     const span = document.createElement('span');
                     let typeClass = '';
+                    let copyValue = '';
 
                     if (match[1]) { // Khớp username (@...)
                         typeClass = 'clickable-username';
-                        const username = match[2]; // Chỉ lấy phần username sau dấu @
+                        copyValue = match[2]; // Chỉ copy phần username sau dấu @
                         span.textContent = matchedText; // Hiển thị cả dấu @
-                        span.onclick = (e) => { e.stopPropagation(); copyToClipboard(username, span); };
                     } else if (match[3]) { // Khớp number (4+ digits)
                         typeClass = 'clickable-number';
+                        copyValue = matchedText;
                         span.textContent = matchedText;
-                        span.onclick = (e) => { e.stopPropagation(); copyToClipboard(matchedText, span); };
                     }
 
                     span.className = typeClass;
+                    // Sử dụng addEventListener thay vì onclick để linh hoạt hơn
+                    span.addEventListener('click', (e) => {
+                         e.stopPropagation(); // Ngăn sự kiện click của thẻ cha (card)
+                         copyToClipboard(copyValue, span);
+                    });
+                     // Thêm thuộc tính để không bị chỉnh sửa nội dung bên trong span
+                    span.contentEditable = "false";
                     fragment.appendChild(span);
                     lastIndex = combinedRegex.lastIndex;
                 }
@@ -1132,10 +1158,8 @@ mark.search-highlight {
                     fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
                 }
 
-                // Chỉ thay thế nếu có thay đổi
-                if (fragment.childNodes.length > 1 || (fragment.childNodes.length === 1 && fragment.firstChild.nodeType !== Node.TEXT_NODE)) {
-                   textNode.parentNode.replaceChild(fragment, textNode);
-                }
+                // Thay thế text node cũ bằng fragment mới
+                parent.replaceChild(fragment, textNode);
             });
         }
 
@@ -1174,76 +1198,107 @@ mark.search-highlight {
             // Set initial content for comparison
             editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
 
-            // --- Search Highlighting and Scrolling ---
+            // --- Search Highlighting, Scrolling, and Cycling ---
+            highlightedElements = []; // Reset highlights
             const searchTerm = searchInput.value.trim().toLowerCase();
+
             if (searchTerm && editorEl) {
-                let contentHTML = editorEl.innerHTML; // Get the raw HTML content
+                const escapedSearchTerm = escapeRegExp(searchTerm);
+                 // Regex để tìm không phân biệt hoa thường, chỉ tìm ngoài thẻ HTML
+                const regex = new RegExp(escapedSearchTerm, 'gi');
 
-                // Regex để tìm kiếm không phân biệt hoa thường, chỉ tìm ngoài thẻ HTML
-                 // Only match outside of tags and not inside attributes
-                const regex = new RegExp(searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
-                let firstMatchFound = false;
+                // Function to wrap matches in text nodes
+                function wrapMatchesInNode(node) {
+                     if (node.nodeType === Node.TEXT_NODE) {
+                         // Bỏ qua nếu trong thẻ A hoặc đã highlight
+                        if (node.parentElement.closest('A, MARK')) return;
 
-                // Function to recursively search and replace in text nodes
-                function highlightTextNodes(node) {
-                    if (firstMatchFound) return; // Stop after first highlight
+                        const text = node.nodeValue;
+                        const matches = [...text.matchAll(regex)]; // Tìm tất cả các vị trí khớp
 
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        const nodeValue = node.nodeValue;
-                        const match = nodeValue.match(regex);
+                        if (matches.length > 0) {
+                            const fragment = document.createDocumentFragment();
+                            let lastIndex = 0;
+                            matches.forEach(matchInfo => {
+                                const index = matchInfo.index;
+                                const matchedText = matchInfo[0];
 
-                        if (match) {
-                            const firstMatchIndex = nodeValue.toLowerCase().indexOf(searchTerm);
-                            if (firstMatchIndex !== -1) {
-                                const beforeText = nodeValue.substring(0, firstMatchIndex);
-                                const matchedText = nodeValue.substring(firstMatchIndex, firstMatchIndex + searchTerm.length);
-                                const afterText = nodeValue.substring(firstMatchIndex + searchTerm.length);
+                                 // Thêm text trước match
+                                if (index > lastIndex) {
+                                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, index)));
+                                }
 
+                                // Tạo thẻ mark
                                 const mark = document.createElement('mark');
                                 mark.className = 'search-highlight';
                                 mark.textContent = matchedText;
-
-                                const fragment = document.createDocumentFragment();
-                                if (beforeText) fragment.appendChild(document.createTextNode(beforeText));
                                 fragment.appendChild(mark);
-                                if (afterText) fragment.appendChild(document.createTextNode(afterText));
+                                highlightedElements.push(mark); // Lưu lại element đã highlight
 
-                                node.parentNode.replaceChild(fragment, node);
-                                firstMatchFound = true; // Mark as found
+                                lastIndex = index + matchedText.length;
+                            });
 
-                                // Scroll to the highlighted element
-                                mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // Thêm text sau match cuối
+                            if (lastIndex < text.length) {
+                                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
                             }
+                            // Thay thế node gốc bằng fragment
+                             if (node.parentNode) { // Check if node is still in the DOM
+                                node.parentNode.replaceChild(fragment, node);
+                             }
+
                         }
-                    } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'MARK' && node.childNodes.length > 0) {
-                         // Check if it's already highlighted or is a script/style tag
-                        if (node.classList.contains('search-highlight') || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') {
-                            return;
-                        }
-                        // Recursively process child nodes
-                        // Need to convert NodeList to array to avoid issues when replacing nodes
-                        const children = Array.from(node.childNodes);
-                        for(let i = 0; i < children.length; i++) {
-                             if (firstMatchFound) break; // Check again inside the loop
-                             highlightTextNodes(children[i]);
-                        }
+                     } else if (node.nodeType === Node.ELEMENT_NODE) {
+                         // Bỏ qua các thẻ không nên duyệt vào trong
+                        if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE' || node.isContentEditable === false) return;
+                        // Đệ quy cho các node con
+                         // Convert to array to avoid issues with live NodeList during replacement
+                         Array.from(node.childNodes).forEach(child => wrapMatchesInNode(child));
                     }
                 }
 
-                 // Start the highlighting process from the editor element
-                highlightTextNodes(editorEl);
+                // --- Logic xử lý cycling ---
+                // Kiểm tra xem có phải click lại vào note đang active không
+                 const isClickingActiveNoteAgain = (note.id === activeNoteId); // activeNoteId được set ở đầu showNoteDetail
 
-                // If scrolling didn't happen via highlightTextNodes (e.g., match was already wrapped), try scrolling again
-                 if (firstMatchFound) {
-                     const firstHighlight = editorEl.querySelector('mark.search-highlight');
-                     if (firstHighlight && typeof firstHighlight.scrollIntoView === 'function') {
-                          // Small delay to ensure rendering is complete before scrolling
-                         setTimeout(() => {
-                             firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                         }, 100);
+                 if (!isClickingActiveNoteAgain || highlightedElements.length === 0) {
+                     // Nếu là note mới hoặc không có highlight nào thì reset index
+                     currentHighlightIndex = 0;
+                 } else {
+                     // Nếu click lại note cũ, tăng index để scroll tới highlight tiếp theo
+                     currentHighlightIndex = (currentHighlightIndex + 1) % highlightedElements.length;
+                 }
+
+
+                 // Bắt đầu highlight từ editor element
+                wrapMatchesInNode(editorEl); // Hàm này sẽ cập nhật highlightedElements
+
+
+                // --- Scroll đến highlight ---
+                if (highlightedElements.length > 0) {
+                     // Đảm bảo index hợp lệ sau khi wrapMatchesInNode chạy xong
+                     if(currentHighlightIndex >= highlightedElements.length) {
+                         currentHighlightIndex = 0;
                      }
-                }
+                     const targetHighlight = highlightedElements[currentHighlightIndex];
+                     if (targetHighlight) {
+                         // Delay nhẹ để đảm bảo DOM đã cập nhật hoàn toàn
+                         setTimeout(() => {
+                             targetHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                             console.log(`Scrolled to highlight ${currentHighlightIndex + 1}/${highlightedElements.length}`);
+                         }, 150); // Có thể tăng giảm delay nếu cần
+                     }
+                 } else {
+                      // Nếu không tìm thấy kết quả nào sau khi wrap, reset index
+                      currentHighlightIndex = 0;
+                 }
+            } else {
+                 // Không có search term, reset index
+                 currentHighlightIndex = 0;
             }
+
+            // Cập nhật lại data-initial-content sau khi highlight (nếu cần)
+             editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
             // --- End Search Highlighting ---
 
             // Apply click-to-copy highlighting
