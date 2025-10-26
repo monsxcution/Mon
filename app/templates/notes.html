@@ -670,6 +670,9 @@
                 <h3 id="notes-notificationTitle" class="text-center mb-3"></h3>
                 <p id="notes-notificationContent" style="white-space: pre-wrap;"></p>
                 <input type="hidden" id="notes-notificationId">
+                <audio id="notificationSound" preload="auto">
+                    <source src="{{ url_for('static', filename='sounds/notification.wav') }}" type="audio/wav">
+                </audio>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="notes-acknowledgeBtn">OK, Đã
@@ -859,23 +862,8 @@
             savedSelection = null; // Xóa vùng chọn đã lưu khi ẩn menu
         }
 
-        // Ẩn menu nhưng giữ selection (dùng khi mở modal)
-        function hideAllContextMenusPreserveSelection() {
-            document.querySelectorAll('.custom-context-menu').forEach(menu => {
-                menu.classList.remove('show');
-                menu.style.removeProperty('display');
-                menu.style.removeProperty('visibility');
-                menu.style.removeProperty('left');
-                menu.style.removeProperty('top');
-            });
-            // không đụng tới savedSelection
-        }
-
         // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.custom-context-menu')) return; // bấm trong menu -> giữ nguyên selection
-            hideAllContextMenus(); // bấm ngoài -> ẩn và reset như cũ
-        });
+        document.addEventListener('click', hideAllContextMenus);
         window.addEventListener('scroll', hideAllContextMenus, { passive: true });
         window.addEventListener('resize', hideAllContextMenus);
 
@@ -906,17 +894,7 @@
         const notificationTitle = document.getElementById('notes-notificationTitle');
         const notificationContent = document.getElementById('notes-notificationContent');
         const notificationIdInput = document.getElementById('notes-notificationId');
-
-        // --- Debug Helper Function ---
-        function debugLog(message, level = 'INFO') {
-            console.log(`🔍 DEBUG: ${message}`);
-            // Send to Flask server for terminal display
-            fetch('/debug/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message, level: level })
-            }).catch(() => {}); // Ignore network errors
-        }
+        const notificationSound = document.getElementById('notificationSound');
 
         // --- Core Functions ---
         function formatTimeAgo(isoString) {
@@ -1077,29 +1055,7 @@
                 </div>
             </div>`;
 
-            // --- ⭐ BẮT ĐẦU THÊM CODE MỚI TỪ ĐÂY ---
-            let titleHtml = note.title_html || '';
-            let contentHtml = note.content_html || '';
-            const searchInput = document.getElementById('notes-search-input');
-            const searchTerm = searchInput ? searchInput.value.trim() : ''; // Lấy giá trị từ ô tìm kiếm
-            
-
-            if (searchTerm) {
-                // Tạo regex để tìm kiếm (không phân biệt hoa thường, toàn cục)
-                // Escape các ký tự đặc biệt trong search term để tránh lỗi regex
-                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
-
-                // Highlight text như Telegram (background màu xanh đậm)
-                // Sử dụng replace với $1 để giữ nguyên cách viết hoa/thường của từ gốc
-                titleHtml = titleHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
-                contentHtml = contentHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
-                
-            }
-            // --- ⭐ KẾT THÚC CODE MỚI ---
-
-            // Sử dụng titleHtml và contentHtml đã được xử lý
-            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${titleHtml}<br>${contentHtml}</div>`;
+            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
             const editorEl = document.getElementById('detail-editable-full');
 
             // Force disable spellcheck via JavaScript
@@ -1199,71 +1155,27 @@
         }
 
         async function saveNoteChanges(noteId, forceSave = false) {
-            console.log('🔍 DEBUG: ===== STARTING saveNoteChanges =====');
-            console.log('🔍 DEBUG: Parameters:', { noteId, forceSave });
-            
-            if (!noteId) {
-                console.log('🔍 DEBUG: ❌ No noteId provided, exiting');
-                return;
-            }
+            if (!noteId) return;
 
             const editorEl = document.getElementById('detail-editable-full');
-            if (!editorEl) {
-                console.log('🔍 DEBUG: ❌ Editor element not found, exiting');
-                return;
-            }
+            if (!editorEl) return;
 
             const initialContent = editorEl.getAttribute('data-initial-content');
             const currentContent = editorEl.innerHTML;
 
-            console.log('🔍 DEBUG: Content comparison:', {
-                initialLength: initialContent?.length || 0,
-                currentLength: currentContent?.length || 0,
-                isEqual: currentContent === initialContent,
-                forceSave: forceSave
-            });
-
             // Skip save if content unchanged and not forced
             if (!forceSave && currentContent === initialContent) {
-                console.log('🔍 DEBUG: ⏭️ Skipping save - content unchanged and not forced');
                 return;
             }
 
             const fullContent = editorEl.innerHTML;
-            const brMatch = fullContent.match(/<br\s*\/?>/i);
-            const payload = brMatch
-                ? { title_html: fullContent.slice(0, brMatch.index), content_html: fullContent.slice(brMatch.index + brMatch[0].length) }
-                : { title_html: fullContent, content_html: '' };
-
-            console.log('🔍 DEBUG: Payload prepared:', {
-                titleLength: payload.title_html?.length || 0,
-                contentLength: payload.content_html?.length || 0,
-                titlePreview: payload.title_html?.substring(0, 100),
-                contentPreview: payload.content_html?.substring(0, 100)
-            });
-
-            // Check for profile spans in the content
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = fullContent;
-            const profileSpans = tempDiv.querySelectorAll('.has-profile');
-            const linkCount = tempDiv.querySelectorAll('a[href]').length;
-            const profileCount = tempDiv.querySelectorAll('.has-profile').length;
-            
-            debugLog(`Links found: ${linkCount}, Profiles found: ${profileCount}`);
-            console.log('🔍 DEBUG: Profile spans found in content:', profileSpans.length);
-            
-            if (profileSpans.length > 0) {
-                console.log('🔍 DEBUG: Profile spans details:', Array.from(profileSpans).map(span => ({
-                    className: span.className,
-                    profileId: span.dataset.profileId,
-                    profilePassword: span.dataset.profilePassword,
-                    contentLength: span.dataset.profileContent?.length,
-                    imagesLength: span.dataset.profileImages?.length
-                })));
-            }
+            const parts = fullContent.split('<br>');
+            const payload = {
+                title_html: parts.shift() || '',
+                content_html: parts.join('<br>')
+            };
 
             try {
-                console.log('🔍 DEBUG: 🚀 Sending request to server...');
                 showToast('Đang lưu...', 'info');
 
                 const response = await fetch(`{{ url_for('notes_feature.api_update_note', note_id='') }}${noteId}`, {
@@ -1272,42 +1184,24 @@
                     body: JSON.stringify(payload)
                 });
 
-                console.log('🔍 DEBUG: Server response status:', response.status);
-                console.log('🔍 DEBUG: Server response ok:', response.ok);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.log('🔍 DEBUG: ❌ Server error response:', errorText);
-                    throw new Error('Lỗi khi lưu trên server');
-                }
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
 
                 const updatedNote = await response.json();
-                console.log('🔍 DEBUG: ✅ Server response received:', {
-                    id: updatedNote.id,
-                    titleLength: updatedNote.title_html?.length || 0,
-                    contentLength: updatedNote.content_html?.length || 0,
-                    modifiedAt: updatedNote.modified_at
-                });
 
                 // Update local data immediately
                 const index = window.notesData.findIndex(n => n.id === noteId);
                 if (index !== -1) {
-                    console.log('🔍 DEBUG: Updating local data at index:', index);
                     window.notesData[index] = updatedNote;
-                } else {
-                    console.log('🔍 DEBUG: ⚠️ Note not found in local data');
                 }
 
                 // Update initial content to new saved state
                 editorEl.setAttribute('data-initial-content', currentContent);
-                console.log('🔍 DEBUG: Updated initial content');
 
                 showToast('Đã lưu thay đổi!', 'success');
 
                 // Update only the specific card without full re-render
                 const cardWrapper = document.querySelector(`[data-note-id="${noteId}"]`);
                 if (cardWrapper) {
-                    console.log('🔍 DEBUG: Updating card preview...');
                     const card = cardWrapper.querySelector('.card');
                     if (card) {
                         // Update card preview content
@@ -1331,18 +1225,11 @@
                             timeStamp.innerHTML = `<i class="bi bi-clock-history me-1"></i>${formatTimeAgo(updatedNote.modified_at)}`;
                         }
                     }
-                } else {
-                    console.log('🔍 DEBUG: ⚠️ Card wrapper not found for update');
                 }
 
-                console.log('🔍 DEBUG: ✅ saveNoteChanges completed successfully');
-
             } catch (error) {
-                console.log('🔍 DEBUG: ❌ ERROR in saveNoteChanges:', error);
                 showToast('Lỗi khi tự động lưu!', 'error');
             }
-            
-            console.log('🔍 DEBUG: ===== saveNoteChanges ENDED =====');
         }
 
         window.prepareAddNoteModal = () => {
@@ -1619,32 +1506,19 @@
             }
         });
 
-        document.querySelector('#context-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        document.querySelector('#context-link').addEventListener('click', () => {
             // The selection is already saved, just show the modal
             linkUrlInput.value = 'https://';
-            hideAllContextMenusPreserveSelection(); // Ẩn menu nhưng giữ selection
             addLinkModal.show();
         });
         saveLinkBtn.addEventListener('click', () => {
             const url = linkUrlInput.value.trim();
             if (url) {
                 restoreSelection(); // Restore selection before creating link
-                const sel = window.getSelection();
-                if (sel && sel.rangeCount) {
-                    const r = sel.getRangeAt(0);
-                    if (document.getElementById('detail-editable-full').contains(r.commonAncestorContainer) && !sel.isCollapsed) {
-                        document.execCommand('createLink', false, url);
-                        addLinkModal.hide();
-                        savedSelection = null; // Clear saved selection
-                        setTimeout(() => saveNoteChanges(activeNoteId), 100);
-                    } else {
-                        showToast('Hãy bôi đen đoạn cần gán link trong nội dung ghi chú.', 'warning');
-                    }
-                } else {
-                    showToast('Hãy bôi đen đoạn cần gán link trong nội dung ghi chú.', 'warning');
-                }
+                document.execCommand('createLink', false, url);
+                addLinkModal.hide();
+                savedSelection = null; // Clear saved selection
+                setTimeout(() => saveNoteChanges(activeNoteId), 100);
             }
         });
 
@@ -1897,9 +1771,7 @@
 
 
         // Profile: Click "Gán Profile" in context menu
-        document.querySelector('#context-profile').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        document.querySelector('#context-profile').addEventListener('click', () => {
             const selection = window.getSelection();
             if (selection.toString().length === 0) {
                 showAlert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
@@ -1913,19 +1785,15 @@
             deleteProfileBtn.style.display = 'none';
             currentProfileSpan = null; // Reset current profile
             blockNextBlurSave = true;
-            hideAllContextMenusPreserveSelection(); // Ẩn menu nhưng giữ selection
+            hideAllContextMenus();
             profileModal.show();
         });
 
         // Profile: Save button
         saveProfileBtn.addEventListener('click', () => {
-            debugLog('===== STARTING PROFILE SAVE PROCESS =====');
-            
             const profileId = profileIdInput.value.trim();
             const profilePassword = profilePasswordInput.value.trim();
             const profileContent = document.getElementById('notes-profile-content-editor')?.innerHTML.trim() || '';
-            
-            debugLog(`Profile data: ID="${profileId}", Password="${profilePassword}", ContentLength=${profileContent.length}, isEditing=${!!currentProfileSpan}, activeNoteId=${activeNoteId}`);
             
             // Thu thập ảnh từ thumbnail area
             const thumbnailImages = [];
@@ -1937,25 +1805,19 @@
                 }
             });
             
-            debugLog(`Thumbnail images found: ${thumbnailImages.length}`);
-            debugLog(`Thumbnail data preview: ${thumbnailImages.map(img => img.substring(0, 50) + '...').join(', ')}`);
-            
             // 1) Giữ content là text thuần
             const finalContent = profileContent;
 
             // 2) Lưu ảnh thành JSON string
             const imagesJson = JSON.stringify(thumbnailImages);
-            debugLog(`Images JSON length: ${imagesJson.length}`);
 
             // 3) Dọn dữ liệu cũ tự động nếu phát hiện profileSpan.dataset.profileContent còn chứa .tg-thumb
             if (currentProfileSpan && currentProfileSpan.dataset.profileContent) {
-                console.log('🔍 DEBUG: Cleaning legacy images from existing profile span');
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = currentProfileSpan.dataset.profileContent;
                 const hasLegacyImages = tempDiv.querySelectorAll('.tg-thumb').length > 0;
                 
                 if (hasLegacyImages) {
-                    console.log('🔍 DEBUG: Found legacy images, cleaning...');
                     // Gỡ ảnh cũ khỏi content và lưu lại
                     const cleanContent = tempDiv.cloneNode(true);
                     cleanContent.querySelectorAll('.tg-thumb, img').forEach(n => n.remove());
@@ -1964,133 +1826,34 @@
             }
             
             if (!profileId && !finalContent && thumbnailImages.length === 0) {
-                debugLog('❌ VALIDATION FAILED - no content provided', 'ERROR');
                 showAlert('Nhập ít nhất 1 trường: Nội dung hoặc ID hoặc ảnh.');
                 return;
             }
 
-            debugLog('✅ Validation passed, proceeding with span creation...');
-
             if (currentProfileSpan) {
-                console.log('🔍 DEBUG: 📝 EDITING EXISTING PROFILE SPAN');
-                console.log('🔍 DEBUG: Current span before update:', {
-                    id: currentProfileSpan.dataset.profileId,
-                    password: currentProfileSpan.dataset.profilePassword,
-                    contentLength: currentProfileSpan.dataset.profileContent?.length,
-                    imagesLength: currentProfileSpan.dataset.profileImages?.length
-                });
-                
                 // Editing existing profile
                 currentProfileSpan.dataset.profileId = profileId;
                 currentProfileSpan.dataset.profilePassword = profilePassword;
                 currentProfileSpan.dataset.profileContent = finalContent;   // text only
                 currentProfileSpan.dataset.profileImages = imagesJson;       // ảnh
                 if (profileId) currentProfileSpan.textContent = profileId;
-                
-                console.log('🔍 DEBUG: Updated span data:', {
-                    id: currentProfileSpan.dataset.profileId,
-                    password: currentProfileSpan.dataset.profilePassword,
-                    contentLength: currentProfileSpan.dataset.profileContent?.length,
-                    imagesLength: currentProfileSpan.dataset.profileImages?.length
-                });
-            } else {
-                console.log('🔍 DEBUG: 🆕 CREATING NEW PROFILE SPAN');
-                
-                // FALLBACK: Kiểm tra có selection hay không
-                const editorEl = document.getElementById('detail-editable-full');
-                const sel = window.getSelection();
-                const hasSelection = !!(savedSelection || (sel && sel.rangeCount && !sel.isCollapsed));
-                
-                console.log('🔍 DEBUG: Selection analysis:', {
-                    hasSavedSelection: !!savedSelection,
-                    hasCurrentSelection: !!(sel && sel.rangeCount && !sel.isCollapsed),
-                    hasAnySelection: hasSelection,
-                    editorExists: !!editorEl
-                });
-                
-                const stripHtml = s => (s || '').replace(/<[^>]*>/g, '').trim();
-                
-                if (!hasSelection) {
-                    debugLog('📍 NO SELECTION - inserting span at caret or end of editor');
-                    
-                    // => Không edit, không bôi đen: CHÈN SPAN TẠI CON TRỎ (caret) hoặc CUỐI EDITOR
-                    const span = document.createElement('span');
-                    span.className = 'has-profile';
-                    span.dataset.profileId = profileId;                 // có thể rỗng
-                    span.dataset.profilePassword = profilePassword;     // có thể rỗng
-                    span.dataset.profileContent = finalContent;         // text-only (đã chuẩn hóa)
-                    span.dataset.profileImages = imagesJson;            // JSON string ảnh
-                    span.style.color = '#00e0ff';
-                    span.textContent = profileId || stripHtml(finalContent) || '[profile]';
-
-                    debugLog(`Created span element: className=${span.className}, profileId=${span.dataset.profileId}, textContent=${span.textContent}`);
-
-                    const sel = window.getSelection();
-                    let usedSelection = false;
-
-                    if (sel && sel.rangeCount) {
-                        const r = sel.getRangeAt(0);
-                        const insideEditor = editorEl.contains(r.commonAncestorContainer);
-                        const notCollapsed = !sel.isCollapsed;
-
-                        if (insideEditor && notCollapsed) {
-                            debugLog('Inserting span at current selection inside editor');
-                            r.insertNode(span);
-                            r.setStartAfter(span);
-                            r.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(r);
-                            usedSelection = true;
-                        }
-                    }
-
-                    if (!usedSelection) {
-                        debugLog('Appending span to end of editor');
-                        editorEl.appendChild(span);
-                        const rng = document.createRange();
-                        rng.setStartAfter(span);
-                        rng.collapse(true);
-                        const s = window.getSelection();
-                        s.removeAllRanges(); 
-                        s.addRange(rng);
-                    }
-                    
-                    debugLog('✅ Span inserted successfully');
-                } else if (savedSelection) {
-                    debugLog('🎯 CREATING SPAN WITH SAVED SELECTION');
-                    
-                    // Nhánh cũ - đang bôi đen: bọc selection bằng span
-                    const span = document.createElement('span');
-                    span.className = 'has-profile';
-                    span.dataset.profileId = profileId;
-                    span.dataset.profilePassword = profilePassword;
-                    span.dataset.profileContent = finalContent;
-                    span.dataset.profileImages = imagesJson;
-                    span.style.color = '#00e0ff';
-                    span.appendChild(savedSelection.extractContents());
-                    savedSelection.insertNode(span);
-                    
-                    debugLog('✅ Span created with saved selection');
-                }
-                
-                // Initialize profile interactions để popover/hook hoạt động
-                initializeProfileInteractions();
-                debugLog(`has-profile in editor = ${editorEl.querySelectorAll('.has-profile').length}`);
+            } else if (savedSelection) {
+                // Creating new profile
+                const span = document.createElement('span');
+                span.className = 'has-profile';
+                span.dataset.profileId = profileId;
+                span.dataset.profilePassword = profilePassword;
+                span.dataset.profileContent = finalContent; // text only
+                span.dataset.profileImages = imagesJson;   // ảnh
+                span.style.color = '#00e0ff';
+                span.appendChild(savedSelection.extractContents());
+                savedSelection.insertNode(span);
             }
 
-            console.log('🔍 DEBUG: 🚀 PROFILE SAVE COMPLETED - calling saveNoteChanges...');
-            console.log('🔍 DEBUG: About to call saveNoteChanges with:', {
-                activeNoteId: activeNoteId,
-                forceSave: true
-            });
-            
             profileModal.hide();
             savedSelection = null;
             currentProfileSpan = null;
-            
-            console.log('🔍 DEBUG: 🔄 CALLING saveNoteChanges NOW...');
             saveNoteChanges(activeNoteId, true);
-            console.log('🔍 DEBUG: ===== PROFILE SAVE PROCESS COMPLETED =====');
         });
 
         // Profile: Delete button
@@ -2625,6 +2388,10 @@
                         notificationContent.innerHTML = notification.notes || 'Không có nội dung chi tiết.';
                         notificationIdInput.value = notification.id;
 
+                        // Play notification sound
+                        if (notificationSound) {
+                            notificationSound.play().catch(e => console.log("User interaction needed to play sound."));
+                        }
 
                         notificationModal.show();
 
