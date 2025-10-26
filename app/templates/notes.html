@@ -499,51 +499,6 @@
                         <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false"
                             style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung ghi chú..."></div>
                     </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" role="switch" id="notes-enableAlarmCheck">
-                        <label class="form-check-label" for="notes-enableAlarmCheck">Đặt báo thức</label>
-                    </div>
-                    <div id="notes-alarm-container" class="d-none">
-                        <div class="btn-group w-100 mb-3" role="group">
-                            <input type="radio" class="btn-check" name="alarmType" id="alarmTypeRelative"
-                                autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="alarmTypeRelative">Sau một khoảng</label>
-
-                            <input type="radio" class="btn-check" name="alarmType" id="alarmTypeAbsolute"
-                                autocomplete="off" checked>
-                            <label class="btn btn-outline-secondary" for="alarmTypeAbsolute">Thời gian cụ thể</label>
-                        </div>
-
-                        <div id="notes-alarm-absolute-panel">
-                            <input type="datetime-local" class="form-control" id="notes-dueTime">
-                        </div>
-
-                        <div id="notes-alarm-relative-panel" class="d-none">
-                            <div class="row g-2">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="relative-days" placeholder="0"
-                                            min="0">
-                                        <span class="input-group-text">Ngày</span>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="relative-hours" placeholder="0"
-                                            min="0" max="23">
-                                        <span class="input-group-text">Giờ</span>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="relative-minutes" placeholder="5"
-                                            min="0" max="59">
-                                        <span class="input-group-text">Phút</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -653,30 +608,6 @@
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
                 <button type="button" class="btn btn-danger" id="notes-confirm-delete-btn">Xác Nhận</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Notification Modal -->
-<div class="modal fade" id="notes-notificationModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border border-warning border-3 shadow-lg">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2"></i>ĐẾN GIỜ RỒI!</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <h3 id="notes-notificationTitle" class="text-center mb-3"></h3>
-                <p id="notes-notificationContent" style="white-space: pre-wrap;"></p>
-                <input type="hidden" id="notes-notificationId">
-                <audio id="notificationSound" preload="auto">
-                    <source src="{{ url_for('static', filename='sounds/notification.wav') }}" type="audio/wav">
-                </audio>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="notes-acknowledgeBtn">OK, Đã
-                    hiểu</button>
             </div>
         </div>
     </div>
@@ -850,7 +781,7 @@
 
         // Ẩn tất cả context menu (tab/card/editor/profile-span + menu thumbnail ảnh)
         // Gọi mỗi lần click ra ngoài, scroll, resize.
-        function hideAllContextMenus() {
+        function hideAllContextMenus(preserveSelection = false) {
             document.querySelectorAll('.custom-context-menu').forEach(menu => {
                 menu.classList.remove('show');
                 // xoá mọi inline có thể giữ trạng thái "ẩn" sau lần trước
@@ -859,7 +790,11 @@
                 menu.style.removeProperty('left');
                 menu.style.removeProperty('top');
             });
-            savedSelection = null; // Xóa vùng chọn đã lưu khi ẩn menu
+            
+            // Chỉ xóa savedSelection nếu KHÔNG preserve
+            if (!preserveSelection) {
+                savedSelection = null;
+            }
         }
 
         // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
@@ -882,20 +817,6 @@
         window.notesData = [];
         window.filteredNotes = [];
 
-        // Alarm system variables
-        const alarmCheckbox = document.getElementById('notes-enableAlarmCheck');
-        const alarmContainer = document.getElementById('notes-alarm-container');
-        const alarmTypeRadios = document.querySelectorAll('input[name="alarmType"]');
-        const absolutePanel = document.getElementById('notes-alarm-absolute-panel');
-        const relativePanel = document.getElementById('notes-alarm-relative-panel');
-
-        // Notification elements
-        const notificationModal = new bootstrap.Modal(document.getElementById('notes-notificationModal'));
-        const notificationTitle = document.getElementById('notes-notificationTitle');
-        const notificationContent = document.getElementById('notes-notificationContent');
-        const notificationIdInput = document.getElementById('notes-notificationId');
-        const notificationSound = document.getElementById('notificationSound');
-
         // --- Core Functions ---
         function formatTimeAgo(isoString) {
             if (!isoString) return '';
@@ -907,6 +828,58 @@
                 if (value >= 1) return `${value} ${unit} trước`;
             }
             return "vài giây trước";
+        }
+
+        // Auto-detection helper: Wrap patterns with clickable spans
+        function autoDetectPatterns(text) {
+            console.log('[autoDetectPatterns] 🔍 Input text:', text);
+            
+            if (!text || typeof text !== 'string') {
+                console.log('[autoDetectPatterns] ⚠️ Invalid input, returning as-is');
+                return text;
+            }
+            
+            // 1. Detect 4+ digits: wrap in blue span with auto-copy on click
+            // Pattern: \b\d{4,}\b (4 or more consecutive digits)
+            text = text.replace(/\b(\d{4,})\b/g, (match) => {
+                console.log('[autoDetectPatterns] 🔢 Found number:', match);
+                return `<span class="auto-number" style="color: #69b3ff; cursor: pointer;" data-number="${match}">${match}</span>`;
+            });
+            
+            // 2. Detect /command or //command: wrap in cyan span
+            // EXCLUDE HTML tags like /span, /div, /p, etc.
+            // //command -> copy "/command" (with /)
+            // /command -> copy "command" (without /)
+            // Pattern: /{1,2}[a-zA-Z0-9_]+ but NOT if it's an HTML closing tag
+            text = text.replace(/(\/{1,2})([a-zA-Z0-9_]+)/g, (match, slashes, command, offset, string) => {
+                // Check if this is inside an HTML tag (has < before /)
+                const beforeMatch = string.substring(Math.max(0, offset - 1), offset);
+                if (beforeMatch === '<') {
+                    console.log('[autoDetectPatterns] ⏭️ Skipping HTML closing tag:', match);
+                    return match; // Return as-is
+                }
+                
+                // Skip common HTML tags
+                const htmlTags = ['span', 'div', 'p', 'a', 'b', 'i', 'u', 'strong', 'em', 'br', 'hr', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot'];
+                if (htmlTags.includes(command.toLowerCase())) {
+                    console.log('[autoDetectPatterns] ⏭️ Skipping HTML tag name:', match);
+                    return match; // Return as-is
+                }
+                
+                console.log('[autoDetectPatterns] 📝 Found command:', match, '| slashes:', slashes, '| command:', command);
+                const copyText = slashes.length === 2 ? `/${command}` : command;
+                return `<span class="auto-command" style="color: #00e0ff; cursor: pointer;" data-command="${match}" data-copy="${copyText}">${match}</span>`;
+            });
+            
+            // 3. Detect 'text: wrap only text after ' (exclude the quote)
+            // Pattern: '([a-zA-Z0-9_]+) (' followed by alphanumeric/underscore, no closing quote)
+            text = text.replace(/'([a-zA-Z0-9_]+)/g, (match, word) => {
+                console.log('[autoDetectPatterns] 💬 Found quoted:', word);
+                return `'<span class="auto-quoted" style="color: #ffa500; cursor: pointer;" data-quoted="${word}">${word}</span>`;
+            });
+            
+            console.log('[autoDetectPatterns] ✅ Processed text:', text);
+            return text;
         }
 
         async function fetchAndRenderNotes(searchTerm = '') {
@@ -975,12 +948,6 @@
                 content = content.replace(regex, `$1 class="has-profile profile-highlight">`);
             }
 
-            // Countdown HTML for alarm
-            let countdownHTML = '';
-            if (note.due_time) {
-                countdownHTML = `<small class="text-warning fw-bold"><i class="bi bi-alarm-fill"></i> <span id="countdown-${note.id}" data-due-time="${note.due_time}">...</span></small>`;
-            }
-
             col.innerHTML = `
             <div class="card h-100" data-note-id="${note.id}">
                 <div class="card-body d-flex flex-column">
@@ -991,7 +958,6 @@
                             <small class="text-muted" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">${formatTimeAgo(note.modified_at)}</small>
                         </div>
                     </div>
-                    ${countdownHTML ? `<div class="mb-2">${countdownHTML}</div>` : ''}
                     <div class="card-text card-note-body flex-grow-1">${content}</div>
                 </div>
             </div>`;
@@ -1049,13 +1015,32 @@
                 </small>
                 <div>
                     <button class="btn btn-sm btn-primary" onclick="window.prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
-                    <button class="btn btn-sm btn-outline-info" onclick="window.setAlarmForNote('${note.id}')" title="Đặt báo thức"><i class="bi bi-alarm"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
                     <button class="btn-close btn-close-white" onclick="window.closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
                 </div>
             </div>`;
 
-            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${note.title_html || ''}<br>${note.content_html || ''}</div>`;
+            // --- ⭐ BẮT ĐẦU THÊM CODE MỚI TỪ ĐÂY ---
+            let titleHtml = note.title_html || '';
+            let contentHtml = note.content_html || '';
+            const searchInput = document.getElementById('notes-search-input');
+            const searchTerm = searchInput ? searchInput.value.trim() : ''; // Lấy giá trị từ ô tìm kiếm
+
+            if (searchTerm) {
+                // Tạo regex để tìm kiếm (không phân biệt hoa thường, toàn cục)
+                // Escape các ký tự đặc biệt trong search term để tránh lỗi regex
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+
+                // Highlight text như Telegram (background màu xanh đậm)
+                // Sử dụng replace với $1 để giữ nguyên cách viết hoa/thường của từ gốc
+                titleHtml = titleHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+                contentHtml = contentHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+            }
+            // --- ⭐ KẾT THÚC CODE MỚI ---
+
+            // Sử dụng titleHtml và contentHtml đã được xử lý
+            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${titleHtml}<br>${contentHtml}</div>`;
             const editorEl = document.getElementById('detail-editable-full');
 
             // Force disable spellcheck via JavaScript
@@ -1078,6 +1063,84 @@
                 saveNoteChanges(note.id);
             });
 
+            // Keydown handler - prevent deleting entire auto-detected spans
+            editorEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    console.log('[editor keydown] ⌨️ Delete key pressed:', e.key);
+                    
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    
+                    const range = selection.getRangeAt(0);
+                    
+                    // Check if we're about to delete an auto-detected span
+                    if (e.key === 'Backspace' && range.collapsed) {
+                        // Backspace - check node before cursor
+                        const nodeBefore = range.startContainer.previousSibling || 
+                                         range.startContainer.parentNode?.previousSibling;
+                        
+                        if (nodeBefore && (nodeBefore.classList?.contains('auto-number') || 
+                                          nodeBefore.classList?.contains('auto-command') || 
+                                          nodeBefore.classList?.contains('auto-quoted'))) {
+                            console.log('[editor keydown] 🛑 Preventing Backspace - unwrapping span:', nodeBefore);
+                            e.preventDefault();
+                            
+                            // Unwrap the span: replace with text content
+                            const textNode = document.createTextNode(nodeBefore.textContent);
+                            nodeBefore.parentNode.replaceChild(textNode, nodeBefore);
+                            
+                            // Move cursor to end of text
+                            const newRange = document.createRange();
+                            newRange.setStart(textNode, textNode.length);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                            return;
+                        }
+                    } else if (e.key === 'Delete' && range.collapsed) {
+                        // Delete - check node after cursor
+                        const nodeAfter = range.endContainer.nextSibling || 
+                                        range.endContainer.parentNode?.nextSibling;
+                        
+                        if (nodeAfter && (nodeAfter.classList?.contains('auto-number') || 
+                                         nodeAfter.classList?.contains('auto-command') || 
+                                         nodeAfter.classList?.contains('auto-quoted'))) {
+                            console.log('[editor keydown] 🛑 Preventing Delete - unwrapping span:', nodeAfter);
+                            e.preventDefault();
+                            
+                            // Unwrap the span: replace with text content
+                            const textNode = document.createTextNode(nodeAfter.textContent);
+                            nodeAfter.parentNode.replaceChild(textNode, nodeAfter);
+                            return;
+                        }
+                    }
+                    
+                    // If cursor is inside an auto-detected span, unwrap it first
+                    const currentNode = range.startContainer.parentNode;
+                    if (currentNode && (currentNode.classList?.contains('auto-number') || 
+                                       currentNode.classList?.contains('auto-command') || 
+                                       currentNode.classList?.contains('auto-quoted'))) {
+                        console.log('[editor keydown] 🔓 Cursor inside auto-span, unwrapping first:', currentNode);
+                        
+                        // Save cursor position
+                        const offset = range.startOffset;
+                        
+                        // Unwrap the span
+                        const textNode = document.createTextNode(currentNode.textContent);
+                        currentNode.parentNode.replaceChild(textNode, currentNode);
+                        
+                        // Restore cursor position
+                        const newRange = document.createRange();
+                        newRange.setStart(textNode, Math.min(offset, textNode.length));
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                        
+                        // Don't prevent default - let normal delete happen
+                    }
+                }
+            });
+
             editorEl.addEventListener('contextmenu', handleEditorContextMenu);
 
             // Click handler for links - open in new tab
@@ -1095,27 +1158,27 @@
                 e.preventDefault();
 
                 // Get the pasted content as plain text from the clipboard
-                const plainText = (e.clipboardData || window.clipboardData).getData('text');
+                let plainText = (e.clipboardData || window.clipboardData).getData('text');
                 if (!plainText) {
                     return;
                 }
 
+                // Auto-detect patterns (numbers, /commands, 'quoted text)
+                let processedHtml = autoDetectPatterns(plainText);
+
                 // URL regex pattern - handles http, https, ftp, and file protocols
                 const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
 
-                if (urlRegex.test(plainText)) {
+                if (urlRegex.test(processedHtml)) {
                     // If URLs are found, replace them with HTML anchor tags
-                    const processedHtml = plainText.replace(urlRegex, (url) => {
+                    processedHtml = processedHtml.replace(urlRegex, (url) => {
                         // Create a styled and secure link
                         return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #69b3ff; text-decoration: underline;">${url}</a>`;
                     });
-
-                    // Insert the processed HTML into the editor
-                    document.execCommand('insertHTML', false, processedHtml);
-                } else {
-                    // If no URLs are found, simply insert the content as plain text
-                    document.execCommand('insertText', false, plainText);
                 }
+
+                // Insert the processed HTML into the editor
+                document.execCommand('insertHTML', false, processedHtml);
 
                 // Auto-save after paste
                 setTimeout(() => {
@@ -1125,8 +1188,103 @@
                 }, 100);
             });
 
+            // Input handler - auto-detect patterns when typing (on Space/Enter)
+            let typingTimer;
+            editorEl.addEventListener('input', (e) => {
+                console.log('[editor input] ⌨️ Input event triggered');
+                
+                // Clear previous timer
+                clearTimeout(typingTimer);
+                
+                // Wait 500ms after user stops typing
+                typingTimer = setTimeout(() => {
+                    console.log('[editor input] 🔄 Processing auto-detection after typing pause');
+                    
+                    // Get current content
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    
+                    const range = selection.getRangeAt(0);
+                    const currentNode = range.startContainer;
+                    
+                    // Only process text nodes that are not already in auto-detected spans
+                    if (currentNode.nodeType === Node.TEXT_NODE) {
+                        const parentNode = currentNode.parentNode;
+                        
+                        // Skip if already in auto-detected span
+                        if (parentNode.classList?.contains('auto-number') ||
+                            parentNode.classList?.contains('auto-command') ||
+                            parentNode.classList?.contains('auto-quoted')) {
+                            console.log('[editor input] ⏭️ Already in auto-span, skipping');
+                            return;
+                        }
+                        
+                        const text = currentNode.textContent;
+                        console.log('[editor input] 📝 Processing text node:', text);
+                        
+                        // Check if text contains patterns to detect
+                        const hasNumber = /\b\d{4,}\b/.test(text);
+                        const hasCommand = /\/{1,2}[a-zA-Z0-9_]+/.test(text);
+                        const hasQuoted = /'[a-zA-Z0-9_]+/.test(text);
+                        
+                        if (hasNumber || hasCommand || hasQuoted) {
+                            console.log('[editor input] ✅ Found patterns - applying auto-detection');
+                            
+                            // Save cursor position relative to parent
+                            const cursorOffset = range.startOffset;
+                            
+                            // Apply auto-detection
+                            const processedHtml = autoDetectPatterns(text);
+                            
+                            // Create temporary container
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = processedHtml;
+                            
+                            // Replace text node with processed nodes
+                            const fragment = document.createDocumentFragment();
+                            while (tempDiv.firstChild) {
+                                fragment.appendChild(tempDiv.firstChild);
+                            }
+                            
+                            parentNode.replaceChild(fragment, currentNode);
+                            
+                            // Restore cursor position (best effort)
+                            try {
+                                const newRange = document.createRange();
+                                const textNodes = [];
+                                const walker = document.createTreeWalker(
+                                    parentNode,
+                                    NodeFilter.SHOW_TEXT,
+                                    null,
+                                    false
+                                );
+                                
+                                let node;
+                                while (node = walker.nextNode()) {
+                                    textNodes.push(node);
+                                }
+                                
+                                if (textNodes.length > 0) {
+                                    const lastNode = textNodes[textNodes.length - 1];
+                                    newRange.setStart(lastNode, lastNode.length);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                }
+                            } catch (err) {
+                                console.error('[editor input] ❌ Failed to restore cursor:', err);
+                            }
+                            
+                            // Re-initialize auto-detected elements
+                            initializeAutoDetectedElements();
+                        }
+                    }
+                }, 500);
+            });
+
             // Initialize profile interactions and apply saved colors
             initializeProfileInteractions();
+            initializeAutoDetectedElements();
             applySavedColors();
 
             // Profile highlight logic for search
@@ -1147,11 +1305,6 @@
 
             detailPlaceholder.classList.add('d-none');
             detailContent.classList.remove('d-none');
-
-            // Update countdown if note has due_time
-            if (note.due_time) {
-                updateCountdown(`detail-countdown-${note.id}`, note.due_time);
-            }
         }
 
         async function saveNoteChanges(noteId, forceSave = false) {
@@ -1243,46 +1396,12 @@
             titleInput.spellcheck = false;
             contentEditor.spellcheck = false;
 
-            // Reset alarm settings
-            if (alarmCheckbox) {
-                alarmCheckbox.checked = false;
-                alarmContainer.classList.add('d-none');
-            }
-            document.getElementById('alarmTypeAbsolute').checked = true;
-            document.getElementById('notes-dueTime').value = '';
-            document.getElementById('relative-days').value = '';
-            document.getElementById('relative-hours').value = '';
-            document.getElementById('relative-minutes').value = '5';
-
             notesModal.show();
         };
 
         window.addNewNoteFromContextMenu = () => {
-            console.log('addNewNoteFromContextMenu called');
             hideAllContextMenus();
             window.prepareAddNoteModal();
-        };
-
-        window.setAlarmForNote = (noteId) => {
-            const note = window.notesData.find(n => n.id === noteId);
-            if (!note) return;
-
-            modalTitle.textContent = 'Đặt Báo Thức';
-            editIdInput.value = noteId;
-            titleInput.innerHTML = note.title_html || '';
-            contentEditor.innerHTML = note.content_html || '';
-
-            // Show alarm options
-            alarmCheckbox.checked = true;
-            alarmContainer.classList.remove('d-none');
-
-            // Set default values
-            document.getElementById('notes-dueTime').value = '';
-            document.getElementById('relative-days').value = '';
-            document.getElementById('relative-hours').value = '';
-            document.getElementById('relative-minutes').value = '5';
-
-            notesModal.show();
         };
 
         // Confirm Delete Modal
@@ -1372,40 +1491,6 @@
                 title_html: titleInput.innerHTML,
                 content_html: contentEditor.innerHTML,
             };
-
-            // Add alarm data if enabled
-            if (alarmCheckbox && alarmCheckbox.checked) {
-                const isAbsolute = document.getElementById('alarmTypeAbsolute').checked;
-                if (isAbsolute) {
-                    const dueTime = document.getElementById('notes-dueTime').value;
-                    if (dueTime) {
-                        payload.due_date = dueTime;
-                        payload.notice = JSON.stringify({
-                            enabled: true,
-                            title: titleInput.textContent || 'Nhắc nhở',
-                            note: contentEditor.textContent || '',
-                            due_date: dueTime
-                        });
-                    }
-                } else {
-                    const days = parseInt(document.getElementById('relative-days').value) || 0;
-                    const hours = parseInt(document.getElementById('relative-hours').value) || 0;
-                    const minutes = parseInt(document.getElementById('relative-minutes').value) || 5;
-
-                    const dueDate = new Date();
-                    dueDate.setDate(dueDate.getDate() + days);
-                    dueDate.setHours(dueDate.getHours() + hours);
-                    dueDate.setMinutes(dueDate.getMinutes() + minutes);
-
-                    payload.due_date = dueDate.toISOString();
-                    payload.notice = JSON.stringify({
-                        enabled: true,
-                        title: titleInput.textContent || 'Nhắc nhở',
-                        note: contentEditor.textContent || '',
-                        due_date: dueDate.toISOString()
-                    });
-                }
-            }
 
             if (!payload.title_html && !payload.content_html) {
                 showAlert('Ghi chú không được để trống.');
@@ -1783,9 +1868,9 @@
             profilePasswordInput.value = '';
             profileContentInput.innerHTML = '';
             deleteProfileBtn.style.display = 'none';
-            currentProfileSpan = null; // Reset current profile
+            currentProfileSpan = null;
             blockNextBlurSave = true;
-            hideAllContextMenus();
+            hideAllContextMenus(true); // Preserve savedSelection!
             profileModal.show();
         });
 
@@ -1848,6 +1933,10 @@
                 span.style.color = '#00e0ff';
                 span.appendChild(savedSelection.extractContents());
                 savedSelection.insertNode(span);
+            } else {
+                // Không có selection và không đang edit -> lỗi logic
+                showAlert('Lỗi: Không tìm thấy selection hoặc profile đang chỉnh sửa.');
+                return;
             }
 
             profileModal.hide();
@@ -2084,37 +2173,6 @@
         // Global clicks
         notesPane.addEventListener('contextmenu', handleTabContextMenu);
 
-        // --- Countdown Functions ---
-
-        function updateCountdown(elementId, dueTimeString) {
-            const elem = document.getElementById(elementId);
-            if (!elem) return;
-
-            const distance = new Date(dueTimeString).getTime() - new Date().getTime();
-            if (distance < 0) {
-                elem.textContent = "Đã đến giờ!";
-                return;
-            }
-
-            const days = Math.floor(distance / 86400000);
-            const hours = Math.floor((distance % 86400000) / 3600000);
-            const minutes = Math.floor((distance % 3600000) / 60000);
-            const seconds = Math.floor((distance % 60000) / 1000);
-
-            let result = "Còn ";
-            if (days > 0) result += `${days} ngày `;
-            if (hours > 0 || days > 0) result += `${hours} giờ `;
-            result += `${minutes} phút ${seconds} giây`;
-            elem.textContent = result;
-        }
-
-        // Update countdown every second
-        setInterval(() => {
-            document.querySelectorAll('[id^="countdown-"]').forEach(span => {
-                if (span.dataset.dueTime) updateCountdown(span.id, span.dataset.dueTime);
-            });
-        }, 1000);
-
         // --- Profile Functions ---
 
         // Initialize profile colors storage
@@ -2197,6 +2255,7 @@
                 <div class="profile-popover-content">
                     ${profileId ? `<div><strong>ID:</strong> ${profileId}</div>` : ''}
                     ${profilePassword ? `<div><strong>Password:</strong> ${profilePassword}</div>` : ''}
+                    ${profileContent ? `<div style="margin-top:8px;max-width:400px;word-wrap:break-word;">${profileContent}</div>` : ''}
                     ${mediaHTML}
                 </div>
             `;
@@ -2235,17 +2294,184 @@
         });
         }
 
-        // --- Alarm System Functions ---
+        // Initialize auto-detected elements interactions
+        function initializeAutoDetectedElements() {
+            console.log('[initializeAutoDetectedElements] 🔧 Initializing auto-detected element handlers');
+            const editor = document.getElementById('detail-editable-full');
+            if (!editor) {
+                console.log('[initializeAutoDetectedElements] ⚠️ Editor not found');
+                return;
+            }
 
-        // Toggle alarm container visibility
-        if (alarmCheckbox) {
-            alarmCheckbox.addEventListener('change', function () {
-                if (this.checked) {
-                    alarmContainer.classList.remove('d-none');
-                } else {
-                    alarmContainer.classList.add('d-none');
-                }
+            // 1. Handle auto-number clicks: auto-copy number
+            const numberSpans = editor.querySelectorAll('.auto-number');
+            console.log(`[initializeAutoDetectedElements] 🔢 Found ${numberSpans.length} number spans`);
+            
+            numberSpans.forEach(span => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const number = span.dataset.number;
+                    console.log('[auto-number click] 📋 Copying number:', number);
+                    
+                    navigator.clipboard.writeText(number).then(() => {
+                        console.log('[auto-number click] ✅ Number copied successfully');
+                        showToast(`Đã copy: ${number}`, 'success');
+                    }).catch(err => {
+                        console.error('[auto-number click] ❌ Copy failed:', err);
+                        showToast('Lỗi khi copy số', 'error');
+                    });
+                });
+
+                // Right-click context menu for copy
+                span.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const number = span.dataset.number;
+                    console.log('[auto-number contextmenu] 🖱️ Right-clicked number:', number);
+                    showAutoNumberContextMenu(e.clientX, e.clientY, number);
+                });
             });
+
+            // 2. Handle auto-command clicks: auto-copy with smart logic
+            // /command -> copy "command" (without /)
+            // //command -> copy "/command" (with one /)
+            const commandSpans = editor.querySelectorAll('.auto-command');
+            console.log(`[initializeAutoDetectedElements] 📝 Found ${commandSpans.length} command spans`);
+            
+            commandSpans.forEach(span => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const fullCommand = span.dataset.command;
+                    const copyText = span.dataset.copy;
+                    console.log('[auto-command click] 📋 Full command:', fullCommand, '| Copy text:', copyText);
+                    
+                    navigator.clipboard.writeText(copyText).then(() => {
+                        console.log('[auto-command click] ✅ Command copied successfully');
+                        showToast(`Đã copy: ${copyText}`, 'success');
+                    }).catch(err => {
+                        console.error('[auto-command click] ❌ Copy failed:', err);
+                        showToast('Lỗi khi copy command', 'error');
+                    });
+                });
+
+                span.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const command = span.dataset.command;
+                    const copyText = span.dataset.copy;
+                    console.log('[auto-command contextmenu] 🖱️ Right-clicked command:', command);
+                    showAutoCommandContextMenu(e.clientX, e.clientY, copyText);
+                });
+            });
+
+            // 3. Handle auto-quoted clicks: auto-copy quoted text
+            const quotedSpans = editor.querySelectorAll('.auto-quoted');
+            console.log(`[initializeAutoDetectedElements] 💬 Found ${quotedSpans.length} quoted spans`);
+            
+            quotedSpans.forEach(span => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const quoted = span.dataset.quoted;
+                    console.log('[auto-quoted click] 📋 Copying quoted text:', quoted);
+                    
+                    navigator.clipboard.writeText(quoted).then(() => {
+                        console.log('[auto-quoted click] ✅ Quoted text copied successfully');
+                        showToast(`Đã copy: ${quoted}`, 'success');
+                    }).catch(err => {
+                        console.error('[auto-quoted click] ❌ Copy failed:', err);
+                        showToast('Lỗi khi copy quoted text', 'error');
+                    });
+                });
+
+                span.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const quoted = span.dataset.quoted;
+                    console.log('[auto-quoted contextmenu] 🖱️ Right-clicked quoted:', quoted);
+                    showAutoQuotedContextMenu(e.clientX, e.clientY, quoted);
+                });
+            });
+
+            console.log('[initializeAutoDetectedElements] ✅ All handlers initialized');
+        }
+
+        // Context menu for auto-number
+        function showAutoNumberContextMenu(x, y, number) {
+            hideAllContextMenus();
+            
+            const menu = document.createElement('div');
+            menu.className = 'context-menu show';
+            menu.style.position = 'fixed';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.zIndex = '10000';
+            
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="navigator.clipboard.writeText('${number}').then(() => showToast('Đã copy số: ${number}', 'success'))">
+                    <i class="bi bi-clipboard"></i> Copy số
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => menu.remove(), { once: true });
+            }, 0);
+        }
+
+        // Context menu for /command
+        function showAutoCommandContextMenu(x, y, copyText) {
+            console.log('[showAutoCommandContextMenu] 🖱️ Showing context menu for:', copyText);
+            hideAllContextMenus();
+            
+            const menu = document.createElement('div');
+            menu.className = 'context-menu show';
+            menu.style.position = 'fixed';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.zIndex = '10000';
+            
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="navigator.clipboard.writeText('${copyText}').then(() => showToast('Đã copy: ${copyText}', 'success'))">
+                    <i class="bi bi-clipboard"></i> Copy Command
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => menu.remove(), { once: true });
+            }, 0);
+        }
+
+        // Context menu for 'quoted
+        function showAutoQuotedContextMenu(x, y, quoted) {
+            hideAllContextMenus();
+            
+            const menu = document.createElement('div');
+            menu.className = 'context-menu show';
+            menu.style.position = 'fixed';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.zIndex = '10000';
+            
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="navigator.clipboard.writeText('${quoted}').then(() => showToast('Đã copy: ${quoted}', 'success'))">
+                    <i class="bi bi-clipboard"></i> Copy text
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => menu.remove(), { once: true });
+            }, 0);
         }
 
         // ===== CONTEXT MENU CHUỘT PHẢI TRÊN CARD GHI CHÚ =====
@@ -2357,54 +2583,9 @@
                             }
                         }
                         break;
-                        
-                    default:
-                        console.log('Unknown action:', action);
                 }
             });
         })();
-
-        // Handle alarm type radio buttons
-        alarmTypeRadios.forEach(radio => {
-            radio.addEventListener('change', function () {
-                if (this.id === 'alarmTypeAbsolute') {
-                    absolutePanel.classList.remove('d-none');
-                    relativePanel.classList.add('d-none');
-                } else {
-                    absolutePanel.classList.add('d-none');
-                    relativePanel.classList.remove('d-none');
-                }
-            });
-        });
-
-        // Notification polling
-        setInterval(async () => {
-            try {
-                const response = await fetch('/notes/api/check-notifications');
-                if (response.ok) {
-                    const notification = await response.json();
-                    if (notification) {
-                        notificationTitle.textContent = notification.title;
-                        notificationContent.innerHTML = notification.notes || 'Không có nội dung chi tiết.';
-                        notificationIdInput.value = notification.id;
-
-                        // Play notification sound
-                        if (notificationSound) {
-                            notificationSound.play().catch(e => console.log("User interaction needed to play sound."));
-                        }
-
-                        notificationModal.show();
-
-                        // Refresh notes if on notes tab
-                        if (document.getElementById('notes-tool-pane').classList.contains('active')) {
-                            await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error("Error polling for notifications:", error);
-            }
-        }, 10000); // Check every 10 seconds
 
         // --- Initial Setup ---
         async function initializeNotesView() {
